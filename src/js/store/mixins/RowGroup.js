@@ -1,0 +1,769 @@
+/*
+  levelsWithGroups sample structure
+  [
+    [{
+      'root': ['Germany', 'UK', 'Japan', 'USA']
+    }],
+    [{
+      'Germany': ['Germany/BMW', 'Germany/Audi', 'Germany/VW'],
+      'UK': ['UK/Land Rover', 'UK/Jaguar'],
+      'Japan': ['Japan/Toyota', 'Japan/Mazda', 'Japan/Lexus'],
+      'USA': ['USA/Ford']
+    }],
+    [{
+      'Germany/BMW': ['Germany/BMW/X1', 'Germany/BMW/X2', 'Germany/BMW/X7'],
+      'Germany/Audi': ['Germany/Audi/A3', 'Germany/Audi/A4', 'Germany/Audi/Q5', 'Germany/Audi/Q7'],
+      'Germany/VW': ['Germany/VW/Teramont', 'Germany/VW/Tiguan', 'Germany/VW/Polo', 'Germany/VW/Tuareg'],
+      'UK/Land Rover': ['UK/Land Rover/Land Rover Sport'],
+      'UK/Jaguar': ['UK/Jaguar/F-Pace', 'UK/Jaguar/E-Pace', 'UK/Jaguar/E-Type'],
+      'Japan/Toyota': ['Japan/Toyota/Camry', 'Japan/Toyota/Land Cruiser', 'Japan/Toyota/Prado', 'Japan/Toyota/HighLander'],
+      'Japan/Mazda': ['Japan/Mazda/CX-5', 'Japan/Mazda/CX-9', 'Japan/Mazda/6'],
+      'Japan/Lexus': ['Japan/Lexus/RX 350', 'Japan/Lexus/NX', 'Japan/Lexus/NX 300', 'Japan/Lexus/RX'],
+      'USA/Ford': ['USA/Ford/F-150', 'USA/Ford/Explorer']
+    }]
+  ]
+*/
+
+(()=> {
+
+  const RowGroup = {
+    rowGroupData() {
+      const me = this;
+
+      me.set$rowGroupValue();
+      me.setExpandedGroups();
+      me.generateGroupsInfo();
+      me.sortGroups();
+      me.generateDisplayedGroupedData();
+    },
+
+    rowGroupDataForFiltering() {
+      const me = this;
+
+      me.generateGroupsInfoForFiltering();
+    },
+
+    generateDisplayedGroupedData() {
+      const me = this;
+      const displayedGroupsSorted = me.getSortedDisplayedGroups();
+      let groupedData = [];
+
+      displayedGroupsSorted.forEach(group => {
+        const groupChildren = me.groupsChildren[group];
+        const groupDetails = me.groupDetails[group];
+        const expanded = me.expandedGroups[group] || false;
+
+        groupedData.push(groupDetails);
+
+        // Group that does not have groups
+        // This group has children that are real data
+        if (!groupDetails.$hasChildrenGroups && expanded) {
+          groupedData = groupedData.concat(groupChildren);
+        }
+      });
+
+      me.displayedData = groupedData;
+    },
+
+    // Regenerate display group data
+    // It is only for case when there is no sorters
+    simpleReGenerateDisplayedGroupedData(index, dir, type) {
+      const me = this;
+      const groupedData = me.displayedData.slice();
+
+      for (const group in me.expandedGroupsWithDataChildren) {
+        if (me.isParentCollapsed(group)) {
+          continue;
+        }
+
+        const groupData = me.groupsChildren[group].slice();
+        const groupDetails = me.groupDetails[group];
+        const rowIndex = me.idRowIndexesMap.get(groupDetails.id);
+
+        groupedData.splice(rowIndex + 1, groupData.length, ...groupData);
+      }
+
+      me.displayedData = groupedData;
+    },
+
+    generateDisplayedGroupedDataForFiltering(doNotSort = false) {
+      const me = this;
+      let displayedGroupsSorted = [];
+      let groupedData = [];
+
+      if (!doNotSort) {
+        displayedGroupsSorted = me.getSortedDisplayedGroupsForFiltering();
+
+        displayedGroupsSorted.forEach(group => {
+          const groupChildren = me.groupsChildrenForFiltering[group];
+          const groupDetails = me.groupDetailsForFiltering[group];
+          const expanded = me.expandedGroups[group] || false;
+
+          groupedData.push(groupDetails);
+
+          // Group that does not have groups
+          // This group has children that are real data
+          if (!groupDetails.$hasChildrenGroups && expanded) {
+            groupedData = groupedData.concat(groupChildren);
+          }
+        });
+      } else {
+        groupedData = me.getGroupDataForFiltering();
+      }
+
+      me.displayedData = groupedData;
+    },
+
+    /*
+     Generates groupsChildren, groupDetails, levelsWithGroups
+     */
+    generateGroupsInfo(groupNames, groupLevel) {
+      const me = this;
+      const parentGroups = {};
+      let hasChildrenGroups = true;
+
+      if (groupNames === undefined) {
+        me.groupsChildren = me.groupsChildren || Object.groupBy(me.data, row => row.$rowGroupValue);
+        groupNames = Object.keys(me.groupsChildren);
+        groupLevel = me.rowGroups.length - 1;
+        hasChildrenGroups = false;
+        me.groupDetails = {};
+        me.levelsWithGroups = [];
+        me.expandedGroupsWithDataChildren = {};
+      }
+
+      groupNames.forEach(groupName => {
+        const splitted = groupName.split('/');
+        const rowDisplayGroupValue = splitted.pop();
+        let parentGroupName = 'root';
+
+        if (groupLevel !== 0) {
+          parentGroupName = splitted.join('/');
+          parentGroups[parentGroupName] = true;
+        }
+
+        const parentGroup = splitted.join('/');
+        const expanded = me.expandedGroups[groupName] || false;
+
+        me.groupsChildren[parentGroup] = me.groupsChildren[parentGroup] || [];
+        me.levelsWithGroups[groupLevel] = me.levelsWithGroups[groupLevel] || [{}];
+        me.levelsWithGroups[groupLevel][0][parentGroupName] = me.levelsWithGroups[groupLevel][0][parentGroupName] || [];
+        me.levelsWithGroups[groupLevel][0][parentGroupName].push(groupName);
+
+        const groupInfo = {
+          $rowGroupValue: groupName,
+          $rowDisplayGroupValue: rowDisplayGroupValue,
+          $groupLevel: groupLevel,
+          $isGroupRow: true,
+          $hasChildrenGroups: hasChildrenGroups,
+          id: me.generateId(),
+          childrenAmount: me.groupsChildren[groupName].length,
+          expanded,
+          $agValues: {}
+        };
+
+        if (!hasChildrenGroups) {
+          me.aggregations.forEach(aggregation => {
+            const values = me.groupsChildren[groupName].map(rowData => rowData[aggregation.index]);
+            groupInfo.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+          });
+
+          groupInfo.amount = groupInfo.childrenAmount;
+
+          if (groupInfo.expanded) {
+            me.expandedGroupsWithDataChildren[groupName] = true;
+          }
+        } else {
+          me.aggregations.forEach(aggregation => {
+            const values = me.groupsChildren[groupName].map(groupData => groupData.$agValues[aggregation.index]);
+            groupInfo.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+          });
+
+          groupInfo.amount = me.groupsChildren[groupName].reduce((sum, child) => sum + child.amount, 0);
+        }
+
+        me.groupDetails[groupName] = groupInfo;
+        if (groupLevel !== 0) {
+          me.groupsChildren[parentGroup].push(groupInfo);
+        }
+      });
+
+      if (groupLevel !== 0) {
+        const parentGroupNames = Object.keys(parentGroups);
+        me.generateGroupsInfo(parentGroupNames, groupLevel - 1);
+      }
+    },
+
+    generateGroupsInfoForFiltering(groupNames, groupLevel) {
+      const me = this;
+      const parentGroups = {};
+      let hasChildrenGroups = true;
+
+      if (groupNames === undefined) {
+        me.groupsChildrenForFiltering = Object.groupBy(me.filteredData, row => row.$rowGroupValue);
+        groupNames = Object.keys(me.groupsChildrenForFiltering);
+        groupLevel = me.rowGroups.length - 1;
+        hasChildrenGroups = false;
+        me.groupDetailsForFiltering = {};
+        me.levelsWithGroupsForFiltering = [];
+        me.expandedGroupsWithDataChildrenForFiltering = {};
+      }
+
+      groupNames.forEach(groupName => {
+        const groupInfo = me.groupDetails[groupName];
+        const splitted = groupName.split('/');
+        const rowDisplayGroupValue = splitted.pop();
+        let parentGroupName = 'root';
+
+        if (groupLevel !== 0) {
+          parentGroupName = splitted.join('/');
+          parentGroups[parentGroupName] = true;
+        }
+
+        const parentGroup = splitted.join('/');
+        const expanded = me.expandedGroups[groupName] || false;
+
+        if (parentGroup === '') {
+          // TODO: fix case with '' group
+          // Maybe it is root group
+        }
+
+        me.groupsChildrenForFiltering[parentGroup] = me.groupsChildrenForFiltering[parentGroup] || [];
+        me.levelsWithGroupsForFiltering[groupLevel] = me.levelsWithGroupsForFiltering[groupLevel] || [{}];
+        me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName] = me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName] || [];
+        me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName].push(groupName);
+
+        if(!groupInfo){
+          console.error(`groupDetails does not contain ${groupName}`);
+        }
+
+        const groupInfoForFiltering = {
+          $rowGroupValue: groupName,
+          $rowDisplayGroupValue: rowDisplayGroupValue,
+          $groupLevel: groupLevel,
+          $isGroupRow: true,
+          $hasChildrenGroups: hasChildrenGroups,
+          id: groupInfo.id,
+          childrenAmount: me.groupsChildrenForFiltering[groupName].length,
+          expanded,
+          $agValues: {}
+        };
+
+        if (!hasChildrenGroups) {
+          me.aggregations.forEach(aggregation => {
+            const values = me.groupsChildrenForFiltering[groupName].map(rowData => rowData[aggregation.index]);
+            groupInfoForFiltering.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+          });
+
+          groupInfoForFiltering.amount = groupInfoForFiltering.childrenAmount;
+
+          if (groupInfoForFiltering.expanded) {
+            me.expandedGroupsWithDataChildrenForFiltering[groupName] = true;
+          }
+        } else {
+          me.aggregations.forEach(aggregation => {
+            const values = me.groupsChildrenForFiltering[groupName].map(groupData => groupData.$agValues[aggregation.index]);
+            groupInfoForFiltering.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+          });
+
+          groupInfoForFiltering.amount = me.groupsChildrenForFiltering[groupName].reduce((sum, child) => sum + child.amount, 0);
+        }
+
+        me.groupDetailsForFiltering[groupName] = groupInfoForFiltering;
+        if (groupLevel !== 0) {
+          me.groupsChildrenForFiltering[parentGroup].push(groupInfoForFiltering);
+        }
+      });
+
+      if (groupLevel === 0) {
+        me.generateDisplayedGroupsForFiltering(groupNames);
+      } else {
+        const parentGroupNames = Object.keys(parentGroups);
+        me.generateGroupsInfoForFiltering(parentGroupNames, groupLevel - 1);
+      }
+    },
+
+    clearGroups() {
+      const me = this;
+
+      delete me.groupsChildren
+      delete me.levelsWithGroups;
+      delete me.expandedGroupsWithDataChildren;
+
+      me.data.forEach(rowData => {
+        delete rowData.$rowGroupValue;
+      });
+    },
+
+    set$rowGroupValue() {
+      this.data.forEach(rowData => {
+        let $rowGroupValues = [];
+
+        this.rowGroups.forEach(group => {
+          $rowGroupValues.push(rowData[group]);
+        });
+
+        rowData.$rowGroupValue = $rowGroupValues.join('/');
+      });
+    },
+
+    setExpandedGroups() {
+      const me = this;
+
+      me.expandedGroups = {};
+
+      if (typeof me.rowGroupExpanded === 'function') {
+        const groupNames = Object.keys(Object.groupBy(me.data, row => row.$rowGroupValue));
+        const parentGroups = {};
+        groupNames.forEach(group => {
+          const splitted = group.split('/');
+          const iL = splitted.length;
+
+          for (let i = 0; i < iL; i++) {
+            splitted.pop();
+            parentGroups[splitted.join('/')] = true;
+          }
+        });
+
+        const parentGroupNames = Object.keys(parentGroups);
+
+        const rowGroupExpanded = [].concat(groupNames).concat(parentGroupNames).sort();
+
+        rowGroupExpanded.forEach(group => {
+          const expanded = me.rowGroupExpanded(group);
+
+          me.expandedGroups[group] = expanded;
+
+          if (expanded) {
+            rowGroupExpanded.push(group);
+          }
+        });
+
+        me.rowGroupExpanded = rowGroupExpanded;
+      } else {
+        me.rowGroupExpanded.forEach(group => {
+          me.expandedGroups[group] = true;
+        });
+      }
+    },
+
+    generateDisplayedGroupsForFiltering(zeroLevelGroups) {
+      const me = this;
+
+      me.displayedGroupsForFiltering = {};
+
+      zeroLevelGroups.forEach(group => {
+        me.displayedGroupsForFiltering[group] = true;
+      });
+
+      me.rowGroupExpanded.forEach(group => {
+        const subGroups = me.groupsChildrenForFiltering[group];
+
+        subGroups?.forEach(({$rowGroupValue}) => {
+          if ($rowGroupValue) {
+            me.displayedGroupsForFiltering[$rowGroupValue] = true;
+          }
+        });
+      });
+    },
+
+    sortGroups() {
+      const me = this;
+
+      me.levelsWithGroups.forEach(({0: groupsContainer}) => {
+        for (const group in groupsContainer) {
+          const subGroups = groupsContainer[group];
+          const newSubGroupsOrder = subGroups.toSorted((a, b) => {
+            const groupA = me.groupDetails[a];
+            const groupB = me.groupDetails[b];
+
+            switch (me.defaultRowGroupSort) {
+              case 'asc-amount':
+                return groupA.amount - groupB.amount;
+              case 'desc-amount':
+                return groupB.amount - groupA.amount;
+            }
+          });
+
+          groupsContainer[group] = newSubGroupsOrder;
+        }
+      });
+    },
+
+    sortGroupsForFiltering() {
+      const me = this;
+      const levelsWithGroupsForFiltering = [];
+
+      me.levelsWithGroups.forEach(({0: groupsContainer}, level) => {
+        const filteredGroupsContainer = {}
+
+        for (const group in groupsContainer) {
+          const subGroups = groupsContainer[group].filter(value => me.displayedGroupsForFiltering[value]);
+
+          if (me.displayedGroupsForFiltering[group] || level === 0) {
+            filteredGroupsContainer[group] = subGroups;
+          }
+        }
+
+        levelsWithGroupsForFiltering[level] = [filteredGroupsContainer];
+      });
+
+      me.levelsWithGroupsForFiltering = levelsWithGroupsForFiltering;
+    },
+
+    getSortedDisplayedGroups() {
+      const me = this;
+      let displayedGroupsSorted = [];
+
+      const recursiveDataExtraction = (levelGroups, level = 0) => {
+        levelGroups.forEach((group) => {
+          displayedGroupsSorted.push(group);
+
+          if (me.expandedGroups[group] && level !== me.levelsWithGroups.length - 1) {
+            const nextLevel = level + 1;
+            const levelGroups = me.levelsWithGroups[nextLevel][0][group];
+
+            recursiveDataExtraction(levelGroups, nextLevel);
+          }
+        });
+      }
+
+      switch (me.defaultRowGroupSort) {
+        case 'desc-string':
+          displayedGroupsSorted = Array.from(Object.keys(me.displayedGroups)).sort();
+          break;
+        case 'desc-amount':
+          const zeroLevelGroups = me.levelsWithGroups[0][0].root;
+          recursiveDataExtraction(zeroLevelGroups);
+          break;
+        default:
+          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`)
+      }
+
+      return displayedGroupsSorted;
+    },
+
+    getSortedDisplayedGroupsForFiltering() {
+      const me = this;
+      let displayedGroupsSorted = [];
+
+      const recursiveDataExtraction = (levelGroups, level = 0) => {
+        levelGroups.forEach((group) => {
+          displayedGroupsSorted.push(group);
+
+          if (me.expandedGroups[group] && level !== me.levelsWithGroupsForFiltering.length - 1) {
+            const nextLevel = level + 1;
+            const levelGroups = me.levelsWithGroupsForFiltering[nextLevel][0][group];
+
+            recursiveDataExtraction(levelGroups, nextLevel);
+          }
+        });
+      }
+
+      switch (me.defaultRowGroupSort) {
+        case 'desc-string':
+          displayedGroupsSorted = Array.from(Object.keys(me.displayedGroupsForFiltering)).sort();
+          break;
+        case 'desc-amount':
+          const zeroLevelGroups = me.levelsWithGroupsForFiltering[0][0].root;
+          recursiveDataExtraction(zeroLevelGroups);
+          break;
+        default:
+          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`)
+      }
+
+      return displayedGroupsSorted;
+    },
+
+    getAggregationResult(aggregation, values) {
+      let result = '';
+
+      if (typeof aggregation.fn === 'function') {
+        result = aggregation.fn(values);
+      } else {
+        switch (aggregation.fn) {
+          case 'sum':
+            result = values.reduce((sum, value) => sum + value, 0);
+            break;
+          case 'avg':
+            const sum = values.reduce((sum, value) => sum + value, 0);
+            const avg = parseFloat((sum / values.length).toFixed(2));
+
+            result = avg;
+            break;
+          case 'min':
+            result = values.sort()[0];
+            break;
+          case 'max':
+            result = values.sort()[values.length - 1];
+            break;
+        }
+      }
+
+      return result;
+    },
+
+    expand(group) {
+      const me = this;
+      const groupDetails = me.groupDetails[group];
+      const rowIndex = me.idRowIndexesMap.get(groupDetails.id);
+
+      groupDetails.expanded = true;
+      me.expandedGroups[group] = true;
+      if (!groupDetails.$hasChildrenGroups) {
+        me.expandedGroupsWithDataChildren[group] = true;
+      }
+
+      const groupData = me.getGroupExpandedChildren(group);
+
+      me.displayedData.splice(rowIndex + 1, 0, ...groupData);
+      me.rowGroupExpanded.push(group);
+
+      me.updateIndexes();
+    },
+
+    expandForFiltering(group) {
+      const me = this;
+      const groupDetails = me.groupDetailsForFiltering[group];
+      const rowIndex = me.idRowIndexesMap.get(groupDetails.id);
+
+      groupDetails.expanded = true;
+      me.expandedGroups[group] = true;
+      if (!groupDetails.$hasChildrenGroups) {
+        me.expandedGroupsWithDataChildren[group] = true;
+        me.expandedGroupsWithDataChildrenForFiltering[group] = true;
+      }
+
+      const groupData = me.getGroupExpandedChildrenForFiltering(group);
+
+      me.displayedData.splice(rowIndex + 1, 0, ...groupData);
+      me.rowGroupExpanded.push(group);
+      me.updateIndexes();
+    },
+
+    expandAll() {
+      const me = this;
+
+      me.prevAction = '';
+
+      me.rowGroupExpanded = () => {
+        return true;
+      }
+
+      me.rowGroupExpanded = [];
+
+      for (const group in me.groupDetails) {
+        const groupDetails = me.groupDetails[group];
+
+        me.expandedGroups[group] = true;
+        me.rowGroupExpanded.push(group);
+        groupDetails.expanded = true;
+
+        if (!groupDetails.$hasChildrenGroups) {
+          me.expandedGroupsWithDataChildren[group] = true;
+        }
+      }
+
+      me.generateDisplayedGroupedData();
+      me.setIndexAndItemsMaps();
+    },
+
+    toggleExpand(group) {
+      const me = this;
+      const groupDetails = me.groupDetails[group];
+
+      if (groupDetails.expanded) {
+        me.collapse(group);
+      } else {
+        me.expand(group);
+      }
+    },
+
+    collapse(group) {
+      const me = this;
+      const groupData = me.getGroupExpandedChildren(group);
+      const groupDetails = me.groupDetails[group];
+      const rowIndex = me.idRowIndexesMap.get(groupDetails.id);
+
+      groupDetails.expanded = false;
+      delete me.expandedGroups[group];
+      if (!groupDetails.$hasChildrenGroups) {
+        delete me.expandedGroupsWithDataChildren[group];
+      }
+
+      me.displayedData.splice(rowIndex + 1, groupData.length);
+      me.rowGroupExpanded = me.rowGroupExpanded.filter(value => value !== group);
+
+      me.updateIndexes();
+    },
+
+    collapseForFiltering(group) {
+      const me = this;
+      const groupDetails = me.groupDetailsForFiltering[group];
+      const groupData = me.getGroupExpandedChildrenForFiltering(group);
+      const rowIndex = me.idRowIndexesMap.get(groupDetails.id);
+
+      groupDetails.expanded = false;
+      delete me.expandedGroups[group];
+      if (!groupDetails.$hasChildrenGroups) {
+        delete me.expandedGroupsWithDataChildren[group];
+        delete me.expandedGroupsWithDataChildrenForFiltering[group];
+      }
+
+      me.displayedData.splice(rowIndex + 1, groupData.length);
+      me.rowGroupExpanded = me.rowGroupExpanded.filter(value => value !== group);
+
+      me.updateIndexes();
+    },
+
+    collapseAll() {
+      const me = this;
+
+      me.prevAction = '';
+
+      me.rowGroupExpanded = () => {
+        return false;
+      }
+
+      me.rowGroupExpanded = [];
+
+      for (const group in me.groupDetails) {
+        me.expandedGroups[group] = false;
+        me.groupDetails[group].expanded = false;
+      }
+
+      me.generateDisplayedGroupedData();
+      me.setIndexAndItemsMaps();
+    },
+
+    getGroupExpandedChildren(group, groupData = []) {
+      const me = this;
+      const groupDetails = me.groupDetails[group];
+      let groupChildren = me.groupsChildren[group].slice();
+
+      if (!groupDetails.$hasChildrenGroups && me.sorters.length) {
+        groupChildren = me.sortPieceOfData(groupChildren);
+      } else {
+        groupChildren.sort((groupA, groupB) => {
+          switch (me.defaultRowGroupSort) {
+            case 'asc-amount':
+              return groupA.amount - groupB.amount;
+            case 'desc-amount':
+              return groupB.amount - groupA.amount;
+          }
+        });
+      }
+
+      groupChildren.forEach(item => {
+        groupData.push(item);
+        if (item.$isGroupRow && item.expanded) {
+          const itemGroup = item.$rowGroupValue;
+
+          me.getGroupExpandedChildren(itemGroup, groupData);
+        }
+      });
+
+      return groupData;
+    },
+
+    getGroupExpandedChildrenForFiltering(group, groupData = []) {
+      const me = this;
+      const groupDetails = me.groupDetailsForFiltering[group];
+      let groupChildren = me.groupsChildrenForFiltering[group].slice();
+
+      if (!groupDetails.$hasChildrenGroups && me.sorters.length) {
+        groupChildren = me.sortPieceOfData(groupChildren);
+      }
+
+      groupChildren.forEach(item => {
+        groupData.push(item);
+        if (item.$isGroupRow && item.expanded) {
+          const itemGroup = item.$rowGroupValue;
+
+          me.getGroupExpandedChildrenForFiltering(itemGroup, groupData);
+        }
+      });
+
+      return groupData;
+    },
+
+    reConfigRowGroups(rowGroups) {
+      const me = this;
+      const {
+        sorters,
+        filters
+      } = me;
+
+      me.setRowGroups(rowGroups);
+
+      me.prevAction = '';
+
+      me.rowGroupExpanded = [];
+      me.expandedGroups = {};
+      delete me.groupsChildren;
+      if (rowGroups.length === 0) {
+        me.clearGroups();
+        if (!(sorters.length || filters.length)) {
+          delete me.displayedData;
+        } else {
+          // Requires resort and refilter because sorted and filtered data will be different for grouping.
+          if (filters.length) {
+            me.reFilter(false);
+          }
+
+          if (sorters.length) {
+            me.reSort();
+          }
+        }
+      } else {
+        if (filters.length) {
+          // TODO
+          me.set$rowGroupValue();
+          me.generateGroupsInfo();
+          me.sortGroups();
+
+          me.rowGroupDataForFiltering();
+          me.sortGroupsForFiltering();
+          me.generateDisplayedGroupedDataForFiltering();
+          me.updateIndexes();
+        } else {
+          me.set$rowGroupValue();
+          me.generateGroupsInfo();
+          me.sortGroups();
+          me.generateDisplayedGroupedData();
+        }
+      }
+
+      //??? Maybe bug, maybe it requires to test sorters.length
+      if (!filters.length || !rowGroups.length) {
+        me.setIndexAndItemsMaps();
+      }
+    },
+
+    setRowGroups(rowGroups) {
+      this.rowGroups = rowGroups;
+    },
+
+    getGroupDataForFiltering() {
+      const me = this;
+      const sortedData = me.displayedData.slice();
+
+      for (const group in me.expandedGroupsWithDataChildrenForFiltering) {
+        if (me.isParentCollapsed(group)) {
+          continue;
+        }
+
+        const groupData = me.groupsChildrenForFiltering[group].slice();
+        const groupDetails = me.groupDetailsForFiltering[group];
+        const rowIndex = me.idRowIndexesMap.get(groupDetails.id);
+
+        sortedData.splice(rowIndex + 1, groupData.length, ...groupData);
+      }
+
+      return sortedData;
+    },
+  }
+
+  Object.assign(Fancy.Store.prototype, RowGroup);
+
+})();
