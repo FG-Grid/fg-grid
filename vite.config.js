@@ -85,6 +85,63 @@ export {
   Grid$200 as Grid
 }`,
         plugins: [terser()]
+      },{
+        format: 'cjs',
+        name: 'Fancy',
+        entryFileNames: 'fg-grid.js',
+        dir: 'dist',
+        strict: false,
+        banner: `(function (root, factory) {
+  if (typeof exports === 'object' && typeof module === 'object') {
+    // CommonJS
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD
+    define([], factory);
+  } else if (typeof exports === 'object') {
+    // CommonJS-like environments
+    exports["Fancy"] = factory();
+  } else {
+    // Browser globals (root is window)
+    root["Fancy"] = factory();
+  }
+})(typeof self !== 'undefined' ? self : this, function () {
+`,
+        footer: `
+  return Fancy;
+});`,
+        globals: {
+          window: 'self'
+        }
+      },{
+        format: 'cjs',
+        name: 'Fancy',
+        entryFileNames: 'fg-grid.min.js',
+        dir: 'dist',
+        strict: false,
+        banner: `(function (root, factory) {
+  if (typeof exports === 'object' && typeof module === 'object') {
+    // CommonJS
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD
+    define([], factory);
+  } else if (typeof exports === 'object') {
+    // CommonJS-like environments
+    exports["Fancy"] = factory();
+  } else {
+    // Browser globals (root is window)
+    root["Fancy"] = factory();
+  }
+})(typeof self !== 'undefined' ? self : this, function () {
+`,
+        footer: `
+  return Fancy;
+});`,
+        globals: {
+          window: 'self'
+        },
+        plugins: [terser()]
       }]
     }
   }

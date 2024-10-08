@@ -1,3 +1,19 @@
+(function (root, factory) {
+  if (typeof exports === 'object' && typeof module === 'object') {
+    // CommonJS
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD
+    define([], factory);
+  } else if (typeof exports === 'object') {
+    // CommonJS-like environments
+    exports["Fancy"] = factory();
+  } else {
+    // Browser globals (root is window)
+    root["Fancy"] = factory();
+  }
+})(typeof self !== 'undefined' ? self : this, function () {
+
 const Fancy$1 = {
   version: '0.2.5'
 };
@@ -6187,9 +6203,5 @@ Fancy.format = {
 
 })();
 
-require('../styles/fg-grid.css');
-        
-module.exports = {
-  Fancy,
-  Grid: Fancy.Grid
-};
+  return Fancy;
+});
