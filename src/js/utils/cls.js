@@ -1,6 +1,7 @@
 Fancy.cls = {
   HIDDEN: 'fg-hidden',
   GRID: 'fg-grid',
+  TOUCH: 'fg-touch',
 
   // Header
   HEADER: 'fg-header',

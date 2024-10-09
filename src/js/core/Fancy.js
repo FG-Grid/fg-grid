@@ -1,5 +1,6 @@
 const Fancy = {
-  version: '0.2.5'
+  version: '0.2.6',
+  isTouchDevice: 'ontouchstart' in window
 };
 
-window.Fancy = Fancy;
+window.Fancy = window.Fancy || Fancy;

@@ -42,7 +42,7 @@
   }
 
   const FancySignText = {
-    //'=': "Clear",
+    '=': "Clear",
     '=': "Contains",
     '!=': "Not Contains",
     '==': "Equals",

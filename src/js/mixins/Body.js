@@ -503,7 +503,7 @@
         columnStart = columnIndex;
       }
 
-      //Update Header Cells
+      // Update Header Cells
       for (let i = columnStart; i <= columnEnd; i++) {
         const column = me.columns[i];
 
@@ -524,7 +524,7 @@
         }
       }
 
-      //Update Body Cells
+      // Update Body Cells
       me.renderedRowsIdMap.forEach((rowEl, id) => {
         const cells = rowEl.querySelectorAll(`.${CELL}`);
         cells.forEach(cell => {

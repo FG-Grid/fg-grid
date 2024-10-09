@@ -15,10 +15,11 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.2.5'
+  version: '0.2.6',
+  isTouchDevice: 'ontouchstart' in window
 };
 
-window.Fancy = Fancy$1;
+window.Fancy = window.Fancy || Fancy$1;
 
 Fancy.debounce = (func, delay) => {
   let timeoutId;
@@ -47,7 +48,7 @@ Fancy.svg = {
     '<svg viewBox="0 0 16 16" style="shape-rendering: geometricprecision;">',
       '<path fill-rule="evenodd" fill="currentColor" d="M5 3.505C5 3.226 5.214 3 5.505 3h.99c.279 0 .505.214.505.505v.99A.497.497 0 0 1 6.495 5h-.99A.497.497 0 0 1 5 4.495v-.99zm4 0C9 3.226 9.214 3 9.505 3h.99c.279 0 .505.214.505.505v.99a.497.497 0 0 1-.505.505h-.99A.497.497 0 0 1 9 4.495v-.99zm-4 4C5 7.226 5.214 7 5.505 7h.99c.279 0 .505.214.505.505v.99A.497.497 0 0 1 6.495 9h-.99A.497.497 0 0 1 5 8.495v-.99zm4 0C9 7.226 9.214 7 9.505 7h.99c.279 0 .505.214.505.505v.99a.497.497 0 0 1-.505.505h-.99A.497.497 0 0 1 9 8.495v-.99zm-4 4c0-.279.214-.505.505-.505h.99c.279 0 .505.214.505.505v.99a.497.497 0 0 1-.505.505h-.99A.497.497 0 0 1 5 12.495v-.99zm4 0c0-.279.214-.505.505-.505h.99c.279 0 .505.214.505.505v.99a.497.497 0 0 1-.505.505h-.99A.497.497 0 0 1 9 12.495v-.99z"></path>',
     '</svg>'
-  ],
+  ].join(''),
   remove: [
     '<svg viewBox="0 0 16 16" style="shape-rendering: geometricprecision;">',
       '<path fill-rule="evenodd" fill="currentColor" d="M3.71428571,7 C3.32,7 3,7.224 3,7.5 L3,8.5 C3,8.776 3.32,9 3.71428571,9 L12.2857143,9 C12.68,9 13,8.776 13,8.5 L13,7.5 C13,7.224 12.68,7 12.2857143,7 L3.71428571,7 Z"></path>',
@@ -83,6 +84,7 @@ Fancy.svg = {
 Fancy.cls = {
   HIDDEN: 'fg-hidden',
   GRID: 'fg-grid',
+  TOUCH: 'fg-touch',
 
   // Header
   HEADER: 'fg-header',
@@ -1766,7 +1768,6 @@ Fancy.format = {
         }
       } else {
         if (filters.length) {
-          // TODO
           me.set$rowGroupValue();
           me.generateGroupsInfo();
           me.sortGroups();
@@ -2054,12 +2055,13 @@ Fancy.format = {
 
       me.calcMaxScrollTop();
       me.calcViewRange();
+
+      me.initResizeObserver();
     }
 
     deltaChange(delta) {
       const me = this;
 
-      //let scrollTop = me.scrollTop + (delta > 0 ? -me.deltaRowHeight : me.deltaRowHeight);
       let scrollTop = me.scrollTop - delta;
 
       if (scrollTop < 0) {
@@ -2077,7 +2079,6 @@ Fancy.format = {
     horizontalDeltaChange(delta){
       const me = this;
 
-      //let scrollLeft = me.scrollLeft + (delta > 0 ? -me.deltaRowHeight : me.deltaRowHeight);
       let scrollLeft = me.scrollLeft - delta;
 
       if (scrollLeft < 0) {
@@ -2526,6 +2527,22 @@ Fancy.format = {
 
       return width;
     }
+
+    initResizeObserver(){
+      const me = this;
+      const grid = me.grid;
+
+      me.resizeObserver = new ResizeObserver((entries) => {
+        if(me.grid.checkSize()) {
+          me.generateNewRange();
+          grid.reCalcColumnsPositions();
+          grid.updateWidth();
+          grid.updateCellPositions();
+        }
+      });
+
+      me.resizeObserver.observe(me.grid.containerEl);
+    }
   }
 
   Fancy.Scroller = Scroller;
@@ -2543,7 +2560,8 @@ Fancy.format = {
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
-    ANIMATE_CELLS_POSITION
+    ANIMATE_CELLS_POSITION,
+    TOUCH
   } = Fancy.cls;
 
   class Grid {
@@ -2617,6 +2635,10 @@ Fancy.format = {
 
       if(me.cellsRightBorder){
         gridEl.classList.add(GRID_CELLS_RIGHT_BORDER);
+      }
+
+      if(Fancy.isTouchDevice){
+        gridEl.classList.add(TOUCH);
       }
 
       gridEl.classList.add('fg-theme-' + me.theme);
@@ -2975,7 +2997,6 @@ Fancy.format = {
       me.scroller.generateNewRange(false);
       me.reSetVisibleHeaderColumnsIndex();
       me.reSetVisibleBodyColumnsIndex();
-      // Add removeColumn method
       me.reCalcColumnsPositions();
     }
 
@@ -2998,13 +3019,24 @@ Fancy.format = {
 
     checkSize(){
       const me = this;
+      let changed = false;
 
       if(me.width && me.height);
 
       const rect = me.containerEl.getBoundingClientRect();
 
+      if(me.width !== rect.width){
+        changed = true;
+      }
+
+      if(me.height !== rect.height){
+        changed = true;
+      }
+
       me.width = rect.width;
       me.height = rect.height;
+
+      return changed;
     }
 
     getColumn(index){
@@ -4140,7 +4172,7 @@ Fancy.format = {
         columnStart = columnIndex;
       }
 
-      //Update Header Cells
+      // Update Header Cells
       for (let i = columnStart; i <= columnEnd; i++) {
         const column = me.columns[i];
 
@@ -4161,7 +4193,7 @@ Fancy.format = {
         }
       }
 
-      //Update Body Cells
+      // Update Body Cells
       me.renderedRowsIdMap.forEach((rowEl, id) => {
         const cells = rowEl.querySelectorAll(`.${CELL}`);
         cells.forEach(cell => {
@@ -5925,7 +5957,7 @@ Fancy.format = {
   };
 
   const FancySignText = {
-    //'=': "Clear",
+    '=': "Clear",
     '=': "Contains",
     '!=': "Not Contains",
     '==': "Equals",

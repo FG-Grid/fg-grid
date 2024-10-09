@@ -717,7 +717,6 @@
         }
       } else {
         if (filters.length) {
-          // TODO
           me.set$rowGroupValue();
           me.generateGroupsInfo();
           me.sortGroups();

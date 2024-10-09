@@ -9,7 +9,8 @@
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
-    ANIMATE_CELLS_POSITION
+    ANIMATE_CELLS_POSITION,
+    TOUCH
   } = Fancy.cls;
 
   class Grid {
@@ -83,6 +84,10 @@
 
       if(me.cellsRightBorder){
         gridEl.classList.add(GRID_CELLS_RIGHT_BORDER);
+      }
+
+      if(Fancy.isTouchDevice){
+        gridEl.classList.add(TOUCH);
       }
 
       gridEl.classList.add('fg-theme-' + me.theme);
@@ -441,7 +446,6 @@
       me.scroller.generateNewRange(false);
       me.reSetVisibleHeaderColumnsIndex();
       me.reSetVisibleBodyColumnsIndex();
-      // Add removeColumn method
       me.reCalcColumnsPositions();
     }
 
@@ -464,6 +468,7 @@
 
     checkSize(){
       const me = this;
+      let changed = false;
 
       if(me.width && me.height){
         //return;
@@ -471,8 +476,18 @@
 
       const rect = me.containerEl.getBoundingClientRect();
 
+      if(me.width !== rect.width){
+        changed = true;
+      }
+
+      if(me.height !== rect.height){
+        changed = true;
+      }
+
       me.width = rect.width;
       me.height = rect.height;
+
+      return changed;
     }
 
     getColumn(index){

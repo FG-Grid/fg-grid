@@ -39,12 +39,13 @@
 
       me.calcMaxScrollTop();
       me.calcViewRange();
+
+      me.initResizeObserver();
     }
 
     deltaChange(delta) {
       const me = this;
 
-      //let scrollTop = me.scrollTop + (delta > 0 ? -me.deltaRowHeight : me.deltaRowHeight);
       let scrollTop = me.scrollTop - delta;
 
       if (scrollTop < 0) {
@@ -62,7 +63,6 @@
     horizontalDeltaChange(delta){
       const me = this;
 
-      //let scrollLeft = me.scrollLeft + (delta > 0 ? -me.deltaRowHeight : me.deltaRowHeight);
       let scrollLeft = me.scrollLeft - delta;
 
       if (scrollLeft < 0) {
@@ -510,6 +510,22 @@
       }
 
       return width;
+    }
+
+    initResizeObserver(){
+      const me = this;
+      const grid = me.grid;
+
+      me.resizeObserver = new ResizeObserver((entries) => {
+        if(me.grid.checkSize()) {
+          me.generateNewRange();
+          grid.reCalcColumnsPositions();
+          grid.updateWidth();
+          grid.updateCellPositions();
+        }
+      });
+
+      me.resizeObserver.observe(me.grid.containerEl);
     }
   }
 
