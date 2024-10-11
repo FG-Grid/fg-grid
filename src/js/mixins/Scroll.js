@@ -11,20 +11,23 @@
 
     onMouseWheel(event) {
       const me = this;
-
-      event.preventDefault();
+      let changed = false;
 
       me.wheelScrolling = true;
 
       if(Math.abs(event.deltaY) > Math.abs(event.deltaX)){
         // Vertical scroll
-        me.scroller.deltaChange(event.wheelDelta);
+        changed = me.scroller.deltaChange(event.wheelDelta);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
       }
       else{
         // Horizontal scroll
-        me.scroller.horizontalDeltaChange(event.wheelDelta);
+        changed = me.scroller.horizontalDeltaChange(event.wheelDelta);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
+      }
+
+      if(changed){
+        event.preventDefault();
       }
 
       cancelAnimationFrame(me.animationRenderId);

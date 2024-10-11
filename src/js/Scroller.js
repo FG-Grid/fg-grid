@@ -46,6 +46,7 @@
     deltaChange(delta) {
       const me = this;
 
+      let changed = false;
       let scrollTop = me.scrollTop - delta;
 
       if (scrollTop < 0) {
@@ -56,13 +57,19 @@
         scrollTop = me.maxScrollTop;
       }
 
+      if(me.scrollTop !== scrollTop){
+        changed = true;
+      }
       me.scrollTop = scrollTop;
       me.verticalScrollContainerEl.scrollTop = scrollTop;
+
+      return changed;
     }
 
     horizontalDeltaChange(delta){
       const me = this;
 
+      let changed = false;
       let scrollLeft = me.scrollLeft - delta;
 
       if (scrollLeft < 0) {
@@ -73,15 +80,28 @@
         scrollLeft = me.maxScrollTop;
       }
 
+      if(me.horizontalScrollContainerEl.scrollLeft !== scrollLeft){
+        changed = true;
+      }
       me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
       me.scrollLeft = me.horizontalScrollContainerEl.scrollLeft;
       //me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
+
+      return changed;
     }
 
     calcVisibleRows() {
       const me = this;
+      let requiresRenderMoreRows = false;
+      const newBufferRows = Math.ceil(me.grid.height / me.grid.rowHeight) + me.extraBufferRows;
 
-      me.bufferRows = Math.ceil(me.grid.height / me.grid.rowHeight) + me.extraBufferRows;
+      if(me.bufferRows < newBufferRows){
+        requiresRenderMoreRows = true;
+      }
+
+      me.bufferRows = newBufferRows;
+
+      return requiresRenderMoreRows;
     }
 
     calcMaxScrollTop() {
@@ -518,14 +538,38 @@
 
       me.resizeObserver = new ResizeObserver((entries) => {
         if(me.grid.checkSize()) {
+          const changedBufferedRows = me.calcVisibleRows();
           me.generateNewRange();
           grid.reCalcColumnsPositions();
           grid.updateWidth();
           grid.updateCellPositions();
+
+          if(changedBufferedRows){
+            grid.renderVisibleRows();
+          }
         }
       });
 
       me.resizeObserver.observe(me.grid.containerEl);
+    }
+
+    isColumnVisible(checkColumn){
+      const me = this;
+
+      if(!checkColumn){
+        return false;
+      }
+
+      for(let i = 0, iL = me.columnsViewRange.length;i<iL;i++){
+        const columnIndex = me.columnsViewRange[i];
+        const column = me.grid.columns[columnIndex];
+
+        if(column.id === checkColumn.id){
+          return true;
+        }
+      }
+
+      return false;
     }
   }
 

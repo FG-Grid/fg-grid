@@ -220,6 +220,8 @@
       let aggregations = [];
 
       if(config.columns){
+        config.columns = Fancy.deepClone(config.columns);
+
         let left = 0;
         let newRowGroupsOrder = false;
 
@@ -270,33 +272,15 @@
         }
 
         config.columns.forEach(column => {
-          switch (column.type){
-            case 'boolean':
-              column.render = Fancy.render.boolean;
-              break;
-            case 'currency':
-              column.format = Fancy.format.currency;
-              column.type = 'number';
-              break;
+          switch(column.type){
             case 'order':
-              column.sortable = false;
-              column.render = Fancy.render.order;
-              column.width = column.width || 45;
-              column.resizable = false;
-              me.columnOrder = column;
               if(rowGroups.length || config.rowGroupBar){
                 console.error('Order column is not supported for row grouping');
               }
               break;
           }
 
-          if(column.width === undefined){
-            column.width = this.defaultColumnWidth;
-          }
-
-          if(column.minWidth && column.width < column.minWidth){
-            column.width = column.minWidth;
-          }
+          me.prepareColumn(column, config.defaults);
 
           if(column.checkboxSelection){
             config.checkboxSelection = true;
@@ -312,18 +296,6 @@
           column.left = left;
           if(!column.hidden){
             left += column.width;
-          }
-
-          if(!column.title){
-            column.title = capitalizeFirstLetter(column.index || '');
-          }
-
-          if(config.defaults){
-            Object.keys(config.defaults).forEach(key => {
-              if(column[key] === undefined){
-                column[key] = config.defaults[key];
-              }
-            });
           }
         });
       }
@@ -369,93 +341,6 @@
       }, 0);
     }
 
-    showColumn(column, animate){
-      const me = this;
-
-      if(animate){
-        me.animatingColumnsPosition = true;
-        me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
-      }
-
-      delete column.hidden;
-
-      me.scroller.generateNewRange();
-      me.reCalcColumnsPositions();
-      me.updateWidth();
-      me.updateCellPositions();
-
-      if(animate){
-        setTimeout(() => {
-          me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
-          delete me.animatingColumnsPosition;
-        }, 300);
-      }
-    }
-
-    hideColumn(column, animate){
-      const me = this;
-
-      if(!me.isPossibleToHideColumn()){
-        console.warn('Hiding column was prevented because it requires at least 1 visible column');
-        return false;
-      }
-
-      if(animate && !me.animatingColumnsPosition){
-        me.animatingColumnsPosition = true;
-        me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
-      }
-
-      column.hidden = true;
-
-      const {
-        columnsToRemove
-      } = me.scroller.generateNewRange();
-      me.reCalcColumnsPositions();
-      me.updateWidth();
-      me.updateCellPositions();
-
-      if(animate && me.animatingColumnsPosition){
-        setTimeout(() => {
-          me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
-          delete me.animatingColumnsPosition;
-        }, 300);
-      }
-
-      return {
-        columnIndex: columnsToRemove[0]
-      };
-    }
-
-    removeColumn(column){
-      const me = this;
-
-      const {
-        columnIndex: hiddenColumnIndex
-      } = me.hideColumn(column, false);
-
-      me.columns.splice(hiddenColumnIndex, 1);
-      delete column.elFilter;
-      delete column.elMenu;
-      delete column.elSortAsc;
-      delete column.elSortDesc;
-      delete me.$rowGroupColumn.elSortOrder;
-      delete me.$rowGroupColumn.filterCellEl;
-      delete me.$rowGroupColumn.headerCellEl;
-      delete me.$rowGroupColumn.left;
-
-      me.scroller.generateNewRange(false);
-      me.reSetVisibleHeaderColumnsIndex();
-      me.reSetVisibleBodyColumnsIndex();
-      me.reCalcColumnsPositions();
-    }
-
-    isPossibleToHideColumn(){
-      const me = this;
-      const numOfHiddenColumns = me.columns.reduce((sum, column) => sum + (column.hidden? 1: 0), 0);
-
-      return me.columns.length - numOfHiddenColumns !== 1;
-    }
-
     reCalcColumnsPositions(){
       const me = this;
 
@@ -488,51 +373,6 @@
       me.height = rect.height;
 
       return changed;
-    }
-
-    getColumn(index){
-      const me = this;
-
-      return me.columns.find(column => column.index === index);
-    }
-
-    generateColumnIds(columns){
-      const me = this;
-
-      me.columnIdsMap = new Map();
-      me.columnIdsSeedMap = new Map();
-
-      columns.forEach(column => {
-        if(!column.id){
-          const index = (column.index || column.title || '').toLocaleLowerCase();
-          let seed = me.columnIdsSeedMap.get(index);
-
-          if(seed === undefined){
-            column.id = index || me.getAutoColumnIdSeed();
-          }
-          else{
-            column.id = `${index}-${seed}`;
-          }
-
-          seed++;
-          me.columnIdsSeedMap.set(index, seed);
-        }
-
-        me.columnIdsMap.set(column.id, column);
-      });
-    }
-
-    getAutoColumnIdSeed(){
-      const me = this;
-
-      if(me.columnIdSeed === undefined){
-        me.columnIdSeed = 0;
-      }
-      else{
-        me.columnIdSeed++;
-      }
-
-      return me.columnIdSeed;
     }
 
     setData(data){
@@ -568,9 +408,5 @@
 
   window.Grid = Grid;
   Fancy.Grid = Grid;
-
-  function capitalizeFirstLetter(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
 
 })();

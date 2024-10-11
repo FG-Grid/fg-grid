@@ -144,6 +144,7 @@
   outline: 0px;
   border: 1px solid #b7b7b7;
   border-width: 1px 1px 1px 0px;
+  border-radius: 0px;
   font-size: var(--filter-field-font-size);
   color: var(--filter-field-cell-color);
 }

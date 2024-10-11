@@ -14,6 +14,7 @@ import './store/mixins/Selection.js';
 
 import './Scroller.js';
 import './Grid.js';
+import './mixins/Column.js';
 import './mixins/Header.js';
 import './mixins/Body.js';
 import './mixins/Scroll.js';

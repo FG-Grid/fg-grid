@@ -1,6 +1,27 @@
 const Fancy$1 = {
-  version: '0.2.6',
-  isTouchDevice: 'ontouchstart' in window
+  version: '0.2.7',
+  isTouchDevice: 'ontouchstart' in window,
+  capitalizeFirstLetter(str){
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  },
+  deepClone(obj) {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => Fancy$1.deepClone(item));
+    }
+
+    const clonedObj = {};
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        clonedObj[key] = Fancy$1.deepClone(obj[key]);
+      }
+    }
+
+    return clonedObj;
+  }
 };
 
 window.Fancy = window.Fancy || Fancy$1;
@@ -2046,6 +2067,7 @@ Fancy.format = {
     deltaChange(delta) {
       const me = this;
 
+      let changed = false;
       let scrollTop = me.scrollTop - delta;
 
       if (scrollTop < 0) {
@@ -2056,13 +2078,19 @@ Fancy.format = {
         scrollTop = me.maxScrollTop;
       }
 
+      if(me.scrollTop !== scrollTop){
+        changed = true;
+      }
       me.scrollTop = scrollTop;
       me.verticalScrollContainerEl.scrollTop = scrollTop;
+
+      return changed;
     }
 
     horizontalDeltaChange(delta){
       const me = this;
 
+      let changed = false;
       let scrollLeft = me.scrollLeft - delta;
 
       if (scrollLeft < 0) {
@@ -2073,15 +2101,28 @@ Fancy.format = {
         scrollLeft = me.maxScrollTop;
       }
 
+      if(me.horizontalScrollContainerEl.scrollLeft !== scrollLeft){
+        changed = true;
+      }
       me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
       me.scrollLeft = me.horizontalScrollContainerEl.scrollLeft;
       //me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
+
+      return changed;
     }
 
     calcVisibleRows() {
       const me = this;
+      let requiresRenderMoreRows = false;
+      const newBufferRows = Math.ceil(me.grid.height / me.grid.rowHeight) + me.extraBufferRows;
 
-      me.bufferRows = Math.ceil(me.grid.height / me.grid.rowHeight) + me.extraBufferRows;
+      if(me.bufferRows < newBufferRows){
+        requiresRenderMoreRows = true;
+      }
+
+      me.bufferRows = newBufferRows;
+
+      return requiresRenderMoreRows;
     }
 
     calcMaxScrollTop() {
@@ -2518,14 +2559,38 @@ Fancy.format = {
 
       me.resizeObserver = new ResizeObserver((entries) => {
         if(me.grid.checkSize()) {
+          const changedBufferedRows = me.calcVisibleRows();
           me.generateNewRange();
           grid.reCalcColumnsPositions();
           grid.updateWidth();
           grid.updateCellPositions();
+
+          if(changedBufferedRows){
+            grid.renderVisibleRows();
+          }
         }
       });
 
       me.resizeObserver.observe(me.grid.containerEl);
+    }
+
+    isColumnVisible(checkColumn){
+      const me = this;
+
+      if(!checkColumn){
+        return false;
+      }
+
+      for(let i = 0, iL = me.columnsViewRange.length;i<iL;i++){
+        const columnIndex = me.columnsViewRange[i];
+        const column = me.grid.columns[columnIndex];
+
+        if(column.id === checkColumn.id){
+          return true;
+        }
+      }
+
+      return false;
     }
   }
 
@@ -2755,6 +2820,8 @@ Fancy.format = {
       let aggregations = [];
 
       if(config.columns){
+        config.columns = Fancy.deepClone(config.columns);
+
         let left = 0;
         let newRowGroupsOrder = false;
 
@@ -2805,33 +2872,15 @@ Fancy.format = {
         }
 
         config.columns.forEach(column => {
-          switch (column.type){
-            case 'boolean':
-              column.render = Fancy.render.boolean;
-              break;
-            case 'currency':
-              column.format = Fancy.format.currency;
-              column.type = 'number';
-              break;
+          switch(column.type){
             case 'order':
-              column.sortable = false;
-              column.render = Fancy.render.order;
-              column.width = column.width || 45;
-              column.resizable = false;
-              me.columnOrder = column;
               if(rowGroups.length || config.rowGroupBar){
                 console.error('Order column is not supported for row grouping');
               }
               break;
           }
 
-          if(column.width === undefined){
-            column.width = this.defaultColumnWidth;
-          }
-
-          if(column.minWidth && column.width < column.minWidth){
-            column.width = column.minWidth;
-          }
+          me.prepareColumn(column, config.defaults);
 
           if(column.checkboxSelection){
             config.checkboxSelection = true;
@@ -2847,18 +2896,6 @@ Fancy.format = {
           column.left = left;
           if(!column.hidden){
             left += column.width;
-          }
-
-          if(!column.title){
-            column.title = capitalizeFirstLetter(column.index || '');
-          }
-
-          if(config.defaults){
-            Object.keys(config.defaults).forEach(key => {
-              if(column[key] === undefined){
-                column[key] = config.defaults[key];
-              }
-            });
           }
         });
       }
@@ -2904,93 +2941,6 @@ Fancy.format = {
       }, 0);
     }
 
-    showColumn(column, animate){
-      const me = this;
-
-      if(animate){
-        me.animatingColumnsPosition = true;
-        me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
-      }
-
-      delete column.hidden;
-
-      me.scroller.generateNewRange();
-      me.reCalcColumnsPositions();
-      me.updateWidth();
-      me.updateCellPositions();
-
-      if(animate){
-        setTimeout(() => {
-          me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
-          delete me.animatingColumnsPosition;
-        }, 300);
-      }
-    }
-
-    hideColumn(column, animate){
-      const me = this;
-
-      if(!me.isPossibleToHideColumn()){
-        console.warn('Hiding column was prevented because it requires at least 1 visible column');
-        return false;
-      }
-
-      if(animate && !me.animatingColumnsPosition){
-        me.animatingColumnsPosition = true;
-        me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
-      }
-
-      column.hidden = true;
-
-      const {
-        columnsToRemove
-      } = me.scroller.generateNewRange();
-      me.reCalcColumnsPositions();
-      me.updateWidth();
-      me.updateCellPositions();
-
-      if(animate && me.animatingColumnsPosition){
-        setTimeout(() => {
-          me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
-          delete me.animatingColumnsPosition;
-        }, 300);
-      }
-
-      return {
-        columnIndex: columnsToRemove[0]
-      };
-    }
-
-    removeColumn(column){
-      const me = this;
-
-      const {
-        columnIndex: hiddenColumnIndex
-      } = me.hideColumn(column, false);
-
-      me.columns.splice(hiddenColumnIndex, 1);
-      delete column.elFilter;
-      delete column.elMenu;
-      delete column.elSortAsc;
-      delete column.elSortDesc;
-      delete me.$rowGroupColumn.elSortOrder;
-      delete me.$rowGroupColumn.filterCellEl;
-      delete me.$rowGroupColumn.headerCellEl;
-      delete me.$rowGroupColumn.left;
-
-      me.scroller.generateNewRange(false);
-      me.reSetVisibleHeaderColumnsIndex();
-      me.reSetVisibleBodyColumnsIndex();
-      me.reCalcColumnsPositions();
-    }
-
-    isPossibleToHideColumn(){
-      const me = this;
-      const numOfHiddenColumns = me.columns.reduce((sum, column) => sum + (column.hidden? 1: 0), 0);
-
-      return me.columns.length - numOfHiddenColumns !== 1;
-    }
-
     reCalcColumnsPositions(){
       const me = this;
 
@@ -3021,51 +2971,6 @@ Fancy.format = {
       me.height = rect.height;
 
       return changed;
-    }
-
-    getColumn(index){
-      const me = this;
-
-      return me.columns.find(column => column.index === index);
-    }
-
-    generateColumnIds(columns){
-      const me = this;
-
-      me.columnIdsMap = new Map();
-      me.columnIdsSeedMap = new Map();
-
-      columns.forEach(column => {
-        if(!column.id){
-          const index = (column.index || column.title || '').toLocaleLowerCase();
-          let seed = me.columnIdsSeedMap.get(index);
-
-          if(seed === undefined){
-            column.id = index || me.getAutoColumnIdSeed();
-          }
-          else {
-            column.id = `${index}-${seed}`;
-          }
-
-          seed++;
-          me.columnIdsSeedMap.set(index, seed);
-        }
-
-        me.columnIdsMap.set(column.id, column);
-      });
-    }
-
-    getAutoColumnIdSeed(){
-      const me = this;
-
-      if(me.columnIdSeed === undefined){
-        me.columnIdSeed = 0;
-      }
-      else {
-        me.columnIdSeed++;
-      }
-
-      return me.columnIdSeed;
     }
 
     setData(data){
@@ -3102,9 +3007,370 @@ Fancy.format = {
   window.Grid = Grid;
   Fancy.Grid = Grid;
 
-  function capitalizeFirstLetter(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
+})();
+
+(()=>{
+
+  const  {
+    ANIMATE_CELLS_POSITION,
+    CELL,
+    HEADER_CELL,
+    FILTER_BAR_CELL
+  } = Fancy.cls;
+
+  const GridMixinColumn = {
+    showColumn(column, animate){
+      const me = this;
+
+      if(animate){
+        me.animatingColumnsPosition = true;
+        me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
+      }
+
+      delete column.hidden;
+
+      me.scroller.generateNewRange();
+      me.reCalcColumnsPositions();
+      me.updateWidth();
+      me.updateCellPositions();
+
+      if(animate){
+        setTimeout(() => {
+          me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
+          delete me.animatingColumnsPosition;
+        }, 300);
+      }
+    },
+
+    hideColumn(column, animate){
+      const me = this;
+
+      if(!me.isPossibleToHideColumn()){
+        console.warn('Hiding column was prevented because it requires at least 1 visible column');
+        return false;
+      }
+
+      if(animate && !me.animatingColumnsPosition){
+        me.animatingColumnsPosition = true;
+        me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
+      }
+
+      column.hidden = true;
+
+      const {
+        columnsToRemove
+      } = me.scroller.generateNewRange();
+      me.reCalcColumnsPositions();
+      me.updateWidth();
+      me.updateCellPositions();
+
+      if(animate && me.animatingColumnsPosition){
+        setTimeout(() => {
+          me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
+          delete me.animatingColumnsPosition;
+        }, 300);
+      }
+
+      return {
+        columnIndex: columnsToRemove[0]
+      };
+    },
+
+    isPossibleToHideColumn(){
+      const me = this;
+      const numOfHiddenColumns = me.columns.reduce((sum, column) => sum + (column.hidden? 1: 0), 0);
+
+      return me.columns.length - numOfHiddenColumns !== 1;
+    },
+
+    removeColumn(column){
+      const me = this;
+
+      const {
+        columnIndex: hiddenColumnIndex
+      } = me.hideColumn(column, false);
+
+      me.columns.splice(hiddenColumnIndex, 1);
+      me.clearColumFromLinks(column);
+
+      delete me.$rowGroupColumn.elSortOrder;
+      delete me.$rowGroupColumn.filterCellEl;
+      delete me.$rowGroupColumn.headerCellEl;
+      delete me.$rowGroupColumn.left;
+
+      me.scroller.generateNewRange(false);
+      me.reSetVisibleHeaderColumnsIndex();
+      me.reSetVisibleBodyColumnsIndex();
+      me.reCalcColumnsPositions();
+    },
+
+    clearColumFromLinks(column){
+      delete column.elFilter;
+      delete column.elMenu;
+      delete column.elSortAsc;
+      delete column.elSortDesc;
+      delete column.elSortOrder;
+      delete column.filterCellEl;
+      delete column.filterField;
+      delete column.headerCellEl;
+    },
+
+    getColumn(index){
+      const me = this;
+
+      return me.columns.find(column => column.index === index);
+    },
+
+    getAutoColumnIdSeed(){
+      const me = this;
+
+      if(me.columnIdSeed === undefined){
+        me.columnIdSeed = 0;
+      }
+      else {
+        me.columnIdSeed++;
+      }
+
+      return me.columnIdSeed;
+    },
+
+    generateColumnIds(columns, updateMaps = true){
+      const me = this;
+
+      const columnIdsMap = new Map();
+      const columnIdsSeedMap = new Map();
+
+      columns.forEach(column => {
+        const index = (column.index || column.title || '').toLocaleLowerCase();
+        if(!column.id){
+          let seed = columnIdsSeedMap.get(index);
+
+          if(seed === undefined){
+            column.id = index || me.getAutoColumnIdSeed();
+            seed = 0;
+          }
+          else {
+            column.id = `${index}-${seed}`;
+          }
+
+          seed++;
+          columnIdsSeedMap.set(index, seed);
+        }
+        else {
+          let seed = columnIdsSeedMap.get(index);
+
+          if(seed === undefined){
+            seed = 0;
+          }
+
+          seed++;
+          columnIdsSeedMap.set(index, seed);
+        }
+
+        columnIdsMap.set(column.id, column);
+      });
+
+      if(updateMaps){
+        me.columnIdsMap = columnIdsMap;
+        me.columnIdsSeedMap = columnIdsSeedMap;
+      }
+
+      return {
+        columnIdsMap,
+        columnIdsSeedMap
+      }
+    },
+
+    setColumns(columns){
+      const me = this;
+
+      columns = Fancy.deepClone(columns);
+
+      me.animatingColumnsPosition = true;
+      me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
+
+      me.$setColumns(columns);
+
+      me.scroller.generateNewRange(false);
+      me.reCalcColumnsPositions();
+      me.updateWidth();
+
+      me.terminateNotExistedCells();
+      me.reSetVisibleHeaderColumnsIndex();
+      me.reSetVisibleBodyColumnsIndex();
+
+      me.renderMissedCells();
+      me.updateCellPositions();
+
+      setTimeout(() => {
+        me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
+        delete me.animatingColumnsPosition;
+      }, 300);
+    },
+
+    renderMissedCells(){
+      const me = this;
+      let columnStart = me.scroller.columnViewStart;
+      let columnEnd = me.scroller.columnViewEnd;
+
+      const columnIndexes = [];
+
+      for(let i = columnStart; i <= columnEnd; i++){
+        const column = me.columns[i];
+
+        if(column.hidden){
+          continue
+        }
+
+        if(!column.headerCellEl){
+          columnIndexes.push(i);
+        }
+      }
+
+      me.addColumnCells(columnIndexes);
+    },
+
+    terminateNotExistedCells(){
+      const me = this;
+      const cells = me.headerEl.querySelectorAll(`.${HEADER_CELL}`);
+
+      cells.forEach(cell => {
+        const columnId = cell.getAttribute('col-id');
+        const column = me.columnIdsMap.get(columnId);
+        const isColumnVisible = me.scroller.isColumnVisible(column);
+
+        if(!column || !isColumnVisible){
+          cell.remove();
+          if(column && column.filterCellEl){
+            column.filterCellEl.remove();
+          }
+
+          const filterCellEl = me.filterBarEl?.querySelector?.(`.${FILTER_BAR_CELL}[col-id="${columnId}"]`);
+          filterCellEl?.remove();
+
+          const bodyCells = me.bodyEl.querySelectorAll(`.${CELL}[col-id="${columnId}"]`);
+          bodyCells.forEach(bodyCell => {
+            bodyCell.remove();
+          });
+        }
+
+        if(column && !isColumnVisible){
+          me.clearColumFromLinks(column);
+        }
+      });
+    },
+
+    $setColumns(newColumns){
+      const me = this;
+      const columnsToAdd = new Map();
+      const columnsToRemoveIds = new Set();
+
+      const {
+        columnIdsMap: newColumnsIdMap,
+        columnIdsSeedMap: newColumnsIdsSeedMap
+      } = me.generateColumnIds(newColumns, false);
+
+      me.columns.forEach(column => {
+        if(newColumnsIdMap.has(column.id)){
+          const newColumn = newColumnsIdMap.get(column.id);
+
+          if(typeof newColumn.width === 'number' && newColumn.width !== column.width){
+            column.width = newColumn.width;
+          }
+        }
+        else {
+          columnsToRemoveIds.add(column.id);
+        }
+      });
+
+      const newColumnsOrderMap = new Map();
+      newColumns.forEach((newColumn, index)=>{
+        if(!me.columnIdsMap.has(newColumn.id)){
+          me.prepareColumn(newColumn, me.defaults);
+
+          columnsToAdd.set(newColumn.id, newColumn);
+        }
+
+        newColumnsOrderMap.set(index, newColumn.id);
+      });
+
+      columnsToRemoveIds.forEach(id => {
+        const column = me.columnIdsMap.get(id);
+        const index = (column.index || column.title || '').toLocaleLowerCase();
+        me.columnIdsMap.delete(id);
+        let seed = me.columnIdsSeedMap.get(index);
+
+        if(typeof seed === 'number'){
+          seed--;
+          if(seed === 0){
+            me.columnIdsSeedMap.delete(index);
+          }
+          else {
+            me.columnIdsSeedMap.set(index, seed);
+          }
+        }
+      });
+
+      columnsToAdd.forEach((column, key) => {
+        me.columnIdsMap.set(key, column);
+        me.columnIdsSeedMap.set(key, newColumnsIdsSeedMap.get(key));
+      });
+
+      const orderedColumns = [];
+      newColumnsOrderMap.forEach((columnId, index) => {
+        const column = me.columnIdsMap.get(columnId);
+        orderedColumns[index] = column;
+      });
+
+      me.columns = orderedColumns;
+    },
+
+    prepareColumn(column, defaults = {}){
+      const me = this;
+      const store = me.store;
+
+      switch (column.type){
+        case 'boolean':
+          column.render = Fancy.render.boolean;
+          break;
+        case 'currency':
+          column.format = Fancy.format.currency;
+          column.type = 'number';
+          break;
+        case 'order':
+          column.sortable = false;
+          column.render = Fancy.render.order;
+          column.width = column.width || 45;
+          column.resizable = false;
+          me.columnOrder = column;
+
+          if(store?.rowGroups.length || me?.rowGroupBar){
+            console.error('Order column is not supported for row grouping');
+          }
+          break;
+      }
+
+      if(column.width === undefined){
+        column.width = me.defaultColumnWidth;
+      }
+
+      if(column.minWidth && column.width < column.minWidth){
+        column.width = column.minWidth;
+      }
+
+      if(!column.title){
+        column.title = Fancy.capitalizeFirstLetter(column.index || '');
+      }
+
+      Object.keys(defaults).forEach(key => {
+        if(column[key] === undefined){
+          column[key] = defaults[key];
+        }
+      });
+    }
+  };
+
+  Object.assign(Grid.prototype, GridMixinColumn);
 
 })();
 
@@ -4464,20 +4730,23 @@ Fancy.format = {
 
     onMouseWheel(event) {
       const me = this;
-
-      event.preventDefault();
+      let changed = false;
 
       me.wheelScrolling = true;
 
       if(Math.abs(event.deltaY) > Math.abs(event.deltaX)){
         // Vertical scroll
-        me.scroller.deltaChange(event.wheelDelta);
+        changed = me.scroller.deltaChange(event.wheelDelta);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
       }
       else {
         // Horizontal scroll
-        me.scroller.horizontalDeltaChange(event.wheelDelta);
+        changed = me.scroller.horizontalDeltaChange(event.wheelDelta);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
+      }
+
+      if(changed){
+        event.preventDefault();
       }
 
       cancelAnimationFrame(me.animationRenderId);
