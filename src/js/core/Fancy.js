@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '0.3.0',
+  version: '0.3.1',
   isTouchDevice: 'ontouchstart' in window,
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);

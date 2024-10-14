@@ -1,11 +1,11 @@
-import { Column, Item } from './Column';
+import { Column, DataItem } from './Column';
 
 interface GridConfig {
   renderTo?: string;
   filterBar?: boolean;
   defaults?: Column;
   columns: Column[];
-  data: Item[];
+  data: DataItem[];
   width?: number;
   height?: number;
   theme?: 'default' | 'string';
@@ -29,9 +29,10 @@ declare class Grid implements GridConfig {
   setColumns(columns: Column[]): void;
 
   columns: Column[];
-  data: Item[];
+  data: DataItem[];
 }
 
 export {
-  Grid
+  Grid,
+  GridConfig
 }

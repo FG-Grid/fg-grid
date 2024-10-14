@@ -49,6 +49,22 @@
 
     constructor(config) {
       const me = this;
+      const renderTo = config.renderTo;
+
+      if(renderTo.tagName){
+        me.containerEl = renderTo;
+      }
+      else if(typeof renderTo === 'string'){
+        me.containerEl = document.getElementById(renderTo);
+
+        if(!me.containerEl){
+          me.containerEl = document.querySelector(renderTo);
+        }
+      }
+
+      if(!me.containerEl){
+        console.error(`Could not find renderTo element`);
+      }
 
       me.actualRowsIdSet = new Set();
       me.renderedRowsIdMap = new Map();
@@ -56,9 +72,6 @@
       config = me.prepareConfig(config);
 
       Object.assign(me, config);
-
-      //me.initScroller();
-      me.containerEl = document.getElementById(me.renderTo);
 
       me.checkSize();
       me.initScroller();

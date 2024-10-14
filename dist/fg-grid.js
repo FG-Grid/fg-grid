@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.3.0',
+  version: '0.3.1',
   isTouchDevice: 'ontouchstart' in window,
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -2822,6 +2822,22 @@ Fancy.format = {
 
     constructor(config) {
       const me = this;
+      const renderTo = config.renderTo;
+
+      if(renderTo.tagName){
+        me.containerEl = renderTo;
+      }
+      else if(typeof renderTo === 'string'){
+        me.containerEl = document.getElementById(renderTo);
+
+        if(!me.containerEl){
+          me.containerEl = document.querySelector(renderTo);
+        }
+      }
+
+      if(!me.containerEl){
+        console.error(`Could not find renderTo element`);
+      }
 
       me.actualRowsIdSet = new Set();
       me.renderedRowsIdMap = new Map();
@@ -2829,9 +2845,6 @@ Fancy.format = {
       config = me.prepareConfig(config);
 
       Object.assign(me, config);
-
-      //me.initScroller();
-      me.containerEl = document.getElementById(me.renderTo);
 
       me.checkSize();
       me.initScroller();

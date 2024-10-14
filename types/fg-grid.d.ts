@@ -1,5 +1,5 @@
-import { Column }  from './grid/Column';
-import { Grid } from './grid/Grid';
+import { Column, DataItem }  from './grid/Column';
+import { Grid, GridConfig } from './grid/Grid';
 
 interface renderParams {
   item: unknown;
@@ -134,5 +134,8 @@ declare const Fancy : {
 
 export {
   Fancy,
-  Grid
+  Grid,
+  Column,
+  GridConfig,
+  DataItem
 }

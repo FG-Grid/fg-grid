@@ -1,10 +1,10 @@
-export interface Item {
+export interface DataItem {
   id?: string;
   [key: string]: unknown;
 }
 
 interface renderParams {
-  item: Item;
+  item: DataItem;
 }
 
 export interface Column {
