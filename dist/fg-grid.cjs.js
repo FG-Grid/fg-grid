@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.2.8',
+  version: '0.3.0',
   isTouchDevice: 'ontouchstart' in window,
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -2609,8 +2609,10 @@ Fancy.format = {
       me.element = element;
       me.startY = 0;
       me.startX = 0;
-      me.scrollTop = 0;
-      me.scrollLeft = 0;
+
+      me.velocityX = 0;
+      me.velocityY = 0;
+      me.lastMoveTime = 0;
 
       me.touchStartHandler = me.touchStart.bind(me);
       me.touchMoveHandler = me.touchMove.bind(me);
@@ -2630,27 +2632,111 @@ Fancy.format = {
     touchStart(e) {
       const me = this;
 
+      delete me.direction;
+
       me.startY = e.touches[0].pageY;
       me.startX = e.touches[0].pageX;
+
+      me.velocityX = 0;
+      me.velocityY = 0;
+      me.lastMoveTime = Date.now();
+
+      if (me.intervalId) {
+        clearInterval(me.intervalId);
+        delete me.intervalId;
+      }
     }
 
     touchMove(e) {
       const me = this;
-      const deltaY = e.touches[0].pageY - me.startY;
-      const deltaX = e.touches[0].pageX - me.startX;
+      const currentY = e.touches[0].pageY;
+      const currentX = e.touches[0].pageX;
+      const now = Date.now();
 
-      me.startY = e.touches[0].pageY;
-      me.startX = e.touches[0].pageX;
+      const deltaY = currentY - me.startY;
+      const deltaX = currentX - me.startX;
+      const timeDelta = now - me.lastMoveTime;
 
-      Object.assign(e, {
-        deltaX,
-        deltaY
-      });
+      // Calculating the velocity
+      me.velocityX = deltaX / timeDelta;
+      me.velocityY = deltaY / timeDelta;
+
+      // Updating coordinates for the next event
+      me.startY = currentY;
+      me.startX = currentX;
+      me.lastMoveTime = now;
+
+      if(!me.direction){
+        if(Math.abs(deltaY) > Math.abs(deltaX)){
+          me.direction = 'vertical';
+        }
+        else {
+          me.direction = 'horizontal';
+        }
+      }
+
+      if(me.direction === 'vertical'){
+        Object.assign(e, {
+          deltaX: 0,
+          deltaY
+        });
+      }
+      else {
+        Object.assign(e, {
+          deltaX,
+          deltaY: 0
+        });
+      }
 
       me.onTouchScroll(e);
     }
 
-    touchEnd() {}
+    smoothScroll() {
+      const me = this;
+      //let deceleration = 0.95; // Deceleration factor
+      //let threshold = 0.5;     // Minimum speed to stop
+
+      let deceleration = 0.98; // Deceleration factor
+      //let threshold = 0.01;     // Minimum speed to stop
+      let threshold = 0.2;     // Minimum speed to stop
+
+      let intervalDuration = 16;
+
+      me.intervalId = setInterval(() => {
+        me.velocityX *= deceleration;
+        me.velocityY *= deceleration;
+
+        if(me.direction === 'vertical'){
+          me.onTouchScroll({
+            deltaX: 0,
+            deltaY: me.velocityY * 16
+          });
+        }
+        else {
+          me.onTouchScroll({
+            deltaX: me.velocityX * 16,
+            deltaY: 0
+          });
+        }
+
+        // Continue scrolling until the speed exceeds the threshold
+        if(Math.abs(me.velocityX) <= threshold && Math.abs(me.velocityY) <= threshold){
+          //requestAnimationFrame(step);
+
+          clearInterval(me.intervalId);
+          delete me.intervalId;
+        }
+      }, intervalDuration);
+
+      //requestAnimationFrame(step);
+    }
+
+    touchEnd() {
+      const me = this;
+
+      // Smooth continuation of the scroll
+      me.smoothScroll();
+    }
 
     destroy() {
       const me = this;
@@ -2658,6 +2744,10 @@ Fancy.format = {
       me.element.removeEventListener('touchstart', me.touchStartHandler);
       me.element.removeEventListener('touchmove', me.touchMoveHandler);
       me.element.removeEventListener('touchend', me.touchEndHandler);
+
+      if (me.intervalId) {
+        clearInterval(me.intervalId);
+      }
     }
   }
 
@@ -4836,20 +4926,19 @@ Fancy.format = {
 
       me.wheelScrolling = true;
 
-      if(event.deltaY){
+      if(Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
         // Vertical scroll
         changed = me.scroller.deltaChange(event.deltaY);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
       }
-
-      if(event.deltaX){
+      else if(event.deltaX){
         // Horizontal scroll
         changed = me.scroller.horizontalDeltaChange(event.deltaX);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
       }
 
       if(changed){
-        event.preventDefault();
+        event.preventDefault?.();
       }
 
       cancelAnimationFrame(me.animationRenderId);

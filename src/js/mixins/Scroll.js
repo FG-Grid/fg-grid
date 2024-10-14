@@ -51,20 +51,19 @@
 
       me.wheelScrolling = true;
 
-      if(event.deltaY){
+      if(Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
         // Vertical scroll
         changed = me.scroller.deltaChange(event.deltaY);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
       }
-
-      if(event.deltaX){
+      else if(event.deltaX){
         // Horizontal scroll
         changed = me.scroller.horizontalDeltaChange(event.deltaX);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
       }
 
       if(changed){
-        event.preventDefault();
+        event.preventDefault?.();
       }
 
       cancelAnimationFrame(me.animationRenderId);
