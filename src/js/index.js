@@ -13,6 +13,7 @@ import './store/mixins/RowGroup.js';
 import './store/mixins/Selection.js';
 
 import './Scroller.js';
+import './TouchScroller.js';
 import './Grid.js';
 import './mixins/Column.js';
 import './mixins/Header.js';

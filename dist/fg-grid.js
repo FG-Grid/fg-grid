@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.2.7',
+  version: '0.2.8',
   isTouchDevice: 'ontouchstart' in window,
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -2614,6 +2614,73 @@ Fancy.format = {
 
 })();
 
+(()=>{
+
+  class TouchScroller {
+    constructor(element, config) {
+      const me = this;
+
+      Object.assign(me, config);
+
+      me.element = element;
+      me.startY = 0;
+      me.startX = 0;
+      me.scrollTop = 0;
+      me.scrollLeft = 0;
+
+      me.touchStartHandler = me.touchStart.bind(me);
+      me.touchMoveHandler = me.touchMove.bind(me);
+      me.touchEndHandler = me.touchEnd.bind(me);
+
+      me.init();
+    }
+
+    init() {
+      const me = this;
+
+      me.element.addEventListener('touchstart', me.touchStartHandler);
+      me.element.addEventListener('touchmove', me.touchMoveHandler);
+      me.element.addEventListener('touchend', me.touchEndHandler);
+    }
+
+    touchStart(e) {
+      const me = this;
+
+      me.startY = e.touches[0].pageY;
+      me.startX = e.touches[0].pageX;
+    }
+
+    touchMove(e) {
+      const me = this;
+      const deltaY = e.touches[0].pageY - me.startY;
+      const deltaX = e.touches[0].pageX - me.startX;
+
+      me.startY = e.touches[0].pageY;
+      me.startX = e.touches[0].pageX;
+
+      Object.assign(e, {
+        deltaX,
+        deltaY
+      });
+
+      me.onTouchScroll(e);
+    }
+
+    touchEnd() {}
+
+    destroy() {
+      const me = this;
+
+      me.element.removeEventListener('touchstart', me.touchStartHandler);
+      me.element.removeEventListener('touchmove', me.touchMoveHandler);
+      me.element.removeEventListener('touchend', me.touchEndHandler);
+    }
+  }
+
+  Fancy.TouchScroller = TouchScroller;
+
+})();
+
 (()=> {
   const {
     GRID,
@@ -2945,7 +3012,10 @@ Fancy.format = {
       const me = this;
 
       me.debouceClearWheelScrollingFn = Fancy.debounce(me.clearWheelScrolling, 50);
-      me.gridEl.addEventListener('wheel', me.onMouseWheel.bind(this));
+      me.bodyEl.addEventListener('wheel', me.onMouseWheel.bind(this));
+      me.touchScroller = new Fancy.TouchScroller(me.bodyEl, {
+        onTouchScroll: me.onTouchScroll.bind(this)
+      });
 
       me.headerInnerContainerEl.addEventListener('click', me.onHeaderCellClick.bind(this));
       me.headerInnerContainerEl.addEventListener('mousedown', me.onHeaderMouseDown.bind(this));
@@ -3804,12 +3874,8 @@ Fancy.format = {
       const me = this;
       const el = document.createElement('div');
       const elMenuRect = column.elMenu.getBoundingClientRect();
-
-      const verticalScrollPosition = document.documentElement.scrollTop || document.body.scrollTop;
-      const horizontalScrollPosition = document.documentElement.scrollLeft || document.body.scrollLeft;
-
-      let top = elMenuRect.top - 1 + elMenuRect.height + verticalScrollPosition;
-      let left = elMenuRect.left + horizontalScrollPosition;
+      const top = elMenuRect.top - 1 + elMenuRect.height;
+      const left = elMenuRect.left;
 
       el.classList.add(COLUMNS_MENU);
       el.classList.add('fg-theme-' + me.theme);
@@ -4758,6 +4824,43 @@ Fancy.format = {
       else {
         // Horizontal scroll
         changed = me.scroller.horizontalDeltaChange(event.wheelDelta);
+        me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
+      }
+
+      if(changed){
+        event.preventDefault();
+      }
+
+      cancelAnimationFrame(me.animationRenderId);
+
+      me.animationRenderId = requestAnimationFrame(() => {
+        me.renderVisibleRows();
+      });
+
+      cancelAnimationFrame(me.animationRemoveId);
+
+      me.animationRemoveId = requestAnimationFrame(() => {
+        me.removeNotNeededRows();
+      });
+
+      me.debouceClearWheelScrollingFn();
+    },
+
+    onTouchScroll(event){
+      const me = this;
+      let changed = false;
+
+      me.wheelScrolling = true;
+
+      if(event.deltaY){
+        // Vertical scroll
+        changed = me.scroller.deltaChange(event.deltaY);
+        me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
+      }
+
+      if(event.deltaX){
+        // Horizontal scroll
+        changed = me.scroller.horizontalDeltaChange(event.deltaX);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
       }
 
@@ -6305,6 +6408,7 @@ Fancy.format = {
 
       if (!me.elComboList) {
         requestAnimationFrame(() => {
+          me.hideAllOpenedComboList();
           me.showComboList();
         });
       } else {
@@ -6320,6 +6424,12 @@ Fancy.format = {
       me.onChange?.(value, sign, me.column);
     }
 
+    hideAllOpenedComboList(){
+      document.body.querySelectorAll(`.${FILTER_FIELD_LIST}`).forEach(el => {
+        el.remove();
+      });
+    }
+
     destroyComboList() {
       const me = this;
 
@@ -6331,12 +6441,8 @@ Fancy.format = {
       const me = this;
       const el = document.createElement('div');
       const elSignRect = me.elSign.getBoundingClientRect();
-
-      const verticalScrollPosition = document.documentElement.scrollTop || document.body.scrollTop;
-      const horizontalScrollPosition = document.documentElement.scrollLeft || document.body.scrollLeft;
-
-      let top = elSignRect.top - 1 + elSignRect.height + verticalScrollPosition;
-      let left = elSignRect.left + horizontalScrollPosition;
+      const top = elSignRect.top - 1 + elSignRect.height;
+      const left = elSignRect.left;
 
       el.classList.add(FILTER_FIELD_LIST);
       el.style.top = `${top}px`;
@@ -6344,7 +6450,7 @@ Fancy.format = {
 
       let signs = [];
 
-      switch (me.column.type) {
+      switch(me.column.type){
         case 'string':
           signs = ['Clear', 'Contains', 'Not Contains', 'Equals', 'Not Equals', 'Empty', 'Not Empty', 'Starts with', 'Ends with', 'Regex'];
           break;

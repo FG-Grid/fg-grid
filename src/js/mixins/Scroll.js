@@ -45,6 +45,43 @@
       me.debouceClearWheelScrollingFn();
     },
 
+    onTouchScroll(event){
+      const me = this;
+      let changed = false;
+
+      me.wheelScrolling = true;
+
+      if(event.deltaY){
+        // Vertical scroll
+        changed = me.scroller.deltaChange(event.deltaY);
+        me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
+      }
+
+      if(event.deltaX){
+        // Horizontal scroll
+        changed = me.scroller.horizontalDeltaChange(event.deltaX);
+        me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
+      }
+
+      if(changed){
+        event.preventDefault();
+      }
+
+      cancelAnimationFrame(me.animationRenderId);
+
+      me.animationRenderId = requestAnimationFrame(() => {
+        me.renderVisibleRows();
+      });
+
+      cancelAnimationFrame(me.animationRemoveId);
+
+      me.animationRemoveId = requestAnimationFrame(() => {
+        me.removeNotNeededRows();
+      });
+
+      me.debouceClearWheelScrollingFn();
+    },
+
     clearWheelScrolling() {
       delete this.wheelScrolling;
     }

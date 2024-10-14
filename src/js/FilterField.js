@@ -121,6 +121,7 @@
 
       if (!me.elComboList) {
         requestAnimationFrame(() => {
+          me.hideAllOpenedComboList();
           me.showComboList();
         });
       } else {
@@ -136,6 +137,12 @@
       me.onChange?.(value, sign, me.column);
     }
 
+    hideAllOpenedComboList(){
+      document.body.querySelectorAll(`.${FILTER_FIELD_LIST}`).forEach(el => {
+        el.remove();
+      });
+    }
+
     destroyComboList() {
       const me = this;
 
@@ -147,12 +154,8 @@
       const me = this;
       const el = document.createElement('div');
       const elSignRect = me.elSign.getBoundingClientRect();
-
-      const verticalScrollPosition = document.documentElement.scrollTop || document.body.scrollTop;
-      const horizontalScrollPosition = document.documentElement.scrollLeft || document.body.scrollLeft;
-
-      let top = elSignRect.top - 1 + elSignRect.height + verticalScrollPosition;
-      let left = elSignRect.left + horizontalScrollPosition;
+      const top = elSignRect.top - 1 + elSignRect.height;
+      const left = elSignRect.left;
 
       el.classList.add(FILTER_FIELD_LIST);
       el.style.top = `${top}px`;
@@ -160,7 +163,7 @@
 
       let signs = [];
 
-      switch (me.column.type) {
+      switch(me.column.type){
         case 'string':
           signs = ['Clear', 'Contains', 'Not Contains', 'Equals', 'Not Equals', 'Empty', 'Not Empty', 'Starts with', 'Ends with', 'Regex'];
           break;

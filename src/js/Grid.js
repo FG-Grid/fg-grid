@@ -329,7 +329,10 @@
       const me = this;
 
       me.debouceClearWheelScrollingFn = Fancy.debounce(me.clearWheelScrolling, 50);
-      me.gridEl.addEventListener('wheel', me.onMouseWheel.bind(this));
+      me.bodyEl.addEventListener('wheel', me.onMouseWheel.bind(this));
+      me.touchScroller = new Fancy.TouchScroller(me.bodyEl, {
+        onTouchScroll: me.onTouchScroll.bind(this)
+      });
 
       me.headerInnerContainerEl.addEventListener('click', me.onHeaderCellClick.bind(this));
       me.headerInnerContainerEl.addEventListener('mousedown', me.onHeaderMouseDown.bind(this));

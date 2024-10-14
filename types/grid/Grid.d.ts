@@ -26,6 +26,7 @@ declare class Grid implements GridConfig {
   removeColumn(column: Column): void;
   getColumn(index: string): Column;
   setData(data: unknown[]): void;
+  setColumns(columns: Column[]): void;
 
   columns: Column[];
   data: Item[];

@@ -412,12 +412,8 @@
       const me = this;
       const el = document.createElement('div');
       const elMenuRect = column.elMenu.getBoundingClientRect();
-
-      const verticalScrollPosition = document.documentElement.scrollTop || document.body.scrollTop;
-      const horizontalScrollPosition = document.documentElement.scrollLeft || document.body.scrollLeft;
-
-      let top = elMenuRect.top - 1 + elMenuRect.height + verticalScrollPosition;
-      let left = elMenuRect.left + horizontalScrollPosition;
+      const top = elMenuRect.top - 1 + elMenuRect.height;
+      const left = elMenuRect.left;
 
       el.classList.add(COLUMNS_MENU);
       el.classList.add('fg-theme-' + me.theme);
