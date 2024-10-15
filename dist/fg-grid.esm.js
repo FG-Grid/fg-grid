@@ -1,6 +1,8 @@
 const Fancy$1 = {
-  version: '0.3.1',
+  version: '0.3.2',
   isTouchDevice: 'ontouchstart' in window,
+  gridIdSeed: 0,
+  gridsMap: new Map(),
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
@@ -2057,8 +2059,6 @@ Fancy.format = {
       me.grid = config.grid;
 
       me.calcScrollBarWidth();
-
-      me.calcMaxScrollTop();
       me.calcViewRange();
 
       me.initResizeObserver();
@@ -2067,6 +2067,12 @@ Fancy.format = {
     deltaChange(delta) {
       const me = this;
 
+      if(!me.isVerticalVisible()){
+        me.scrollTop = 0;
+        me.verticalScrollContainerEl.scrollTop = 0;
+        return false;
+      }
+
       let changed = false;
       let scrollTop = me.scrollTop - delta;
 
@@ -2074,13 +2080,14 @@ Fancy.format = {
         scrollTop = 0;
       }
 
-      if (scrollTop >= me.maxScrollTop) {
+      if(scrollTop > me.maxScrollTop){
         scrollTop = me.maxScrollTop;
       }
 
       if(me.scrollTop !== scrollTop){
         changed = true;
       }
+
       me.scrollTop = scrollTop;
       me.verticalScrollContainerEl.scrollTop = scrollTop;
 
@@ -2090,6 +2097,12 @@ Fancy.format = {
     horizontalDeltaChange(delta){
       const me = this;
 
+      if(!me.isHorizontalVisible()){
+        me.scrollLeft = 0;
+        me.horizontalScrollContainerEl.scrollLeft = 0;
+        return false;
+      }
+
       let changed = false;
       let scrollLeft = me.scrollLeft - delta;
 
@@ -2097,16 +2110,12 @@ Fancy.format = {
         scrollLeft = 0;
       }
 
-      if (scrollLeft >= me.maxScrollTop) {
-        scrollLeft = me.maxScrollTop;
-      }
-
       if(me.horizontalScrollContainerEl.scrollLeft !== scrollLeft){
         changed = true;
       }
+
       me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
       me.scrollLeft = me.horizontalScrollContainerEl.scrollLeft;
-      //me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
 
       return changed;
     }
@@ -2128,8 +2137,7 @@ Fancy.format = {
     calcMaxScrollTop() {
       const me = this;
 
-      //me.maxScrollTop = me.grid.store.getDataTotal() * me.grid.rowHeight;
-      me.maxScrollTop = me.grid.store.getDisplayedDataTotal() * me.grid.rowHeight;
+      me.maxScrollTop = me.grid.store.getDisplayedDataTotal() * me.grid.rowHeight - me.grid.bodyEl.getBoundingClientRect().height;
     }
 
     updateScrollTop() {
@@ -2443,8 +2451,9 @@ Fancy.format = {
 
     setHorizontalSize() {
       const me = this;
+      const columnsWidth = me.grid.getTotalColumnsWidth();
 
-      me.horizontalScrollSizeEl.style.width = me.grid.getTotalColumnsWidth() + 'px';
+      me.horizontalScrollSizeEl.style.width = `${columnsWidth}px`;
 
       if (!me.isHorizontalVisible()) {
         me.horizontalScrollEl.style.display = 'none';
@@ -2700,35 +2709,36 @@ Fancy.format = {
       //let threshold = 0.01;     // Minimum speed to stop
       let threshold = 0.2;     // Minimum speed to stop
 
-      let intervalDuration = 16;
+      //let intervalDuration = 16;
 
-      me.intervalId = setInterval(() => {
+      //me.intervalId = setInterval(() => {
+      const step = () => {
         me.velocityX *= deceleration;
         me.velocityY *= deceleration;
 
-        if(me.direction === 'vertical'){
+        if (me.direction === 'vertical') {
           me.onTouchScroll({
             deltaX: 0,
-            deltaY: me.velocityY * 16
+            deltaY: me.velocityY * 10
           });
-        }
-        else {
+        } else {
           me.onTouchScroll({
-            deltaX: me.velocityX * 16,
+            deltaX: me.velocityX * 10,
             deltaY: 0
           });
         }
 
         // Continue scrolling until the speed exceeds the threshold
-        if(Math.abs(me.velocityX) <= threshold && Math.abs(me.velocityY) <= threshold){
-          //requestAnimationFrame(step);
-
-          clearInterval(me.intervalId);
-          delete me.intervalId;
+        if(Math.abs(me.velocityX) <= threshold && Math.abs(me.velocityY) <= threshold);
+        else {
+          requestAnimationFrame(()=> {
+            requestAnimationFrame(step);
+          });
         }
-      }, intervalDuration);
+        //}, intervalDuration);
+      };
 
-      //requestAnimationFrame(step);
+      requestAnimationFrame(step);
     }
 
     touchEnd() {
@@ -2806,7 +2816,33 @@ Fancy.format = {
 
     constructor(config) {
       const me = this;
-      const renderTo = config.renderTo;
+
+      me.initContainer(config.renderTo);
+      me.initId();
+
+      me.actualRowsIdSet = new Set();
+      me.renderedRowsIdMap = new Map();
+
+      config = me.prepareConfig(config);
+
+      Object.assign(me, config);
+
+      me.checkSize();
+      me.initScroller();
+      me.render();
+      me.scroller.calcMaxScrollTop();
+      me.scroller.calcVisibleRows();
+      me.renderVisibleRows();
+      me.renderVisibleHeaderCells();
+      if(me.filterBar){
+        me.renderVisibleFilterBarCells();
+      }
+
+      me.ons();
+    }
+
+    initContainer(renderTo){
+      const me = this;
 
       if(renderTo.tagName){
         me.containerEl = renderTo;
@@ -2822,31 +2858,24 @@ Fancy.format = {
       if(!me.containerEl){
         console.error(`Could not find renderTo element`);
       }
+    }
 
-      me.actualRowsIdSet = new Set();
-      me.renderedRowsIdMap = new Map();
+    initId(){
+      const me = this;
 
-      config = me.prepareConfig(config);
-
-      Object.assign(me, config);
-
-      me.checkSize();
-      me.initScroller();
-      me.render();
-      me.scroller.calcVisibleRows();
-      me.renderVisibleRows();
-      me.renderVisibleHeaderCells();
-      if(me.filterBar){
-        me.renderVisibleFilterBarCells();
+      if(!me.id){
+        me.id = `fg-grid-${Fancy.gridIdSeed}`;
+        Fancy.gridIdSeed++;
       }
 
-      me.ons();
+      Fancy.gridsMap.set(me.id, me);
     }
 
     render() {
       const me = this;
       const gridEl = document.createElement('div');
 
+      gridEl.setAttribute('id', me.id);
       gridEl.classList.add(GRID);
       if(me.rowAnimation){
         gridEl.classList.add(ROW_ANIMATION);
@@ -3174,6 +3203,14 @@ Fancy.format = {
         me.renderVisibleRows();
         me.store.memorizePrevRowIndexesMap();
       }
+    }
+
+    destroy(){
+      const me = this;
+
+      me.touchScroller.destroy();
+
+      me.gridEl.remove();
     }
   }
 
@@ -4439,7 +4476,7 @@ Fancy.format = {
 
           const cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 
-          cell.remove?.();
+          cell?.remove();
         });
       });
     },

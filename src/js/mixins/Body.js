@@ -351,7 +351,7 @@
 
           const cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 
-          cell.remove?.();
+          cell?.remove();
         });
       });
     },

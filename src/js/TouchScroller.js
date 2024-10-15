@@ -100,35 +100,39 @@
       //let threshold = 0.01;     // Minimum speed to stop
       let threshold = 0.2;     // Minimum speed to stop
 
-      let intervalDuration = 16;
+      //let intervalDuration = 16;
 
-      me.intervalId = setInterval(() => {
+      //me.intervalId = setInterval(() => {
+      const step = () => {
         me.velocityX *= deceleration;
         me.velocityY *= deceleration;
 
-        if(me.direction === 'vertical'){
+        if (me.direction === 'vertical') {
           me.onTouchScroll({
             deltaX: 0,
-            deltaY: me.velocityY * 16
+            deltaY: me.velocityY * 10
           });
-        }
-        else {
+        } else {
           me.onTouchScroll({
-            deltaX: me.velocityX * 16,
+            deltaX: me.velocityX * 10,
             deltaY: 0
           });
         }
 
         // Continue scrolling until the speed exceeds the threshold
         if(Math.abs(me.velocityX) <= threshold && Math.abs(me.velocityY) <= threshold){
-          //requestAnimationFrame(step);
-
-          clearInterval(me.intervalId);
-          delete me.intervalId;
+          //clearInterval(me.intervalId);
+          //delete me.intervalId;
         }
-      }, intervalDuration);
+        else{
+          requestAnimationFrame(()=> {
+            requestAnimationFrame(step);
+          });
+        }
+        //}, intervalDuration);
+      }
 
-      //requestAnimationFrame(step);
+      requestAnimationFrame(step);
     }
 
     touchEnd() {

@@ -1,6 +1,8 @@
 const Fancy = {
-  version: '0.3.1',
+  version: '0.3.2',
   isTouchDevice: 'ontouchstart' in window,
+  gridIdSeed: 0,
+  gridsMap: new Map(),
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
   },

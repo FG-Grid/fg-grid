@@ -36,8 +36,6 @@
       me.grid = config.grid;
 
       me.calcScrollBarWidth();
-
-      me.calcMaxScrollTop();
       me.calcViewRange();
 
       me.initResizeObserver();
@@ -46,6 +44,12 @@
     deltaChange(delta) {
       const me = this;
 
+      if(!me.isVerticalVisible()){
+        me.scrollTop = 0;
+        me.verticalScrollContainerEl.scrollTop = 0;
+        return false;
+      }
+
       let changed = false;
       let scrollTop = me.scrollTop - delta;
 
@@ -53,13 +57,14 @@
         scrollTop = 0;
       }
 
-      if (scrollTop >= me.maxScrollTop) {
+      if(scrollTop > me.maxScrollTop){
         scrollTop = me.maxScrollTop;
       }
 
       if(me.scrollTop !== scrollTop){
         changed = true;
       }
+
       me.scrollTop = scrollTop;
       me.verticalScrollContainerEl.scrollTop = scrollTop;
 
@@ -69,6 +74,12 @@
     horizontalDeltaChange(delta){
       const me = this;
 
+      if(!me.isHorizontalVisible()){
+        me.scrollLeft = 0;
+        me.horizontalScrollContainerEl.scrollLeft = 0;
+        return false;
+      }
+
       let changed = false;
       let scrollLeft = me.scrollLeft - delta;
 
@@ -76,16 +87,12 @@
         scrollLeft = 0;
       }
 
-      if (scrollLeft >= me.maxScrollTop) {
-        scrollLeft = me.maxScrollTop;
-      }
-
       if(me.horizontalScrollContainerEl.scrollLeft !== scrollLeft){
         changed = true;
       }
+
       me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
       me.scrollLeft = me.horizontalScrollContainerEl.scrollLeft;
-      //me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
 
       return changed;
     }
@@ -107,8 +114,7 @@
     calcMaxScrollTop() {
       const me = this;
 
-      //me.maxScrollTop = me.grid.store.getDataTotal() * me.grid.rowHeight;
-      me.maxScrollTop = me.grid.store.getDisplayedDataTotal() * me.grid.rowHeight;
+      me.maxScrollTop = me.grid.store.getDisplayedDataTotal() * me.grid.rowHeight - me.grid.bodyEl.getBoundingClientRect().height;
     }
 
     updateScrollTop() {
@@ -422,8 +428,9 @@
 
     setHorizontalSize() {
       const me = this;
+      const columnsWidth = me.grid.getTotalColumnsWidth();
 
-      me.horizontalScrollSizeEl.style.width = me.grid.getTotalColumnsWidth() + 'px';
+      me.horizontalScrollSizeEl.style.width = `${columnsWidth}px`;
 
       if (!me.isHorizontalVisible()) {
         me.horizontalScrollEl.style.display = 'none';

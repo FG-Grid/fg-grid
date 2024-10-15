@@ -1,7 +1,7 @@
 import { Column, DataItem } from './Column';
 
 interface GridConfig {
-  renderTo?: string;
+  renderTo?: string | HTMLElement | null;
   filterBar?: boolean;
   defaults?: Column;
   columns: Column[];
@@ -27,6 +27,7 @@ declare class Grid implements GridConfig {
   getColumn(index: string): Column;
   setData(data: unknown[]): void;
   setColumns(columns: Column[]): void;
+  destroy(): void;
 
   columns: Column[];
   data: DataItem[];

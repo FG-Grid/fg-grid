@@ -49,7 +49,33 @@
 
     constructor(config) {
       const me = this;
-      const renderTo = config.renderTo;
+
+      me.initContainer(config.renderTo);
+      me.initId();
+
+      me.actualRowsIdSet = new Set();
+      me.renderedRowsIdMap = new Map();
+
+      config = me.prepareConfig(config);
+
+      Object.assign(me, config);
+
+      me.checkSize();
+      me.initScroller();
+      me.render();
+      me.scroller.calcMaxScrollTop();
+      me.scroller.calcVisibleRows();
+      me.renderVisibleRows();
+      me.renderVisibleHeaderCells();
+      if(me.filterBar){
+        me.renderVisibleFilterBarCells();
+      }
+
+      me.ons();
+    }
+
+    initContainer(renderTo){
+      const me = this;
 
       if(renderTo.tagName){
         me.containerEl = renderTo;
@@ -65,31 +91,24 @@
       if(!me.containerEl){
         console.error(`Could not find renderTo element`);
       }
+    }
 
-      me.actualRowsIdSet = new Set();
-      me.renderedRowsIdMap = new Map();
+    initId(){
+      const me = this;
 
-      config = me.prepareConfig(config);
-
-      Object.assign(me, config);
-
-      me.checkSize();
-      me.initScroller();
-      me.render();
-      me.scroller.calcVisibleRows();
-      me.renderVisibleRows();
-      me.renderVisibleHeaderCells();
-      if(me.filterBar){
-        me.renderVisibleFilterBarCells();
+      if(!me.id){
+        me.id = `fg-grid-${Fancy.gridIdSeed}`;
+        Fancy.gridIdSeed++;
       }
 
-      me.ons();
+      Fancy.gridsMap.set(me.id, me);
     }
 
     render() {
       const me = this;
       const gridEl = document.createElement('div');
 
+      gridEl.setAttribute('id', me.id);
       gridEl.classList.add(GRID);
       if(me.rowAnimation){
         gridEl.classList.add(ROW_ANIMATION);
@@ -419,6 +438,14 @@
         me.renderVisibleRows();
         me.store.memorizePrevRowIndexesMap();
       }
+    }
+
+    destroy(){
+      const me = this;
+
+      me.touchScroller.destroy();
+
+      me.gridEl.remove();
     }
   }
 
