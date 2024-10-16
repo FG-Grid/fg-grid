@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.3.2',
+  version: '0.3.3',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -2567,6 +2567,10 @@ Fancy.format = {
       const grid = me.grid;
 
       me.resizeObserver = new ResizeObserver((entries) => {
+        if (!Array.isArray(entries) || !entries.length) {
+          return;
+        }
+
         if(me.grid.checkSize()) {
           const changedBufferedRows = me.calcVisibleRows();
           me.generateNewRange();

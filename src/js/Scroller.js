@@ -544,6 +544,10 @@
       const grid = me.grid;
 
       me.resizeObserver = new ResizeObserver((entries) => {
+        if (!Array.isArray(entries) || !entries.length) {
+          return;
+        }
+
         if(me.grid.checkSize()) {
           const changedBufferedRows = me.calcVisibleRows();
           me.generateNewRange();
