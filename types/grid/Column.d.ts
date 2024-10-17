@@ -42,7 +42,7 @@ export interface Column<TData = any> {
   render?(params: RenderParams): string|undefined;
   cellStyle?: CellStyle | CellStyleFn;
   cellClsRules?: CellClsRules;
-  cellCls: string | string[] | CellClsFn;
+  cellCls?: string | string[] | CellClsFn;
 
   index?: keyof TData;
   filter?: boolean;
