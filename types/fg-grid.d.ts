@@ -1,16 +1,7 @@
-import { Column, DataItem }  from './grid/Column';
+import {Column, DataItem, RenderParams} from './grid/Column';
 import { Grid, GridConfig } from './grid/Grid';
 
-interface renderParams {
-  item: unknown;
-  column: Column;
-  rowIndex: number;
-  columnIndex: number;
-  value: string|number;
-  cell: HTMLDivElement;
-}
-
-interface ICurrencyParams {
+interface CurrencyParams {
   value: unknown;
   minDecimal?: number;
   maxDecimal?: number;
@@ -116,8 +107,8 @@ declare const Fancy : {
     filter: string;
   },
   render: {
-    boolean(params: renderParams): void;
-    order(params: renderParams): void;
+    boolean(params: RenderParams): void;
+    order(params: RenderParams): void;
   },
   format: {
     CURRENCY_REGIONS: {
@@ -127,7 +118,7 @@ declare const Fancy : {
       JPY: 'jp',
       CNY: 'zh-cn'
     },
-    currency(params: ICurrencyParams): string;
+    currency(params: CurrencyParams): string;
   },
   debounce(func: () => void, delay: number): void;
 }

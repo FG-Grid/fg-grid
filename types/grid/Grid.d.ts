@@ -1,4 +1,4 @@
-import { Column, DataItem } from './Column';
+import { Column, DataItem, RenderParams, RowStyle, RowClsRules } from './Column';
 
 interface GridConfig {
   renderTo?: string | HTMLElement | null;
@@ -17,6 +17,9 @@ interface GridConfig {
   rowGroupType?: 'row' | 'column';
   defaultRowGroupSort?: 'asc-string' | 'desc-string' | 'asc-amount' | 'desc-amount';
   rowGroupBarSeparator?: boolean;
+  rowStyle?: (params: RenderParams) => RowStyle | undefined;
+  rowCls?: (params: RenderParams) => string | string[] | undefined;
+  rowClsRules?: RowClsRules;
 }
 
 declare class Grid implements GridConfig {

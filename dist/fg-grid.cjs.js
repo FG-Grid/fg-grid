@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.3.3',
+  version: '0.3.4',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -4198,8 +4198,15 @@ Fancy.format = {
         const column = me.columns[columnIndex];
         let value = item[column.index];
         let cellInner;
-
         const cell = document.createElement('div');
+        const params = {
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value,
+          cell
+        };
 
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);
@@ -4207,26 +4214,56 @@ Fancy.format = {
         cell.style.width = column.width + 'px';
         cell.style.left = column.left + 'px';
 
+
+        if(column.cellStyle) {
+          let cellExtraStyles;
+          switch(typeof column.cellStyle){
+            case 'function':
+              cellExtraStyles = column.cellStyle(params) || {};
+              break;
+            case 'object':
+              cellExtraStyles = column.cellStyle;
+              break;
+          }
+
+          for (const p in cellExtraStyles) {
+            cell.style[p] = cellExtraStyles[p];
+          }
+        }
+
+        if(column.cellCls){
+          if(typeof column.cellCls === 'string'){
+            cell.classList.add(column.cellCls);
+          }
+          else if(Array.isArray(column.cellCls)){
+            cell.classList.add(...column.cellCls);
+          }
+          else if(typeof column.cellCls === 'function'){
+            let cls = column.cellCls(params);
+            if(typeof cls === 'string'){
+              cls = [cls];
+            }
+
+            if(cls){
+              cell.classList.add(...cls);
+            }
+          }
+        }
+
+        if(column.cellClsRules){
+          for(const cls in column.cellClsRules){
+            const fn = column.cellClsRules[cls];
+
+            fn(params) && cell.classList.add(cls);
+          }
+        }
+
         if(column.format){
-          value = column.format({
-            item,
-            column,
-            rowIndex,
-            columnIndex,
-            value,
-            cell
-          });
+          value = column.format(params);
         }
 
         if(column.render){
-          cellInner = column.render({
-            item,
-            column,
-            rowIndex,
-            columnIndex,
-            value,
-            cell
-          });
+          cellInner = column.render(params);
         }
         else {
           cellInner = value;
@@ -4494,7 +4531,14 @@ Fancy.format = {
         return;
       }
 
+      const params = {
+        rowIndex: index,
+        item
+      };
+
       rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+
+      me.applyExtraRowStyles(rowEl, params);
 
       if(item.$selected){
         rowEl.classList.add(ROW_SELECTED);
@@ -4524,6 +4568,44 @@ Fancy.format = {
       me.renderedRowsIdMap.set(item.id, rowEl);
 
       return rowEl;
+    },
+
+    applyExtraRowStyles(rowEl, params){
+      const me = this;
+
+      if(me.rowStyle){
+        if(typeof me.rowStyle === 'function'){
+          const rowStyles = me.rowStyle(params) || {};
+
+          for(const p in rowStyles){
+            rowEl.style[p] = rowStyles[p];
+          }
+        }
+      }
+
+      if(me.rowCls){
+        if(typeof me.rowCls === 'function'){
+          let cls = me.rowCls(params) || [];
+
+          if(typeof cls === 'string'){
+            cls = [cls];
+          }
+
+          rowEl.classList.add(...cls);
+        }
+      }
+
+      if(me.rowClsRules){
+        if(typeof me.rowClsRules === 'object'){
+          for(const cls in me.rowClsRules){
+            const fn = me.rowClsRules[cls];
+
+            if(fn(params)){
+              rowEl.classList.add(cls);
+            }
+          }
+        }
+      }
     },
 
     renderRowGroup(index, item, style = {}) {
@@ -4597,7 +4679,13 @@ Fancy.format = {
         rowEl.classList.add(ROW_SELECTED);
       }
 
+      const params = {
+        rowIndex: index,
+        item
+      };
+
       rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+      me.applyExtraRowStyles(rowEl, params);
 
       rowEl.style.transform = `translateY(${positionY}px)`;
       rowEl.setAttribute('row-id', item.id);
