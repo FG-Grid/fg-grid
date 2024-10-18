@@ -115,12 +115,16 @@
       const me = this;
 
       me.maxScrollTop = me.grid.store.getDisplayedDataTotal() * me.grid.rowHeight - me.grid.bodyEl.getBoundingClientRect().height;
+
+      if(me.maxScrollTop < 0){
+        me.maxScrollTop = 0;
+      }
     }
 
     updateScrollTop() {
       const me = this;
 
-      if (me.scrollTop > me.maxScrollTop) {
+      if(me.scrollTop > me.maxScrollTop){
         me.scrollTop = me.maxScrollTop;
         me.verticalScrollContainerEl.scrollTop = me.maxScrollTop;
       }
@@ -282,7 +286,7 @@
     onVerticalScroll = () => {
       const me = this;
 
-      if (!me.grid.wheelScrolling) {
+      if(!me.grid.wheelScrolling){
         me.scrollTop = me.verticalScrollContainerEl.scrollTop;
         me.grid.bodyInnerEl.scrollTop = me.scrollTop;
 
