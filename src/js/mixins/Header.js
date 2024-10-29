@@ -217,10 +217,14 @@
       }
 
       cell.appendChild(label);
-      if(column.resizable !== false){
+
+      if(column.menu !== false){
         cell.appendChild(elMenu);
       }
-      cell.appendChild(cellResize);
+
+      if(column.resizable !== false){
+        cell.appendChild(cellResize);
+      }
 
       cell.addEventListener('mousedown', me.onCellMouseDown.bind(this));
 
@@ -240,6 +244,10 @@
       const cell = event.target.classList.contains(HEADER_CELL)? event.target : event.target.closest(`.${HEADER_CELL}`);
       const columnIndex = Number(cell.getAttribute('col-index'));
       const column = me.columns[columnIndex];
+
+      if(column.draggable === false){
+        return;
+      }
 
       me.columnDragDownX = event.pageX;
       me.columnDragDownY = event.pageY;

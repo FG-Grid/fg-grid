@@ -9,7 +9,6 @@
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
-    ANIMATE_CELLS_POSITION,
     TOUCH
   } = Fancy.cls;
 
@@ -47,11 +46,16 @@
       }
     };
 
-    constructor(config) {
+    constructor(config, extraConfig) {
       const me = this;
 
+      if(extraConfig){
+        extraConfig.renderTo = config;
+        config = extraConfig;
+      }
+
       me.initContainer(config.renderTo);
-      me.initId();
+      me.initId(config.id);
 
       me.actualRowsIdSet = new Set();
       me.renderedRowsIdMap = new Map();
@@ -93,8 +97,12 @@
       }
     }
 
-    initId(){
+    initId(id){
       const me = this;
+
+      if(id){
+        me.id = id;
+      }
 
       if(!me.id){
         me.id = `fg-grid-${Fancy.gridIdSeed}`;
@@ -114,7 +122,7 @@
         gridEl.classList.add(ROW_ANIMATION);
       }
 
-      if(me.cellsRightBorder){
+      if(me.cellsRightBorder || me.columnLines){
         gridEl.classList.add(GRID_CELLS_RIGHT_BORDER);
       }
 

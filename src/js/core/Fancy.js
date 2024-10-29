@@ -1,8 +1,11 @@
 const Fancy = {
-  version: '0.3.6',
+  version: '0.3.7',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
+  get(id){
+    return this.gridsMap.get(id);
+  },
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
   },

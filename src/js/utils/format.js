@@ -9,7 +9,7 @@ Fancy.format = {
   currency(params) {
     const value = params.value;
     const minDecimal = params.minDecimal || 0;
-    const maxDecimal = params.maxDecimal || 0;
+    const maxDecimal = params.maxDecimal || minDecimal || 0;
     const currency = params.currency || 'USD';
     let region = 'en-US';
 

@@ -325,12 +325,15 @@
         case 'currency':
           column.format = Fancy.format.currency;
           column.type = 'number';
+          column.$type = 'currency';
           break;
         case 'order':
           column.sortable = false;
           column.render = Fancy.render.order;
           column.width = column.width || 45;
           column.resizable = false;
+          column.menu = false;
+          column.draggable = false;
           me.columnOrder = column;
 
           if(store?.rowGroups.length || me?.rowGroupBar){

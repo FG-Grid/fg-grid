@@ -79,6 +79,12 @@
           cell
         }
 
+        if(column.$type === 'currency'){
+          column.currency && (params.currency = column.currency);
+          column.minDecimal !== undefined && (params.minDecimal = column.minDecimal);
+          column.maxDecimal !== undefined && (params.maxDecimal = column.maxDecimal);
+        }
+
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);
         cell.classList.add(CELL);

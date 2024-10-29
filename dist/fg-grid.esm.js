@@ -1,8 +1,11 @@
 const Fancy$1 = {
-  version: '0.3.6',
+  version: '0.3.7',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
+  get(id){
+    return this.gridsMap.get(id);
+  },
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
@@ -248,7 +251,7 @@ Fancy.format = {
   currency(params) {
     const value = params.value;
     const minDecimal = params.minDecimal || 0;
-    const maxDecimal = params.maxDecimal || 0;
+    const maxDecimal = params.maxDecimal || minDecimal || 0;
     const currency = params.currency || 'USD';
     let region = 'en-US';
 
@@ -2784,7 +2787,6 @@ Fancy.format = {
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
-    ANIMATE_CELLS_POSITION,
     TOUCH
   } = Fancy.cls;
 
@@ -2822,11 +2824,16 @@ Fancy.format = {
       }
     };
 
-    constructor(config) {
+    constructor(config, extraConfig) {
       const me = this;
 
+      if(extraConfig){
+        extraConfig.renderTo = config;
+        config = extraConfig;
+      }
+
       me.initContainer(config.renderTo);
-      me.initId();
+      me.initId(config.id);
 
       me.actualRowsIdSet = new Set();
       me.renderedRowsIdMap = new Map();
@@ -2868,8 +2875,12 @@ Fancy.format = {
       }
     }
 
-    initId(){
+    initId(id){
       const me = this;
+
+      if(id){
+        me.id = id;
+      }
 
       if(!me.id){
         me.id = `fg-grid-${Fancy.gridIdSeed}`;
@@ -2889,7 +2900,7 @@ Fancy.format = {
         gridEl.classList.add(ROW_ANIMATION);
       }
 
-      if(me.cellsRightBorder){
+      if(me.cellsRightBorder || me.columnLines){
         gridEl.classList.add(GRID_CELLS_RIGHT_BORDER);
       }
 
@@ -3554,12 +3565,15 @@ Fancy.format = {
         case 'currency':
           column.format = Fancy.format.currency;
           column.type = 'number';
+          column.$type = 'currency';
           break;
         case 'order':
           column.sortable = false;
           column.render = Fancy.render.order;
           column.width = column.width || 45;
           column.resizable = false;
+          column.menu = false;
+          column.draggable = false;
           me.columnOrder = column;
 
           if(store?.rowGroups.length || me?.rowGroupBar){
@@ -3811,10 +3825,14 @@ Fancy.format = {
       }
 
       cell.appendChild(label);
-      if(column.resizable !== false){
+
+      if(column.menu !== false){
         cell.appendChild(elMenu);
       }
-      cell.appendChild(cellResize);
+
+      if(column.resizable !== false){
+        cell.appendChild(cellResize);
+      }
 
       cell.addEventListener('mousedown', me.onCellMouseDown.bind(this));
 
@@ -3834,6 +3852,10 @@ Fancy.format = {
       const cell = event.target.classList.contains(HEADER_CELL)? event.target : event.target.closest(`.${HEADER_CELL}`);
       const columnIndex = Number(cell.getAttribute('col-index'));
       const column = me.columns[columnIndex];
+
+      if(column.draggable === false){
+        return;
+      }
 
       me.columnDragDownX = event.pageX;
       me.columnDragDownY = event.pageY;
@@ -4211,6 +4233,12 @@ Fancy.format = {
           value,
           cell
         };
+
+        if(column.$type === 'currency'){
+          column.currency && (params.currency = column.currency);
+          column.minDecimal !== undefined && (params.minDecimal = column.minDecimal);
+          column.maxDecimal !== undefined && (params.maxDecimal = column.maxDecimal);
+        }
 
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);

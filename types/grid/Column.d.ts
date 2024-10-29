@@ -12,6 +12,14 @@ export interface RenderParams {
   cell: HTMLDivElement;
 }
 
+type Currencies = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CNY';
+
+export interface FormatParams extends RenderParams {
+  currency?: Currencies;
+  minDecimal?: number;
+  maxDecimal?: number;
+}
+
 export interface CellStyle {
   [cssProperty: string]: string | number;
 }
@@ -38,14 +46,27 @@ export interface RowClsRules {
 
 export interface Column<TData = any> {
   sortable?: boolean;
+  resizable?: boolean;
+  draggable?: boolean;
+  hidden?: boolean;
+  index?: keyof TData;
+  filter?: boolean;
+  menu?: boolean;
+  type?: 'string' | 'number' | 'boolean' | 'currency' | 'order';
+  title?: string;
+
+  minWidth?: number;
   width?: number;
+
   render?(params: RenderParams): string|undefined;
   cellStyle?: CellStyle | CellStyleFn;
   cellClsRules?: CellClsRules;
   cellCls?: string | string[] | CellClsFn;
 
-  index?: keyof TData;
-  filter?: boolean;
+  format?(params: FormatParams): string;
+  currency?: Currencies;
+  minDecimal?: number;
+  maxDecimal?: number;
+
   agFn?: 'sum' | 'avg' | 'min' | 'max' | ((params: unknown) => number | string);
-  type?: 'string' | 'number' | 'boolean' | 'currency' | 'order';
 }
