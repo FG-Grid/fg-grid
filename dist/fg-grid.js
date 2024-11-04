@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.3.7',
+  version: '0.3.8',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
