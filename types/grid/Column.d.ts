@@ -54,6 +54,7 @@ export interface Column<TData = any> {
   menu?: boolean;
   type?: 'string' | 'number' | 'boolean' | 'currency' | 'order';
   title?: string;
+  editable?: boolean;
 
   minWidth?: number;
   width?: number;
