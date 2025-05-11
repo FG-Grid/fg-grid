@@ -15,6 +15,10 @@
       me.store.toggleExpand(group);
 
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     expand(group) {
@@ -35,6 +39,10 @@
 
       me.updateRowGroupCellExpandedCls(group);
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     expandAll() {
@@ -50,6 +58,10 @@
 
       me.updateAllRowGroupCellsExtendedCls();
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     collapse(group) {
@@ -70,6 +82,10 @@
 
       me.updateRowGroupCellExpandedCls(group);
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     collapseAll() {
@@ -85,6 +101,10 @@
 
       me.updateAllRowGroupCellsExtendedCls();
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     updateAfterGrouping() {
@@ -202,7 +222,6 @@
           amountEl.innerHTML = amount;
         }
       })
-
     },
 
     reConfigRowGroups(){

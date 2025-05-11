@@ -28,6 +28,9 @@
   --grid-row-height: 28px;
   --grid-cell-color: #888888;
   --grid-cell-font-size: 12px;
+  --grid-cell-active-background-color: #E0E5E9;
+  --grid-cell-active-box-shadow-color: #B5B9C4;
+  --grid-cell-selected-background-color: #f1f6ff;
   --grid-header-cell-after-height: 50%;
   --grid-header-cell-after-top: calc(50% - 50%*0.5);
 
@@ -59,6 +62,9 @@
   --grid-row-height: 28px;
   --grid-cell-color: #888888;
   --grid-cell-font-size: 12px;
+  --grid-cell-active-background-color: #E0E5E9;
+  --grid-cell-active-box-shadow-color: #B5B9C4;
+  --grid-cell-selected-background-color: #f1f6ff;
   --grid-header-cell-after-height: 100%;
   --grid-header-cell-after-top: 0px;
 
@@ -85,6 +91,36 @@
   box-sizing: border-box;
   outline: none;
 }
+
+.fg-editors-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 101000 !important;
+}
+
+.fg-field {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+}
+
+.fg-field-input {
+  width: 100%;
+  padding: 6px 4px 4px 4px;
+  box-sizing: border-box;
+  margin: 0;
+  outline: 0;
+  border: 1px solid #b7b7b7;
+  border-radius: 0;
+  font-size: var(--filter-field-font-size);
+  color: var(--filter-field-cell-color);
+}
+
+.fg-string-field {}
+
+.fg-string-field-input {}
 
 .fg-filter-bar {
   border-bottom: var(--grid-header-bottom-width) solid var(--grid-header-bottom-color);
@@ -303,6 +339,22 @@
   }
 }
  */
+
+.fg-grid:not(.fg-editing) {
+  .fg-cell-active {
+    background: var(--grid-cell-active-background-color);
+    box-shadow: 0 0 0 2px var(--grid-cell-active-box-shadow-color);
+    z-index: 100000 !important;
+  }
+}
+
+:not(.fg-editing) .fg-cell-active-row {
+  z-index: 100000 !important;
+}
+
+.fg-cell-selected {
+  background: var(--grid-cell-selected-background-color);
+}
 
 .fg-cell-value {}
 

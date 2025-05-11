@@ -49,6 +49,10 @@
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     multiSort(index, dir, type) {
@@ -79,6 +83,10 @@
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     renderVisibleRowsAfterSort() {

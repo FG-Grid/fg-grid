@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.3.9',
+  version: '0.7.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -42,6 +42,22 @@ const Fancy$1 = {
     }
 
     return clonedObj;
+  },
+  getTranslateY(element) {
+    const style = window.getComputedStyle(element);
+    const matrix = style.transform;
+
+    if (!matrix || matrix === 'none') {
+      return 0;
+    }
+
+    const values = matrix.match(/matrix.*\((.+)\)/);
+    if (!values) {
+      return 0;
+    }
+
+    const parts = values[1].split(', ').map(parseFloat);
+    return parts.length === 6 ? parts[5] : 0;
   }
 };
 
@@ -111,6 +127,7 @@ Fancy.cls = {
   HIDDEN: 'fg-hidden',
   GRID: 'fg-grid',
   TOUCH: 'fg-touch',
+  EDITING: 'fg-editing',
 
   // Header
   HEADER: 'fg-header',
@@ -130,6 +147,7 @@ Fancy.cls = {
   BODY: 'fg-body',
   BODY_INNER: 'fg-body-inner',
   BODY_INNER_CONTAINER: 'fg-body-inner-container',
+  EDITORS_CONTAINER: 'fg-editors-container',
 
   // Column
   COLUMN_RESIZING: 'fg-column-resizing',
@@ -149,6 +167,9 @@ Fancy.cls = {
   CELL_ORDER: 'fg-cell-order',
   CELL_WRAPPER: 'fg-cell-wrapper',
   CELL_SELECTION: 'fg-cell-selection',
+  CELL_SELECTED: 'fg-cell-selected',
+  ACTIVE_CELL: 'fg-cell-active',
+  ACTIVE_CELL_ROW: 'fg-cell-active-row',
 
   // Row Group
   ROW: 'fg-row',
@@ -204,6 +225,18 @@ Fancy.cls = {
   //Checkbox
   INPUT_CHECKBOX: 'fg-input-checkbox',
 
+  // Field
+  FIELD: 'fg-field',
+  FIELD_INPUT: 'fg-field-input',
+
+  // String Field
+  STRING_FIELD: 'fg-string-field',
+  STRING_FIELD_INPUT: 'fg-string-field-input',
+
+  // Number Field
+  NUMBER_FIELD: 'fg-number-field',
+  NUMBER_FIELD_INPUT: 'fg-number-field-input',
+
   // SVG
   SVG_ITEM: 'fg-svg-item',
   SVG_CHEVRON_RIGHT: 'fg-svg-chevron-right',
@@ -211,6 +244,168 @@ Fancy.cls = {
   SVG_DRAG: 'fg-svg-drag',
   SVG_REMOVE: 'fg-svg-remove',
   SVG_BLOCK: 'fg-svg-block'
+};
+
+Fancy.key = {
+  BACKSPACE: 8,
+  TAB: 9,
+  ENTER: 13,
+  RETURN: 13,
+  SHIFT: 16,
+  CTRL: 17,
+  ALT: 18,
+  PAUSE: 19,
+  CAPS_LOCK: 20,
+  ESC: 27,
+  SPACE: 32,
+  PAGE_UP: 33,
+  PAGE_DOWN: 34,
+  END: 35,
+  HOME: 36,
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40,
+  PRINT_SCREEN: 44,
+  INSERT: 45,
+  DELETE: 46,
+  ZERO: 48,
+  ONE: 49,
+  TWO: 50,
+  THREE: 51,
+  FOUR: 52,
+  FIVE: 53,
+  SIX: 54,
+  SEVEN: 55,
+  EIGHT: 56,
+  NINE: 57,
+  A: 65,
+  B: 66,
+  C: 67,
+  D: 68,
+  E: 69,
+  F: 70,
+  G: 71,
+  H: 72,
+  I: 73,
+  J: 74,
+  K: 75,
+  L: 76,
+  M: 77,
+  N: 78,
+  O: 79,
+  P: 80,
+  Q: 81,
+  R: 82,
+  S: 83,
+  T: 84,
+  U: 85,
+  V: 86,
+  W: 87,
+  X: 88,
+  Y: 89,
+  Z: 90,
+  META: 91,
+  CONTEXT_MENU: 93,
+  NUM_ZERO: 96,
+  NUM_ONE: 97,
+  NUM_TWO: 98,
+  NUM_THREE: 99,
+  NUM_FOUR: 100,
+  NUM_FIVE: 101,
+  NUM_SIX: 102,
+  NUM_SEVEN: 103,
+  NUM_EIGHT: 104,
+  NUM_NINE: 105,
+  NUM_MULTIPLY: 106,
+  NUM_PLUS: 107,
+  NUM_MINUS: 109,
+  NUM_DOT: 110,
+  NUM_DIVISION: 111,
+  F1: 112,
+  F2: 113,
+  F3: 114,
+  F4: 115,
+  F5: 116,
+  F6: 117,
+  F7: 118,
+  F8: 119,
+  F9: 120,
+  F10: 121,
+  F11: 122,
+  F12: 123,
+  WHEEL_SCALE: 120,
+  DOT: 190
+};
+
+Fancy.Key = {
+  isNum(c){
+    const key = Fancy.key;
+
+    switch(c){
+      case key.ZERO:
+      case key.ONE:
+      case key.TWO:
+      case key.THREE:
+      case key.FOUR:
+      case key.FIVE:
+      case key.SIX:
+      case key.SEVEN:
+      case key.EIGHT:
+      case key.NINE:
+      case key.NUM_ZERO:
+      case key.NUM_ONE:
+      case key.NUM_TWO:
+      case key.NUM_THREE:
+      case key.NUM_FOUR:
+      case key.NUM_FIVE:
+      case key.NUM_SIX:
+      case key.NUM_SEVEN:
+      case key.NUM_EIGHT:
+      case key.NUM_NINE:
+        return true;
+      default:
+        return false;
+    }
+  },
+  isNumControl(c, e){
+    const key = Fancy.key;
+
+    if( Fancy.Key.isNum(c) ){
+      return true;
+    }
+
+    if( e.shiftKey && c === 187){
+      return true;
+    }
+
+    switch(c){
+      case key.NUM_PLUS:
+      case 189:
+      case key.NUM_MINUS:
+      case key.NUM_DOT:
+      case key.BACKSPACE:
+      case key.DELETE:
+      case key.TAB:
+      case key.ENTER:
+      case key.RETURN:
+      case key.SHIFT:
+      case key.CTRL:
+      case key.ALT:
+      case key.ESC:
+      case key.END:
+      case key.HOME:
+      case key.LEFT:
+      case key.UP:
+      case key.RIGHT:
+      case key.DOWN:
+      case key.INSERT:
+      case key.DOT:
+        return true;
+      default:
+        return false;
+    }
+  }
 };
 
 Fancy.render = {
@@ -287,6 +482,21 @@ Fancy.format = {
       minimumFractionDigits: minDecimal,
       maximumFractionDigits: maxDecimal
     }).format(value);
+  }
+};
+
+Fancy.copyText = (text) => {
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text)
+      .catch(err => console.error('Error copying: ', err));
+  }
+  else {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
   }
 };
 
@@ -372,7 +582,7 @@ Fancy.format = {
 
       me.idSeed = 0;
 
-      me.data.forEach((item, index) => {
+      me.data.forEach(item => {
         if (!item.id) {
           item.id = me.generateId();
         }
@@ -441,7 +651,7 @@ Fancy.format = {
       } = me;
 
       if (sorters.length || filters.length || rowGroups.length) {
-        return this.displayedData.length;
+        return this.displayedData?.length || 0;
       }
 
       return me.getDataTotal();
@@ -470,6 +680,31 @@ Fancy.format = {
       const me = this;
 
       me.prevIdRowIndexesMap = me.idRowIndexesMap;
+    }
+
+    getPrevVisibleRowIndex(rowIndex){
+      const me = this;
+      const data = me.displayedData || me.data;
+
+      for(let i = rowIndex - 1;i>-1;i--){
+        const row = data[i];
+        if(row.$isGroupRow !== true){
+          return i;
+        }
+      }
+    }
+
+    getNextVisibleRowIndex(rowIndex){
+      const me = this;
+      const totalDisplayed = me.getDisplayedDataTotal();
+      const data = me.displayedData || me.data;
+
+      for(let i = rowIndex + 1;i<totalDisplayed;i++){
+        const row = data[i];
+        if(row.$isGroupRow !== true){
+          return i;
+        }
+      }
     }
   }
 
@@ -2040,6 +2275,27 @@ Fancy.format = {
   Object.assign(Fancy.Store.prototype, StoreSelection);
 })();
 
+(()=> {
+  const StoreEdit = {
+    setById(id, key, value){
+      const me = this;
+      const item = me.idItemMap.get(id);
+
+      if(typeof key === 'object'){
+        for(let p in key){
+          item[p] = key[p];
+        }
+      }
+      else {
+        item[key] = value;
+      }
+    }
+  };
+
+  Object.assign(Fancy.Store.prototype, StoreEdit);
+
+})();
+
 (() => {
   const {
     BODY_VERTICAL_SCROLL,
@@ -2803,6 +3059,7 @@ Fancy.format = {
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
+    EDITORS_CONTAINER,
     TOUCH
   } = Fancy.cls;
 
@@ -2824,6 +3081,11 @@ Fancy.format = {
 
     actualRowsIdSet;
     renderedRowsIdMap;
+
+    activeCell = true;
+    selectingCells = true;
+
+    editorEnterAction = 'stay'; // 'stay' | 'down' | 'right'
 
     $defaultRowGroupColumn = {
       title: 'Group',
@@ -2867,6 +3129,10 @@ Fancy.format = {
       me.renderVisibleHeaderCells();
       if(me.filterBar){
         me.renderVisibleFilterBarCells();
+      }
+
+      if(me.activeCell){
+        me.initKeyNavigation();
       }
 
       me.ons();
@@ -3008,10 +3274,16 @@ Fancy.format = {
       }
       bodyInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
 
+      const editorsContainerEl = document.createElement('div');
+
+      editorsContainerEl.classList.add(EDITORS_CONTAINER);
+
+      bodyInnerContainerEl.appendChild(editorsContainerEl);
       bodyInnerEl.appendChild(bodyInnerContainerEl);
       bodyEl.appendChild(bodyInnerEl);
       me.gridEl.appendChild(bodyEl);
 
+      me.editorsContainerEl = editorsContainerEl;
       me.bodyInnerContainerEl = bodyInnerContainerEl;
       me.bodyInnerEl = bodyInnerEl;
       me.bodyEl = bodyEl;
@@ -3247,6 +3519,12 @@ Fancy.format = {
 
       me.gridEl.remove();
     }
+
+    onBodyCellClick(event){
+      const me = this;
+
+      me.hideActiveEditor();
+    }
   }
 
   window.Grid = Grid;
@@ -3316,6 +3594,10 @@ Fancy.format = {
         }, 300);
       }
 
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
+
       return {
         columnIndex: columnsToRemove[0]
       };
@@ -3364,6 +3646,28 @@ Fancy.format = {
       const me = this;
 
       return me.columns.find(column => column.index === index);
+    },
+
+    getNextVisibleColumnIndex(index){
+      const me = this;
+
+      for(let i = index + 1;i<me.columns.length;i++){
+        const column = me.columns[i];
+        if(column.hidden !== true){
+          return i;
+        }
+      }
+    },
+
+    getPrevVisibleColumnIndex(index){
+      const me = this;
+
+      for(let i = index - 1;i>-1;i--){
+        const column = me.columns[i];
+        if(column.hidden !== true){
+          return i;
+        }
+      }
     },
 
     getAutoColumnIdSeed(){
@@ -3702,6 +4006,7 @@ Fancy.format = {
         const column = me.columns[columnIndex];
 
         if (!column.elMenuList) {
+          me.destroyHeaderCellMenuList();
           requestAnimationFrame(() => {
             me.showHeaderCellMenuList(event, column, columnIndex);
           });
@@ -3838,6 +4143,8 @@ Fancy.format = {
         column.headerCheckboxSelectionEl = checkboxEl;
 
         cell.appendChild(elSelection);
+
+        me.updateHeaderCheckboxSelection(column);
       }
 
       cell.appendChild(label);
@@ -4069,6 +4376,7 @@ Fancy.format = {
       document.body.appendChild(el);
       setTimeout(()=>{
         el.style.opacity = `1`;
+        me.activeElMenuList = el;
       }, 0);
 
       el.addEventListener('click', me.onClickHeaderMenuItem.bind(this));
@@ -4131,8 +4439,21 @@ Fancy.format = {
       const me = this;
 
       document.removeEventListener('mousedown', me.onDocClickForHeaderCellMenuFn);
-      column.elMenuList?.remove();
-      delete column.elMenuList;
+
+      if(column) {
+        column.elMenuList?.remove();
+        delete column.elMenuList;
+      }
+      else if(me.activeElMenuList){
+        me.scroller.columnsViewRange.forEach(columnIndex => {
+          const column = me.columns[columnIndex];
+          if(column.elMenuList){
+            column.elMenuList.remove();
+            delete column.elMenuList;
+          }
+        });
+      }
+      delete me.activeElMenuList;
     },
 
     reSetVisibleHeaderColumnsIndex(){
@@ -4175,6 +4496,9 @@ Fancy.format = {
     CELL_ORDER,
     CELL_WRAPPER,
     CELL_SELECTION,
+    CELL_SELECTED,
+    ACTIVE_CELL,
+    ACTIVE_CELL_ROW,
     ROW,
     ROW_ODD,
     ROW_EVEN,
@@ -4262,6 +4586,10 @@ Fancy.format = {
         cell.style.width = column.width + 'px';
         cell.style.left = column.left + 'px';
 
+        if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
+          cell.classList.add(ACTIVE_CELL);
+          me.activeCellEl = cell;
+        }
 
         if(column.cellStyle) {
           let cellExtraStyles;
@@ -4366,6 +4694,28 @@ Fancy.format = {
 
           cell.innerHTML = cellInner ?? '&nbsp;';
         }
+
+        if(me.activeCell){
+          cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
+          if(me.selectingCells){
+            cell.addEventListener('mouseenter', me.onBodyCellMouseEnter.bind(this));
+
+            if(me.selectionCellsRange && cell){
+              requestAnimationFrame(()=> {
+                if (me.isCellInSelectedRange(cell)) {
+                  cell.classList.add(CELL_SELECTED);
+                }
+              });
+            }
+          }
+        }
+
+        if(column.editable){
+          cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
+        }
+
+        cell.addEventListener('click', me.onBodyCellClick.bind(this));
+        //cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
 
         return cell;
     },
@@ -4586,6 +4936,11 @@ Fancy.format = {
 
       rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
+      if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){
+        rowEl.classList.add(ACTIVE_CELL_ROW);
+        me.activeCellRowEl = rowEl;
+      }
+
       me.applyExtraRowStyles(rowEl, params);
 
       if(item.$selected){
@@ -4597,6 +4952,7 @@ Fancy.format = {
         rowEl.style[p] = style[p];
       }
       rowEl.setAttribute('row-id', item.id);
+      rowEl.setAttribute('row-index', index);
 
       rowEl.addEventListener('mouseenter', this.onRowMouseEnter.bind(this));
 
@@ -4677,6 +5033,7 @@ Fancy.format = {
         rowEl.style[p] = style[p];
       }
       rowEl.setAttribute('row-id', item.id);
+      rowEl.setAttribute('row-index', index);
       rowEl.setAttribute('row-group', item.$rowGroupValue.replaceAll('-', '$').split('/').join('-'));
 
       rowEl.addEventListener('mouseenter', this.onRowMouseEnter.bind(this));
@@ -4737,6 +5094,7 @@ Fancy.format = {
 
       rowEl.style.transform = `translateY(${positionY}px)`;
       rowEl.setAttribute('row-id', item.id);
+      rowEl.setAttribute('row-index', index);
       rowEl.addEventListener('mouseenter', this.onRowMouseEnter.bind(this));
 
       let columnStart = me.scroller.columnViewStart,
@@ -4878,6 +5236,7 @@ Fancy.format = {
       const positionY = me.getSmoothPositionY(item);
 
       rowEl.style.transform = `translateY(${positionY}px)`;
+      rowEl.setAttribute('row-index', item.rowIndex);
 
       if(me.columnOrder){
         const orderCell = rowEl.querySelector(`.${CELL_ORDER}`);
@@ -4919,6 +5278,7 @@ Fancy.format = {
       }
 
       rowEl.style.transform = `translateY(${item.rowIndex * me.rowHeight}px)`;
+      rowEl.setAttribute('row-index', item.rowIndex);
     },
 
     removeNotNeededRows() {
@@ -5056,6 +5416,13 @@ Fancy.format = {
           cell.setAttribute('col-index', newIndex);
         });
       }
+    },
+
+    getCell(rowIndex, columnIndex){
+      const me = this;
+      const cell = me.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
+
+      return cell;
     }
   };
 
@@ -5206,6 +5573,10 @@ Fancy.format = {
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     multiSort(index, dir, type) {
@@ -5236,6 +5607,10 @@ Fancy.format = {
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     renderVisibleRowsAfterSort() {
@@ -5553,6 +5928,10 @@ Fancy.format = {
       me.store.toggleExpand(group);
 
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     expand(group) {
@@ -5573,6 +5952,10 @@ Fancy.format = {
 
       me.updateRowGroupCellExpandedCls(group);
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     expandAll() {
@@ -5588,6 +5971,10 @@ Fancy.format = {
 
       me.updateAllRowGroupCellsExtendedCls();
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     collapse(group) {
@@ -5608,6 +5995,10 @@ Fancy.format = {
 
       me.updateRowGroupCellExpandedCls(group);
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     collapseAll() {
@@ -5623,6 +6014,10 @@ Fancy.format = {
 
       me.updateAllRowGroupCellsExtendedCls();
       me.updateAfterGrouping();
+
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
     },
 
     updateAfterGrouping() {
@@ -5740,7 +6135,6 @@ Fancy.format = {
           amountEl.innerHTML = amount;
         }
       });
-
     },
 
     reConfigRowGroups(){
@@ -6098,11 +6492,15 @@ Fancy.format = {
   const {
     CELL,
     CELL_SELECTION,
+    CELL_SELECTED,
+    ACTIVE_CELL,
+    ACTIVE_CELL_ROW,
     ROW,
     ROW_SELECTED,
     ROW_GROUP,
     ROW_GROUP_CELL_SELECTION,
-    INPUT_CHECKBOX
+    INPUT_CHECKBOX,
+    BODY
   } = Fancy.cls;
 
   const GridMixinSelection = {
@@ -6130,6 +6528,42 @@ Fancy.format = {
 
       if(column.headerCheckboxSelection){
        me.updateHeaderCheckboxSelection(column);
+      }
+
+      if(group){
+        me.updateRowGroupRowsAndCheckBoxes();
+      }
+    },
+
+    selectRow(cell){
+      const me = this;
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const row = cell.closest(`.${ROW}`);
+      const itemId = row.getAttribute('row-id');
+      const column = me.columns[columnIndex];
+      const store = me.store;
+      const item = store.idItemMap.get(itemId);
+      const selected = !item.$selected;
+      const group = item.$rowGroupValue;
+      const rowCheckBoxes = row.querySelectorAll(`div.${CELL_SELECTION} input.${INPUT_CHECKBOX}`);
+
+      store.selectRowItem(item, selected);
+
+      if(selected){
+        row.classList.add(ROW_SELECTED);
+        rowCheckBoxes.forEach(checkBox => {
+          checkBox.checked = true;
+        });
+      }
+      else {
+        row.classList.remove(ROW_SELECTED);
+        rowCheckBoxes.forEach(checkBox => {
+          checkBox.checked = false;
+        });
+      }
+
+      if(column.headerCheckboxSelection){
+        me.updateHeaderCheckboxSelection(column);
       }
 
       if(group){
@@ -6249,6 +6683,371 @@ Fancy.format = {
       });
     },
 
+    onBodyCellMouseDown(event) {
+      const me = this;
+      const target = event.target;
+      const cell = target.closest(`.${CELL}`);
+
+      me.hideActiveEditor();
+
+      Fancy.gridsMap.forEach(grid => {
+        grid.active = false;
+      });
+      me.active = true;
+
+      if(me.activeCell){
+        me.setActiveCell(cell);
+        requestAnimationFrame(()=> {
+          document.addEventListener('mousedown', (event) => {
+            if (!event.target.closest(`div.${BODY}`)) {
+              me.clearActiveCell();
+              me.clearSelectionRange();
+            }
+
+          }, {
+            once: true
+          });
+        });
+      }
+
+      if(me.selectingCells){
+        me.isSelectingCells = true;
+        document.addEventListener('mouseup', ()=>{
+          delete me.isSelectingCells;
+        }, {
+          once: true
+        });
+      }
+    },
+
+    onBodyCellMouseEnter(event){
+      const me = this;
+      const target = event.target;
+      const cell = target.closest(`.${CELL}`);
+
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined || me.isSelectingCells !== true){
+        return;
+      }
+
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const row = cell.closest(`.${ROW}`);
+      const itemId = row.getAttribute('row-id');
+
+      me.secondActiveCell = cell;
+      me.secondActiveCellColumnIndex = columnIndex;
+      me.secondActiveCellRowId = itemId;
+
+      me.generateCellsSelectionRange();
+      me.selectCellsFromRange();
+    },
+
+    setShiftCellUp(){
+      const me = this;
+
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
+        return;
+      }
+
+      const secondActiveCellRowIndex = me.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const prevRowIndex = grid.store.getPrevVisibleRowIndex(secondActiveCellRowIndex);
+
+      if(prevRowIndex === undefined){
+        return;
+      }
+
+      const itemId = grid.store.getItemByRowIndex(prevRowIndex).id;
+
+      me.secondActiveCell = me.getCell(prevRowIndex, me.secondActiveCellColumnIndex);
+      me.secondActiveCellRowId = itemId;
+
+      me.scrollToCell(me.secondActiveCell);
+
+      me.generateCellsSelectionRange();
+      me.selectCellsFromRange();
+    },
+
+    setShiftCellDown(){
+      const me = this;
+
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
+        return;
+      }
+
+      const secondActiveCellRowIndex = me.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const nextRowIndex = grid.store.getNextVisibleRowIndex(secondActiveCellRowIndex);
+
+      if(nextRowIndex === undefined){
+        return;
+      }
+
+      const itemId = grid.store.getItemByRowIndex(nextRowIndex).id;
+
+      me.secondActiveCell = me.getCell(nextRowIndex, me.secondActiveCellColumnIndex);
+      me.secondActiveCellRowId = itemId;
+
+      me.scrollToCell(me.secondActiveCell);
+
+      me.generateCellsSelectionRange();
+      me.selectCellsFromRange();
+    },
+
+    setShiftCellLeft(){
+      const me = this;
+
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
+        return;
+      }
+
+      const columnIndex = me.getPrevVisibleColumnIndex(me.secondActiveCellColumnIndex);
+      const rowIndex = grid.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+
+      if(columnIndex === undefined){
+        return;
+      }
+
+      me.secondActiveCellColumnIndex = columnIndex;
+      me.secondActiveCell = me.getCell(rowIndex, columnIndex);
+
+      me.scrollToCell(me.secondActiveCell);
+
+      me.generateCellsSelectionRange();
+      me.selectCellsFromRange();
+    },
+
+    setShiftCellRight(){
+      const me = this;
+
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
+        return;
+      }
+
+      const columnIndex = me.getNextVisibleColumnIndex(me.secondActiveCellColumnIndex);
+      const rowIndex = grid.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+
+      if(columnIndex === undefined){
+        return;
+      }
+
+      me.secondActiveCellColumnIndex = columnIndex;
+      me.secondActiveCell = me.getCell(rowIndex, columnIndex);
+
+      me.scrollToCell(me.secondActiveCell);
+
+      me.generateCellsSelectionRange();
+      me.selectCellsFromRange();
+    },
+
+    clearActiveCell(){
+      const me = this;
+
+      me.activeCellEl?.classList.remove(ACTIVE_CELL);
+      me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
+
+      delete me.activeCellEl;
+      delete me.activeCellRowEl;
+      delete me.activeCellColumnIndex;
+      delete me.activeCellColumn;
+      delete me.activeCellRowId;
+
+      // if(me.$signalActiveCell){
+      //   me.$signalControllerActiveCell.abort();
+      // }
+    },
+
+    setActiveCell(cell){
+      const me = this;
+      const row = cell.closest(`.${ROW}`);
+
+      const prevRowIndex = Number(me.activeCellRowEl?.getAttribute('row-index'));
+      const newRowIndex = Number(row.getAttribute('row-index'));
+
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const itemId = row.getAttribute('row-id');
+      const column = me.columns[columnIndex];
+
+      if(me.selectionCellsRange){
+        me.clearSelectionRange();
+      }
+
+      me.activeCellEl?.classList.remove(ACTIVE_CELL);
+      me.activeCellEl = cell;
+      me.activeCellEl.classList.add(ACTIVE_CELL);
+
+      me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
+      me.activeCellRowEl = row;
+      me.activeCellRowEl.classList.add(ACTIVE_CELL_ROW);
+
+      me.activeCellColumnIndex = columnIndex;
+      me.activeCellColumn = column;
+      me.activeCellRowId = itemId;
+
+      me.secondActiveCell = cell;
+      me.secondActiveCellColumnIndex = columnIndex;
+      me.secondActiveCellRowId = itemId;
+
+      const rect = me.bodyEl.getBoundingClientRect();
+      const rowTop = Fancy.getTranslateY(row);
+      const rowRect = row.getBoundingClientRect();
+
+      if(rect.height + me.scroller.scrollTop < rowTop + rowRect.height){
+        const delta = newRowIndex - prevRowIndex;
+        me.scroller.deltaChange(-rowRect.height * delta);
+      }
+      else if(me.scroller.scrollTop > rowTop){
+        const delta = prevRowIndex - newRowIndex;
+        me.scroller.deltaChange(delta * rowRect.height);
+      }
+      else if(rect.width + me.scroller.scrollLeft < column.left + column.width){
+        const delta = (column.left + column.width) - (rect.width + me.scroller.scrollLeft);
+        me.scroller.horizontalDeltaChange(-delta - me.scroller.scrollBarWidth - 2);
+      }
+      else if(me.scroller.scrollLeft > column.left){
+        const delta = me.scroller.scrollLeft - column.left;
+        me.scroller.horizontalDeltaChange(delta + 2);
+      }
+    },
+
+    scrollToCell(cell){
+      const me = this;
+      const row = cell.closest(`.${ROW}`);
+      const rect = me.bodyEl.getBoundingClientRect();
+      const rowTop = Fancy.getTranslateY(row);
+      const rowRect = row.getBoundingClientRect();
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const column = me.columns[columnIndex];
+
+      if(rect.height + me.scroller.scrollTop < rowTop + rowRect.height){
+        const delta = me.rowHeight;
+        me.scroller.deltaChange(-delta);
+      }
+      else if(me.scroller.scrollTop > rowTop){
+        const delta = me.rowHeight;
+        me.scroller.deltaChange(delta);
+      }
+      else if(rect.width + me.scroller.scrollLeft < column.left + column.width){
+        const delta = (column.left + column.width) - (rect.width + me.scroller.scrollLeft);
+        me.scroller.horizontalDeltaChange(-delta - me.scroller.scrollBarWidth - 2);
+      }
+      else if(me.scroller.scrollLeft > column.left){
+        const delta = me.scroller.scrollLeft - column.left;
+        me.scroller.horizontalDeltaChange(delta + 2);
+      }
+    },
+
+    hasActiveCell(){
+      const me = this;
+
+      return me.activeCellColumn !== undefined && me.activeCellRowId !== undefined && me.activeCellColumnIndex !== undefined;
+    },
+
+    scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex){
+      const me = this;
+
+      const delta = me.scroller.scrollTop - (newRowIndex - 1) * me.rowHeight;
+      me.$preventActiveCellRender = true;
+      me.scroller.deltaChange(delta);
+      setTimeout(()=>{
+        const cell = me.getCell(newRowIndex, columnIndex);
+        if (cell) {
+          me.setActiveCell(cell);
+        }
+      },0);
+    },
+
+    setActiveCellUp(){
+      const me = this;
+      const columnIndex = me.activeCellColumnIndex;
+      const row = me.activeCellRowEl;
+      const rowIndex = Number(row.getAttribute('row-index'));
+      const newRowIndex = me.store.getPrevVisibleRowIndex(rowIndex);
+
+      if(newRowIndex === rowIndex || newRowIndex === undefined){
+        if(newRowIndex === undefined && me.scroller.scrollTop !== 0){
+          me.scroller.deltaChange(rowIndex * me.rowHeight);
+        }
+
+        return;
+      }
+
+      const cell = me.getCell(newRowIndex, columnIndex);
+      if(cell){
+        me.setActiveCell(cell);
+      }
+      else {
+        me.scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex);
+      }
+    },
+
+    setActiveCellDown(){
+      const me = this;
+      const columnIndex = me.activeCellColumnIndex;
+      const row = me.activeCellRowEl;
+      const rowIndex = Number(row.getAttribute('row-index'));
+      const totalDisplayed = me.store.getDisplayedDataTotal();
+      const newRowIndex = me.store.getNextVisibleRowIndex(rowIndex);
+
+      if(newRowIndex === rowIndex || newRowIndex === undefined){
+        if(newRowIndex === undefined){
+          const delta = totalDisplayed - rowIndex;
+          me.scroller.deltaChange(-delta * me.rowHeight);
+        }
+
+        return false;
+      }
+
+      const cell = me.getCell(newRowIndex, columnIndex);
+      if(cell) {
+        me.setActiveCell(cell);
+      }
+      else {
+        me.scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex);
+      }
+
+      return cell;
+    },
+
+    setActiveCellLeft(){
+      const me = this;
+      const columnIndex = me.activeCellColumnIndex;
+      const newColumnIndex = me.getPrevVisibleColumnIndex(columnIndex);
+      const row = me.activeCellRowEl;
+      const rowIndex = Number(row.getAttribute('row-index'));
+
+      if(newColumnIndex === columnIndex || newColumnIndex === undefined){
+        return;
+      }
+
+      const cell = me.getCell(rowIndex, newColumnIndex);
+      if(cell){
+        me.setActiveCell(cell);
+      }
+      else {
+        me.scrollToNotVisibleNewActiveCell(rowIndex, newColumnIndex);
+      }
+    },
+
+    setActiveCellRight(){
+      const me = this;
+      const row = me.activeCellRowEl;
+      const rowIndex = Number(row.getAttribute('row-index'));
+      const columnIndex = me.activeCellColumnIndex;
+      const newColumnIndex = me.getNextVisibleColumnIndex(columnIndex);
+
+      if(newColumnIndex === columnIndex || newColumnIndex === undefined){
+        return false;
+      }
+
+      const cell = me.getCell(rowIndex, newColumnIndex);
+      if(cell){
+        me.setActiveCell(cell);
+      }
+      else {
+        me.scrollToNotVisibleNewActiveCell(rowIndex, newColumnIndex);
+      }
+
+      return cell;
+    },
+
     updateHeaderCheckboxSelection(column){
       const me = this;
       const store = me.store;
@@ -6296,10 +7095,363 @@ Fancy.format = {
       });
 
       return items;
+    },
+
+    generateCellsSelectionRange(){
+      const me = this;
+      const activeCellRowIndex = me.store.idRowIndexesMap.get(me.activeCellRowId);
+      const secondActiveCellRowIndex = me.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const rows = [];
+      const columns = [];
+
+      if(activeCellRowIndex <= secondActiveCellRowIndex){
+        rows[0] = activeCellRowIndex;
+        rows[1] = secondActiveCellRowIndex;
+      }
+      else {
+        rows[0] = secondActiveCellRowIndex;
+        rows[1] = activeCellRowIndex;
+      }
+
+      if(me.activeCellColumnIndex <= me.secondActiveCellColumnIndex){
+        columns[0] = me.activeCellColumnIndex;
+        columns[1] = me.secondActiveCellColumnIndex;
+      }
+      else {
+        columns[0] = me.secondActiveCellColumnIndex;
+        columns[1] = me.activeCellColumnIndex;
+      }
+
+      me.selectionCellsRange = {
+        rows,
+        columns
+      };
+    },
+
+    selectCellsFromRange(){
+      const me = this;
+      const selectedCells = me.bodyEl.querySelectorAll(`div.${CELL_SELECTED}`);
+
+      selectedCells.forEach(cell => {
+        if(me.isCellInSelectedRange(cell) === false){
+          cell.classList.remove(CELL_SELECTED);
+        }
+      });
+
+      const {
+        rows,
+        columns
+      } = me.selectionCellsRange;
+
+      if(rows[0] < me.scroller.startRow){
+        rows[0] = me.scroller.startRow;
+      }
+
+      if(rows[1] > me.scroller.endRow){
+        rows[1] = me.scroller.endRow;
+      }
+
+      if(columns[0] < me.scroller.columnViewStart){
+        columns[0] = me.scroller.columnViewStart;
+      }
+
+      if(columns[1] > me.scroller.columnViewEnd){
+        columns[1] = me.scroller.columnViewEnd;
+      }
+
+      for(let i = rows[0];i<=rows[1];i++){
+        for(let j = columns[0];j<=columns[1];j++){
+          const cell = me.bodyEl.querySelector(`div.${ROW}[row-index="${i}"] div.${CELL}[col-index="${j}"]`);
+
+          if(cell && !cell.classList.contains(CELL_SELECTED)) {
+            cell.classList.add(CELL_SELECTED);
+          }
+        }
+      }
+    },
+
+    isCellInSelectedRange(cell){
+      const me = this;
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const row = cell.closest(`.${ROW}`);
+
+      if(!row){
+        return false;
+      }
+
+      const rowIndex = Number(row.getAttribute('row-index'));
+      const {
+        rows,
+        columns
+      } = me.selectionCellsRange;
+
+      return rowIndex >= rows[0] && rowIndex <= rows[1] && columnIndex >= columns[0] && columnIndex <= columns[1];
+    },
+
+    clearSelectionRange(){
+      const me = this;
+      const selectedCells = me.bodyEl.querySelectorAll(`div.${CELL_SELECTED}`);
+
+      selectedCells.forEach(cell => {
+        cell.classList.remove(CELL_SELECTED);
+      });
+
+      delete me.selectionCellsRange;
+    },
+
+    copySelectedCells(){
+      const me = this;
+      const text = me.getTextFromSelectionRange();
+
+      Fancy.copyText(text);
+    },
+
+    getTextFromSelectionRange(){
+      const me = this;
+      const {
+        rows,
+        columns
+      } = me.selectionCellsRange || {
+        rows: [],
+        columns: []
+      };
+      const data = [];
+
+      for(let i = rows[0];i<=rows[1];i++){
+        let item = me.store.getItemByRowIndex(i);
+        const rowData = [];
+
+        for(let j = columns[0];j<=columns[1];j++){
+          const column = me.columns[j];
+          let cellInner;
+          let value = item[column.index];
+
+          if(column.render){
+            cellInner = column.render({
+              item,
+              column,
+              rowIndex: i,
+              columnIndex: j,
+              value
+            });
+          }
+          else {
+            cellInner = value;
+          }
+
+          rowData.push(cellInner);
+        }
+
+        data.push(rowData);
+      }
+
+      return data.map(row => row.join('\t')).join('\n');
+    },
+
+    insertCopiedCells(){
+      const me = this;
+      const textarea = document.createElement('textarea');
+      document.body.appendChild(textarea);
+      textarea.focus();
+      document.addEventListener('paste', (event) => {
+        const text = event.clipboardData.getData('text');
+        if(document.body.contains(textarea)){
+          document.body.removeChild(textarea);
+        }
+
+        const rows = text.split('\n');
+        const data = rows.map(row => {
+          const columns = row.split('\t');
+          return [columns[0], Number(columns[1]), Number(columns[2])];
+        });
+
+        const activeRowIndex = Number(me.activeCellRowEl.getAttribute('row-index'));
+
+        data.forEach((dataRow, itemRowIndex)=>{
+          const rowIndex = activeRowIndex + itemRowIndex;
+          const item = me.store.getItemByRowIndex(rowIndex);
+          const rowEl = me.bodyEl.querySelector(`.${ROW}[row-index="${rowIndex}"]`);
+
+          dataRow.forEach((value, itemColumnIndex)=>{
+            const columnIndex = me.activeCellColumnIndex + itemColumnIndex;
+            const column = me.columns[columnIndex];
+
+            me.store.setById(item.id,column.index, value);
+
+            let cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
+
+            cell?.remove();
+
+            cell = me.createCell(rowIndex, columnIndex);
+            rowEl.appendChild(cell);
+          });
+        });
+
+
+      });
     }
   };
 
   Object.assign(Grid.prototype, GridMixinSelection);
+})();
+
+(()=> {
+  const {
+    DOWN,
+    UP,
+    LEFT,
+    RIGHT,
+    ESC,
+    SPACE,
+    C,
+    V,
+    ENTER
+  } = Fancy.key;
+
+  const {
+    ROW
+  } = Fancy.cls;
+
+  const GridMixinKeyNavigation = {
+    initKeyNavigation(){
+      const me = this;
+
+      document.body.addEventListener('keydown', me.onKeyDown.bind(me));
+    },
+    onKeyDown(event){
+      const me = this;
+
+      switch (event.keyCode){
+        case C:
+          if(event.ctrlKey || event.metaKey){
+            me.copySelectedCells();
+          }
+          break;
+        case V:
+          if(me.activeCell && me.activeCellEl && (event.ctrlKey || event.metaKey)){
+            me.insertCopiedCells();
+          }
+          break;
+        case ESC:
+          if(!me.isEditing) {
+            me.destroyHeaderCellMenuList();
+          }
+          break;
+        case SPACE:
+          if(me.activeCell && me.activeCellEl){
+            const cell = me.activeCellEl;
+            const columnIndex = Number(cell.getAttribute('col-index'));
+            const column = me.columns[columnIndex];
+            const row = cell.closest(`.${ROW}`);
+            const itemId = row.getAttribute('row-id');
+            const item = me.store.idItemMap.get(itemId);
+            const value = item[column.index];
+
+            if(column.type === 'boolean' && column.editable){
+              me.store.setById(itemId, column.index, !value);
+              me.activeCellEl.querySelector('input').checked = !value;
+            }
+            else if(me.checkboxSelection){
+              me.selectRow(cell);
+            }
+          }
+          break;
+        case DOWN:
+          if(!me.isEditing){
+            event.preventDefault();
+            me.onKeyDOWN(event.shiftKey);
+          }
+          break;
+        case UP:
+          if(!me.isEditing) {
+            event.preventDefault();
+            me.onKeyUP(event.shiftKey);
+          }
+          break;
+        case LEFT:
+          if(!me.isEditing) {
+            me.onKeyLEFT(event.shiftKey);
+          }
+          break;
+        case RIGHT:
+          if(!me.isEditing) {
+            me.onKeyRIGHT(event.shiftKey);
+          }
+          break;
+        case ENTER:
+          if(!me.isEditing){
+            me.onKeyEnter();
+          }
+          break;
+      }
+    },
+    onKeyUP(shift){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        if(shift){
+          me.setShiftCellUp();
+        }
+        else {
+          me.setActiveCellUp();
+        }
+      }
+    },
+    onKeyDOWN(shift){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        if(shift){
+          me.setShiftCellDown();
+        }
+        else {
+          me.setActiveCellDown();
+        }
+      }
+    },
+    onKeyLEFT(shift){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        if(shift){
+          me.setShiftCellLeft();
+        }
+        else {
+          me.setActiveCellLeft();
+        }
+      }
+    },
+    onKeyRIGHT(shift){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        if(shift){
+          me.setShiftCellRight();
+        }
+        else {
+          me.setActiveCellRight();
+        }
+      }
+    },
+    onKeyEnter(){
+      const me = this;
+
+      if(me.$preventOpeningEditor){
+        delete me.$preventOpeningEditor;
+        return;
+      }
+
+      if(me.activeCellEl){
+        if(me.editingCell?.getAttribute('id') === me.activeCellEl.getAttribute('id')){
+          return;
+        }
+        me.openEditorForCell(me.activeCellEl);
+      }
+    }
+  };
+
+  Object.assign(Grid.prototype, GridMixinKeyNavigation);
+
 })();
 
 (()=> {
@@ -6546,6 +7698,151 @@ Fancy.format = {
 
   Object.assign(Grid.prototype, GridMixinColumnDrag);
 
+})();
+
+(()=> {
+  const {
+    CELL,
+    ROW,
+    EDITING
+  } = Fancy.cls;
+
+  const GridMixinEdit = {
+    onBodyCellDBLClick(event){
+      const me = this;
+      const target = event.target;
+      const cell = target.closest(`.${CELL}`);
+
+      me.openEditorForCell(cell);
+    },
+
+    openEditorForCell(cell){
+      const me = this;
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const column = me.columns[columnIndex];
+      let row = cell.closest(`.${ROW}`);
+      const itemId = row.getAttribute('row-id');
+      const rowIndex = row.getAttribute('row-index');
+      const item = me.store.idItemMap.get(itemId);
+      const value = item[column.index];
+      const rowTop = Fancy.getTranslateY(row);
+
+      if(column.editable !== true){
+        me.hideActiveEditor();
+        return;
+      }
+
+      if(column.editorField){
+        switch (column.type){
+          case 'string':
+          case 'number':
+            me.setStatusEditing(true);
+
+            column.editorField.setValue(value);
+            column.editorField.show({
+              width: `${column.width}px`,
+              left: `${column.left}px`,
+              transform: `translateY(${rowTop - 1}px)`,
+            });
+            column.editorField.focus();
+
+            me.activeEditor = column.editorField;
+            break;
+        }
+      }
+      else {
+        switch(column.type){
+          case 'string':
+          case 'number':
+            me.setStatusEditing(true);
+            column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${column.type}Field`)]({
+              renderTo: me.editorsContainerEl,
+              value,
+              style: {
+                position: 'absolute',
+                width: `${column.width}px`,
+                left: `${column.left}px`,
+                transform: `translateY(${rowTop - 1}px)`,
+                height: `${me.rowHeight + 1}px`
+              },
+              onChange(value, fromTyping){
+                if(fromTyping === false){
+                  return;
+                }
+
+                // Re-get cell on case of scroll
+                if(me.activeCellEl){
+                  cell = me.activeCellEl;
+                  row = cell.closest(`.${ROW}`);
+                }
+
+                me.store.setById(itemId, column.index, value);
+                cell?.remove();
+
+                cell = me.createCell(rowIndex, columnIndex);
+                me.activeCellEl = cell;
+                row.appendChild(cell);
+              },
+              onEnter(){
+                me.hideActiveEditor();
+                let activeCell = false;
+                switch (me.editorEnterAction){
+                  case 'down':
+                    activeCell = me.setActiveCellDown();
+                    break;
+                  case 'right':
+                    activeCell = me.setActiveCellRight();
+                    break;
+                }
+
+                if(activeCell === false){
+                  me.$preventOpeningEditor = true;
+                  setTimeout(()=>{
+                    delete me.$preventOpeningEditor;
+                  }, 100);
+                }
+              },
+              onESC(){
+                me.hideActiveEditor();
+              }
+            });
+            column.editorField.focus();
+
+            me.activeEditor = column.editorField;
+            break;
+          default:
+            me.hideActiveEditor();
+        }
+      }
+    },
+
+    hideActiveEditor(){
+      const me = this;
+
+      if(me.activeEditor){
+        me.activeEditor.hide();
+        delete me.activeEditor;
+        me.setStatusEditing(false);
+      }
+    },
+
+    setStatusEditing(value){
+      const me = this;
+
+      me.isEditing = value;
+
+      if(value){
+        me.gridEl.classList.add(EDITING);
+        me.editingCell = me.activeCellEl;
+      }
+      else {
+        me.gridEl.classList.remove(EDITING);
+        delete me.editingCell;
+      }
+    }
+  };
+
+  Object.assign(Grid.prototype, GridMixinEdit);
 })();
 
 (() => {
@@ -6870,6 +8167,244 @@ Fancy.format = {
   }
 
   Fancy.FilterField = FilterField;
+
+})();
+
+(() => {
+  const {
+    FIELD,
+    FIELD_INPUT
+  } = Fancy.cls;
+
+  const {
+    ENTER,
+    ESC
+  } = Fancy.key;
+
+  class StringField {
+    value = '';
+
+    constructor(config) {
+      const me = this;
+
+      Object.assign(me, config);
+
+      me.render();
+      me.ons();
+    }
+
+    render() {
+      const me = this;
+      const el = document.createElement('div');
+
+      if(typeof me.renderTo === 'string'){
+        me.renderTo = document.getElementById(me.renderTo);
+      }
+
+      if(me.style){
+        for(let p in me.style){
+          el.style[p] = me.style[p];
+        }
+
+        delete me.style;
+      }
+
+      me.container = me.renderTo;
+
+      el.classList.add(FIELD);
+
+      const elInput = document.createElement('input');
+      elInput.classList.add(FIELD_INPUT);
+      elInput.value = me.value;
+      me.input = elInput;
+
+      el.appendChild(elInput);
+      me.el = el;
+
+      me.container.appendChild(el);
+    }
+
+    ons() {
+      const me = this;
+
+      //me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
+      //me.input.addEventListener('input', me.debouceInputFn);
+      me.input.addEventListener('input', me.onInput.bind(me));
+      me.input.addEventListener('keydown', me.onKeyDown.bind(me));
+    }
+
+    onInput(event) {
+      const me = this;
+      const value = event.target.value;
+
+      me.onChange?.(value, true);
+    }
+
+    onKeyDown(event){
+      const me = this;
+
+      switch (event.keyCode) {
+        case ENTER:
+          const value = event.target.value;
+          me.onEnter?.(value);
+          break;
+        case ESC:
+          me.onESC?.();
+          break;
+      }
+    }
+
+    setValue(value) {
+      const me = this;
+
+      me.input.value = value;
+
+      me.onChange?.(value, false);
+    }
+
+    show(style){
+      const me = this;
+
+      me.el.style.display = '';
+
+      for(let p in style){
+        me.el.style[p] = style[p];
+      }
+    }
+
+    focus(){
+      const me = this;
+
+      me.input.focus();
+    }
+
+    hide(){
+      const me = this;
+
+      me.el.style.display = 'none';
+    }
+  }
+
+  Fancy.StringField = StringField;
+
+})();
+
+(() => {
+  const {
+    FIELD,
+    FIELD_INPUT
+  } = Fancy.cls;
+
+  const {
+    ENTER,
+    ESC
+  } = Fancy.key;
+
+  class NumberField {
+    value = '';
+
+    constructor(config) {
+      const me = this;
+
+      Object.assign(me, config);
+
+      me.render();
+      me.ons();
+    }
+
+    render() {
+      const me = this;
+      const el = document.createElement('div');
+
+      if(typeof me.renderTo === 'string'){
+        me.renderTo = document.getElementById(me.renderTo);
+      }
+
+      if(me.style){
+        for(let p in me.style){
+          el.style[p] = me.style[p];
+        }
+
+        delete me.style;
+      }
+
+      me.container = me.renderTo;
+
+      el.classList.add(FIELD);
+
+      const elInput = document.createElement('input');
+      elInput.classList.add(FIELD_INPUT);
+      elInput.value = me.value;
+      me.input = elInput;
+
+      el.appendChild(elInput);
+      me.el = el;
+
+      me.container.appendChild(el);
+    }
+
+    ons() {
+      const me = this;
+
+      //me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
+      //me.input.addEventListener('input', me.debouceInputFn);
+      me.input.addEventListener('input', me.onInput.bind(me));
+      me.input.addEventListener('keydown', me.onKeyDown.bind(me));
+    }
+
+    onInput(event) {
+      const me = this;
+      const value = event.target.value;
+
+      me.onChange?.(value, true);
+    }
+
+    onKeyDown(event){
+      const me = this;
+
+      switch (event.keyCode) {
+        case ENTER:
+          const value = event.target.value;
+          me.onEnter?.(value);
+          break;
+        case ESC:
+          me.onESC?.();
+          break;
+      }
+    }
+
+    setValue(value) {
+      const me = this;
+
+      me.input.value = value;
+
+      me.onChange?.(value, false);
+    }
+
+    show(style){
+      const me = this;
+
+      me.el.style.display = '';
+
+      for(let p in style){
+        me.el.style[p] = style[p];
+      }
+    }
+
+    focus(){
+      const me = this;
+
+      me.input.focus();
+    }
+
+    hide(){
+      const me = this;
+
+      me.el.style.display = 'none';
+    }
+  }
+
+  Fancy.NumberField = NumberField;
 
 })();
 

@@ -60,6 +60,10 @@
         }, 300);
       }
 
+      if(me.activeCell){
+        me.clearActiveCell();
+      }
+
       return {
         columnIndex: columnsToRemove[0]
       };
@@ -108,6 +112,28 @@
       const me = this;
 
       return me.columns.find(column => column.index === index);
+    },
+
+    getNextVisibleColumnIndex(index){
+      const me = this;
+
+      for(let i = index + 1;i<me.columns.length;i++){
+        const column = me.columns[i];
+        if(column.hidden !== true){
+          return i;
+        }
+      }
+    },
+
+    getPrevVisibleColumnIndex(index){
+      const me = this;
+
+      for(let i = index - 1;i>-1;i--){
+        const column = me.columns[i];
+        if(column.hidden !== true){
+          return i;
+        }
+      }
     },
 
     getAutoColumnIdSeed(){

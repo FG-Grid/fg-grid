@@ -2,6 +2,7 @@ Fancy.cls = {
   HIDDEN: 'fg-hidden',
   GRID: 'fg-grid',
   TOUCH: 'fg-touch',
+  EDITING: 'fg-editing',
 
   // Header
   HEADER: 'fg-header',
@@ -21,6 +22,7 @@ Fancy.cls = {
   BODY: 'fg-body',
   BODY_INNER: 'fg-body-inner',
   BODY_INNER_CONTAINER: 'fg-body-inner-container',
+  EDITORS_CONTAINER: 'fg-editors-container',
 
   // Column
   COLUMN_RESIZING: 'fg-column-resizing',
@@ -40,6 +42,9 @@ Fancy.cls = {
   CELL_ORDER: 'fg-cell-order',
   CELL_WRAPPER: 'fg-cell-wrapper',
   CELL_SELECTION: 'fg-cell-selection',
+  CELL_SELECTED: 'fg-cell-selected',
+  ACTIVE_CELL: 'fg-cell-active',
+  ACTIVE_CELL_ROW: 'fg-cell-active-row',
 
   // Row Group
   ROW: 'fg-row',
@@ -94,6 +99,18 @@ Fancy.cls = {
 
   //Checkbox
   INPUT_CHECKBOX: 'fg-input-checkbox',
+
+  // Field
+  FIELD: 'fg-field',
+  FIELD_INPUT: 'fg-field-input',
+
+  // String Field
+  STRING_FIELD: 'fg-string-field',
+  STRING_FIELD_INPUT: 'fg-string-field-input',
+
+  // Number Field
+  NUMBER_FIELD: 'fg-number-field',
+  NUMBER_FIELD_INPUT: 'fg-number-field-input',
 
   // SVG
   SVG_ITEM: 'fg-svg-item',

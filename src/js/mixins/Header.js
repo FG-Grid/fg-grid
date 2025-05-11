@@ -78,6 +78,7 @@
         const column = me.columns[columnIndex];
 
         if (!column.elMenuList) {
+          me.destroyHeaderCellMenuList();
           requestAnimationFrame(() => {
             me.showHeaderCellMenuList(event, column, columnIndex);
           });
@@ -214,6 +215,8 @@
         column.headerCheckboxSelectionEl = checkboxEl;
 
         cell.appendChild(elSelection);
+
+        me.updateHeaderCheckboxSelection(column);
       }
 
       cell.appendChild(label);
@@ -445,6 +448,7 @@
       document.body.appendChild(el);
       setTimeout(()=>{
         el.style.opacity = `1`;
+        me.activeElMenuList = el;
       }, 0);
 
       el.addEventListener('click', me.onClickHeaderMenuItem.bind(this));
@@ -507,8 +511,21 @@
       const me = this;
 
       document.removeEventListener('mousedown', me.onDocClickForHeaderCellMenuFn);
-      column.elMenuList?.remove();
-      delete column.elMenuList;
+
+      if(column) {
+        column.elMenuList?.remove();
+        delete column.elMenuList;
+      }
+      else if(me.activeElMenuList){
+        me.scroller.columnsViewRange.forEach(columnIndex => {
+          const column = me.columns[columnIndex];
+          if(column.elMenuList){
+            column.elMenuList.remove();
+            delete column.elMenuList;
+          }
+        })
+      }
+      delete me.activeElMenuList;
     },
 
     reSetVisibleHeaderColumnsIndex(){

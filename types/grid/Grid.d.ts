@@ -20,6 +20,9 @@ interface GridConfig {
   rowStyle?: (params: RenderParams) => RowStyle | undefined;
   rowCls?: (params: RenderParams) => string | string[] | undefined;
   rowClsRules?: RowClsRules;
+  activeCell?: boolean;
+  selectingCells?: boolean;
+  editorEnterAction?: 'stay' | 'down' | 'right';
 }
 
 declare class Grid implements GridConfig {

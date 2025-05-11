@@ -4,6 +4,9 @@
     CELL_ORDER,
     CELL_WRAPPER,
     CELL_SELECTION,
+    CELL_SELECTED,
+    ACTIVE_CELL,
+    ACTIVE_CELL_ROW,
     ROW,
     ROW_ODD,
     ROW_EVEN,
@@ -91,6 +94,10 @@
         cell.style.width = column.width + 'px';
         cell.style.left = column.left + 'px';
 
+        if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
+          cell.classList.add(ACTIVE_CELL);
+          me.activeCellEl = cell;
+        }
 
         if(column.cellStyle) {
           let cellExtraStyles;
@@ -195,6 +202,28 @@
 
           cell.innerHTML = cellInner ?? '&nbsp;';
         }
+
+        if(me.activeCell){
+          cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
+          if(me.selectingCells){
+            cell.addEventListener('mouseenter', me.onBodyCellMouseEnter.bind(this));
+
+            if(me.selectionCellsRange && cell){
+              requestAnimationFrame(()=> {
+                if (me.isCellInSelectedRange(cell)) {
+                  cell.classList.add(CELL_SELECTED);
+                }
+              });
+            }
+          }
+        }
+
+        if(column.editable){
+          cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
+        }
+
+        cell.addEventListener('click', me.onBodyCellClick.bind(this));
+        //cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
 
         return cell;
     },
@@ -415,6 +444,11 @@
 
       rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
+      if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){
+        rowEl.classList.add(ACTIVE_CELL_ROW);
+        me.activeCellRowEl = rowEl;
+      }
+
       me.applyExtraRowStyles(rowEl, params);
 
       if(item.$selected){
@@ -426,6 +460,7 @@
         rowEl.style[p] = style[p];
       }
       rowEl.setAttribute('row-id', item.id);
+      rowEl.setAttribute('row-index', index);
 
       rowEl.addEventListener('mouseenter', this.onRowMouseEnter.bind(this));
 
@@ -506,6 +541,7 @@
         rowEl.style[p] = style[p];
       }
       rowEl.setAttribute('row-id', item.id);
+      rowEl.setAttribute('row-index', index);
       rowEl.setAttribute('row-group', item.$rowGroupValue.replaceAll('-', '$').split('/').join('-'));
 
       rowEl.addEventListener('mouseenter', this.onRowMouseEnter.bind(this));
@@ -566,6 +602,7 @@
 
       rowEl.style.transform = `translateY(${positionY}px)`;
       rowEl.setAttribute('row-id', item.id);
+      rowEl.setAttribute('row-index', index);
       rowEl.addEventListener('mouseenter', this.onRowMouseEnter.bind(this));
 
       let columnStart = me.scroller.columnViewStart,
@@ -707,6 +744,7 @@
       const positionY = me.getSmoothPositionY(item);
 
       rowEl.style.transform = `translateY(${positionY}px)`;
+      rowEl.setAttribute('row-index', item.rowIndex);
 
       if(me.columnOrder){
         const orderCell = rowEl.querySelector(`.${CELL_ORDER}`);
@@ -748,6 +786,7 @@
       }
 
       rowEl.style.transform = `translateY(${item.rowIndex * me.rowHeight}px)`;
+      rowEl.setAttribute('row-index', item.rowIndex);
     },
 
     removeNotNeededRows() {
@@ -886,6 +925,13 @@
           cell.setAttribute('col-index', newIndex);
         });
       }
+    },
+
+    getCell(rowIndex, columnIndex){
+      const me = this;
+      const cell = me.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
+
+      return cell;
     }
   }
 

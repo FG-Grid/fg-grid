@@ -80,7 +80,7 @@
 
       me.idSeed = 0;
 
-      me.data.forEach((item, index) => {
+      me.data.forEach(item => {
         if (!item.id) {
           item.id = me.generateId();
         }
@@ -149,7 +149,7 @@
       } = me;
 
       if (sorters.length || filters.length || rowGroups.length) {
-        return this.displayedData.length;
+        return this.displayedData?.length || 0;
       }
 
       return me.getDataTotal();
@@ -178,6 +178,31 @@
       const me = this;
 
       me.prevIdRowIndexesMap = me.idRowIndexesMap;
+    }
+
+    getPrevVisibleRowIndex(rowIndex){
+      const me = this;
+      const data = me.displayedData || me.data;
+
+      for(let i = rowIndex - 1;i>-1;i--){
+        const row = data[i];
+        if(row.$isGroupRow !== true){
+          return i;
+        }
+      }
+    }
+
+    getNextVisibleRowIndex(rowIndex){
+      const me = this;
+      const totalDisplayed = me.getDisplayedDataTotal();
+      const data = me.displayedData || me.data;
+
+      for(let i = rowIndex + 1;i<totalDisplayed;i++){
+        const row = data[i];
+        if(row.$isGroupRow !== true){
+          return i;
+        }
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '0.3.9',
+  version: '0.7.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -26,6 +26,22 @@ const Fancy = {
     }
 
     return clonedObj;
+  },
+  getTranslateY(element) {
+    const style = window.getComputedStyle(element);
+    const matrix = style.transform;
+
+    if (!matrix || matrix === 'none') {
+      return 0;
+    }
+
+    const values = matrix.match(/matrix.*\((.+)\)/);
+    if (!values) {
+      return 0;
+    }
+
+    const parts = values[1].split(', ').map(parseFloat);
+    return parts.length === 6 ? parts[5] : 0;
   }
 };
 

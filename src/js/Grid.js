@@ -9,6 +9,7 @@
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
+    EDITORS_CONTAINER,
     TOUCH
   } = Fancy.cls;
 
@@ -30,6 +31,11 @@
 
     actualRowsIdSet;
     renderedRowsIdMap;
+
+    activeCell = true;
+    selectingCells = true;
+
+    editorEnterAction = 'stay'; // 'stay' | 'down' | 'right'
 
     $defaultRowGroupColumn = {
       title: 'Group',
@@ -73,6 +79,10 @@
       me.renderVisibleHeaderCells();
       if(me.filterBar){
         me.renderVisibleFilterBarCells();
+      }
+
+      if(me.activeCell){
+        me.initKeyNavigation();
       }
 
       me.ons();
@@ -214,10 +224,16 @@
       }
       bodyInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
 
+      const editorsContainerEl = document.createElement('div');
+
+      editorsContainerEl.classList.add(EDITORS_CONTAINER);
+
+      bodyInnerContainerEl.appendChild(editorsContainerEl);
       bodyInnerEl.appendChild(bodyInnerContainerEl);
       bodyEl.appendChild(bodyInnerEl);
       me.gridEl.appendChild(bodyEl);
 
+      me.editorsContainerEl = editorsContainerEl;
       me.bodyInnerContainerEl = bodyInnerContainerEl;
       me.bodyInnerEl = bodyInnerEl;
       me.bodyEl = bodyEl;
@@ -454,6 +470,12 @@
       me.touchScroller.destroy();
 
       me.gridEl.remove();
+    }
+
+    onBodyCellClick(event){
+      const me = this;
+
+      me.hideActiveEditor();
     }
   }
 
