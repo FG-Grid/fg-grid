@@ -12,7 +12,7 @@
       }
 
       me.sorters.forEach(sorter => {
-        data = me.sortData(data, sorter.index, sorter.dir, sorter.type);
+        data = me.sortData(data, sorter.column, sorter.dir);
       });
 
       me.sortedData = data;
@@ -27,7 +27,7 @@
       me.displayedData = me.sortedData;
     },
 
-    sort(index, dir = 'ASC', type, multi) {
+    sort(column, dir = 'ASC', multi) {
       const me = this;
       let data;
 
@@ -46,22 +46,21 @@
       if (!multi) {
         me.sorters = [];
       } else {
-        me.sorters = me.sorters.filter(sorter => sorter.index !== index);
+        me.sorters = me.sorters.filter(sorter => sorter.column.id !== column.id);
       }
 
       me.sorters.push({
-        index,
-        dir,
-        type: type
+        column,
+        dir
       });
 
       switch (dir) {
         case 'ASC':
         case 'DESC':
           if (me.rowGroups.length) {
-            me.sortedData = me.filters.length ? me.sortGroupDataForFiltering(index, dir, type) : me.sortGroupData(index, dir, type);
+            me.sortedData = me.filters.length ? me.sortGroupDataForFiltering(column, dir) : me.sortGroupData(column, dir);
           } else {
-            me.sortedData = me.sortData(data, index, dir, type);
+            me.sortedData = me.sortData(data, column, dir);
           }
           break;
       }
@@ -77,7 +76,7 @@
       me.prevAction = 'sort';
     },
 
-    sortGroupData(index, dir, type) {
+    sortGroupData(column, dir) {
       const me = this;
       const sortedData = me.displayedData.slice();
 
@@ -93,10 +92,10 @@
 
         if (me.sorters.length) {
           me.sorters.forEach(sorter => {
-            sortedGroupData = me.sortData(sortedGroupData, sorter.index, sorter.dir, sorter.type);
+            sortedGroupData = me.sortData(sortedGroupData, sorter.column, sorter.dir);
           });
         } else {
-          sortedGroupData = me.sortData(groupData, index, dir, type);
+          sortedGroupData = me.sortData(groupData, column, dir);
         }
 
         sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
@@ -105,7 +104,7 @@
       return sortedData;
     },
 
-    sortGroupDataForFiltering(index, dir, type) {
+    sortGroupDataForFiltering(column, dir) {
       const me = this;
       const sortedData = me.displayedData.slice();
 
@@ -121,10 +120,10 @@
 
         if (me.sorters.length) {
           me.sorters.forEach(sorter => {
-            sortedGroupData = me.sortData(sortedGroupData, sorter.index, sorter.dir, sorter.type);
+            sortedGroupData = me.sortData(sortedGroupData, sorter.column, sorter.dir);
           });
         } else {
-          sortedGroupData = me.sortData(groupData, index, dir, type);
+          sortedGroupData = me.sortData(groupData, column, dir);
         }
 
         sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
@@ -137,22 +136,33 @@
       const me = this;
 
       me.sorters.forEach(sorter => {
-        data = me.sortData(data, sorter.index, sorter.dir, sorter.type);
+        data = me.sortData(data, sorter.column, sorter.dir);
       });
 
       return data;
     },
 
-    sortData(data, index, dir, type) {
+    sortData(data, column, dir) {
       let sortedData = [];
 
       switch (dir) {
         case 'ASC':
-          switch (type) {
+          switch (column.type) {
             case 'number':
               sortedData = data.sort((a, b) => {
-                a = a[index];
-                b = b[index];
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  });
+
+                  b = column.getter({
+                    item: b
+                  });
+                }
+                else {
+                  a = a[column.index];
+                  b = b[column.index];
+                }
 
                 if (a === null) {
                   a = Number.MIN_SAFE_INTEGER;
@@ -167,8 +177,19 @@
               break;
             case 'string':
               sortedData = data.sort((a, b) => {
-                a = a[index] || '';
-                b = b[index] || '';
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || '';
+
+                  b = column.getter({
+                    item: b
+                  }) || '';
+                }
+                else {
+                  a = a[column.index] || '';
+                  b = b[column.index] || '';
+                }
 
                 if (!a.localeCompare) {
                   console.error(`${a} is not a string`);
@@ -179,8 +200,18 @@
               break;
             case 'boolean':
               sortedData = data.sort((a, b) => {
-                a = a[index] || false;
-                b = b[index] || false;
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || false;
+                  b = column.getter({
+                    item: b
+                  }) || false;
+                }
+                else {
+                  a = a[column.index] || false;
+                  b = b[column.index] || false;
+                }
 
                 return (a === b) ? 0 : a ? 1 : -1;
               });
@@ -188,11 +219,22 @@
           }
           break;
         case 'DESC':
-          switch (type) {
+          switch (column.type) {
             case 'number':
               sortedData = data.sort((a, b) => {
-                a = a[index];
-                b = b[index];
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  });
+
+                  b = column.getter({
+                    item: b
+                  });
+                }
+                else {
+                  a = a[column.index];
+                  b = b[column.index];
+                }
 
                 if (a === null) {
                   a = Number.MIN_SAFE_INTEGER;
@@ -207,16 +249,37 @@
               break;
             case 'string':
               sortedData = data.sort((a, b) => {
-                a = a[index] || '';
-                b = b[index] || '';
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || '';
+
+                  b = column.getter({
+                    item: b
+                  }) || '';
+                }
+                else {
+                  a = a[column.index] || '';
+                  b = b[column.index] || '';
+                }
 
                 return b.localeCompare(a);
               });
               break;
             case 'boolean':
               sortedData = data.sort((a, b) => {
-                a = a[index] || false;
-                b = b[index] || false;
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || false;
+                  b = column.getter({
+                    item: b
+                  }) || false;
+                }
+                else {
+                  a = a[column.index] || false;
+                  b = b[column.index] || false;
+                }
 
                 return (a === b) ? 0 : a ? -1 : 1;
               });
@@ -228,13 +291,13 @@
       return sortedData;
     },
 
-    clearSort(index, multi) {
+    clearSort(column, multi) {
       const me = this;
 
       me.sortedData = [];
 
-      if (index && multi) {
-        me.sorters = me.sorters.filter(sorter => sorter.index !== index);
+      if (column && multi) {
+        me.sorters = me.sorters.filter(sorter => sorter.column.id !== column.id);
       } else {
         me.sorters = [];
       }

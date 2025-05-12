@@ -16,18 +16,31 @@
 
     openEditorForCell(cell){
       const me = this;
-      const columnIndex = Number(cell.getAttribute('col-index'));
-      const column = me.columns[columnIndex];
+      let columnIndex = Number(cell.getAttribute('col-index'));
+      let column = me.columns[columnIndex];
       let row = cell.closest(`.${ROW}`);
-      const itemId = row.getAttribute('row-id');
-      const rowIndex = row.getAttribute('row-index');
+      let itemId = row.getAttribute('row-id');
+      let rowIndex = row.getAttribute('row-index');
       const item = me.store.idItemMap.get(itemId);
-      const value = item[column.index];
+      let value = item[column.index];
       const rowTop = Fancy.getTranslateY(row);
 
       if(column.editable !== true){
         me.hideActiveEditor();
         return;
+      }
+
+      if(column.getter){
+        const params = {
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value,
+          cell
+        }
+
+        value = column.getter(params);
       }
 
       if(column.editorField){
@@ -72,14 +85,40 @@
                 if(me.activeCellEl){
                   cell = me.activeCellEl;
                   row = cell.closest(`.${ROW}`);
+                  columnIndex = Number(cell.getAttribute('col-index'));
+                  column = me.columns[columnIndex];
+                  rowIndex = row.getAttribute('row-index');
+                  itemId = row.getAttribute('row-id');
                 }
 
-                me.store.setById(itemId, column.index, value);
+                if(column.setter){
+                  const params = {
+                    item,
+                    column,
+                    rowIndex,
+                    columnIndex,
+                    value,
+                    cell,
+                    newValue: value
+                  }
+
+                  column.setter(params);
+                }
+                else {
+                  me.store.setById(itemId, column.index, value);
+                }
                 cell?.remove();
 
                 cell = me.createCell(rowIndex, columnIndex);
                 me.activeCellEl = cell;
                 row.appendChild(cell);
+
+                if(column.setter){
+                  me.rowCellsUpdateWithColumnIndex(row);
+                }
+                else {
+                  me.rowCellsUpdateWithColumnRender(row);
+                }
               },
               onEnter(){
                 me.hideActiveEditor();
@@ -137,6 +176,46 @@
         me.gridEl.classList.remove(EDITING);
         delete me.editingCell;
       }
+    },
+
+    rowCellsUpdateWithColumnIndex(row){
+      const me = this;
+      const rowIndex = row.getAttribute('row-index');
+      const cells = row.querySelectorAll(`.${CELL}`)
+
+      cells.forEach(cell => {
+        const columnIndex = Number(cell.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+
+        if(column.index === undefined){
+          return;
+        }
+
+        cell?.remove();
+
+        cell = me.createCell(rowIndex, columnIndex);
+        row.appendChild(cell);
+      });
+    },
+
+    rowCellsUpdateWithColumnRender(row){
+      const me = this;
+      const rowIndex = row.getAttribute('row-index');
+      const cells = row.querySelectorAll(`.${CELL}`)
+
+      cells.forEach(cell => {
+        const columnIndex = Number(cell.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+
+        if(column.render === undefined){
+          return;
+        }
+
+        cell?.remove();
+
+        cell = me.createCell(rowIndex, columnIndex);
+        row.appendChild(cell);
+      });
     }
   }
 

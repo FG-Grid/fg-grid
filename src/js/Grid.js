@@ -43,6 +43,7 @@
       sortable: false,
       type: 'string',
       rowGroupIndent: true,
+      editable: false,
       render(params){
         const {
           value

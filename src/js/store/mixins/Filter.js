@@ -1,25 +1,25 @@
 (()=> {
 
   const StoreFilter = {
-    clearFilter(index, sign) {
+    clearFilter(column, sign) {
       const me = this;
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
-      me.prevFilterIndex = '';
+      me.filters = me.filters.filter(filter => filter.column.id!== column.id);
+      delete me.prevFilterColumn;
 
       me.reFilter(false);
       me.reSort();
     },
 
-    clearFilterForGrouping(index, sign) {
+    clearFilterForGrouping(column, sign) {
       const me = this;
       const data = me.data.slice();
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
-      me.prevFilterIndex = '';
+      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
+      delete me.prevFilterColumn;
 
       me.filteredData = me.filters.reduce((filteredData, filter) => {
-        return me.filterData(filteredData, filter.index, filter.value, filter.sign);
+        return me.filterData(filteredData, filter.column, filter.value, filter.sign);
       }, data);
 
       me.rowGroupDataForFiltering();
@@ -45,7 +45,7 @@
       }
 
       me.filteredData = me.filters.reduce((filteredData, filter) => {
-        return me.filterData(filteredData, filter.index, filter.value, filter.sign);
+        return me.filterData(filteredData, filter.column, filter.value, filter.sign);
       }, data);
       me.displayedData = me.filteredData;
 
@@ -58,26 +58,26 @@
       me.prevAction = 'filter';
     },
 
-    filter(index, value, sign = '=') {
+    filter(column, value, sign = '=') {
       const me = this;
       let data;
       let totalReFilterRequired = false;
 
       if (me.prevAction === 'sort' && me.sortedData) {
         data = me.sortedData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterIndex !== index && me.filteredData) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && me.filteredData) {
         data = me.filteredData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterIndex === index) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id === column.id) {
         totalReFilterRequired = true;
       } else {
         data = me.data.slice();
       }
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
+      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
 
       if (value !== null) {
         me.filters.push({
-          index,
+          column,
           value,
           sign
         });
@@ -89,31 +89,31 @@
         return;
       }
 
-      me.filteredData = me.filterData(data, index, value, sign);
+      me.filteredData = me.filterData(data, column, value, sign);
       me.displayedData = me.filteredData;
 
       me.updateIndexMapAfterFilter();
 
       me.prevAction = 'filter';
-      me.prevFilterIndex = index;
+      me.prevFilterColumn = column;
     },
 
-    filterForRowGrouping(index, value, sign = '=') {
+    filterForRowGrouping(column, value, sign = '=') {
       const me = this;
       const data = me.data.slice();
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
+      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
 
       if (value !== null) {
         me.filters.push({
-          index,
+          column,
           value,
           sign
         });
       }
 
       me.filteredData = me.filters.reduce((filteredData, filter) => {
-        return me.filterData(filteredData, filter.index, filter.value, filter.sign);
+        return me.filterData(filteredData, filter.column, filter.value, filter.sign);
       }, data);
 
       me.rowGroupDataForFiltering();
@@ -122,7 +122,7 @@
       me.updateIndexes();
 
       me.prevAction = 'filter';
-      me.prevFilterIndex = index;
+      me.prevFilterColumn = column;
     },
 
     updateIndexMapAfterFilter() {
@@ -137,16 +137,30 @@
       });
     },
 
-    filterData(data, index, value, sign) {
+    filterData(data, column, value, sign) {
       let filteredData = [];
 
       value = String(value).toLocaleLowerCase();
+
+      const getItemValue = (item) => {
+        let itemValue;
+        if(column.getter){
+          itemValue = column.getter({
+            item
+          })
+        }
+        else {
+          itemValue = item[column.index];
+        }
+
+        return itemValue;
+      }
 
       switch (sign) {
         // Contains
         case '=':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue.includes(value);
           });
@@ -154,7 +168,7 @@
         // Not Contains
         case '!=':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return !itemValue.includes(value);
           });
@@ -162,7 +176,7 @@
         // Equals
         case '==':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue === value;
           });
@@ -170,7 +184,7 @@
         // Not Equals
         case '!==':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue !== value;
           });
@@ -178,7 +192,7 @@
         // Greater Than
         case '>':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue > value;
           });
@@ -186,7 +200,7 @@
         // Less Than
         case '<':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue < value;
           });
@@ -194,7 +208,7 @@
         // Starts with
         case '_a':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue.startsWith(value);
           });
@@ -202,7 +216,7 @@
         // Ends with
         case 'a_':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue.endsWith(value);
           });
@@ -210,7 +224,7 @@
         // Regex
         case 'regex':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return new RegExp(value).test(itemValue);
           });
@@ -218,7 +232,7 @@
         // Empty
         case 'empty':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             switch (itemValue) {
               case undefined:
@@ -233,7 +247,7 @@
         // Not Empty
         case '!empty':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             switch (itemValue) {
               case undefined:
@@ -248,7 +262,7 @@
         // Positive
         case '+':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue >= 0;
           });
@@ -256,7 +270,7 @@
         // Negative
         case '-':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue < 0;
           });

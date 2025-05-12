@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.7.2',
+  version: '0.7.3',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -726,7 +726,7 @@ Fancy.copyText = (text) => {
       }
 
       me.sorters.forEach(sorter => {
-        data = me.sortData(data, sorter.index, sorter.dir, sorter.type);
+        data = me.sortData(data, sorter.column, sorter.dir);
       });
 
       me.sortedData = data;
@@ -741,7 +741,7 @@ Fancy.copyText = (text) => {
       me.displayedData = me.sortedData;
     },
 
-    sort(index, dir = 'ASC', type, multi) {
+    sort(column, dir = 'ASC', multi) {
       const me = this;
       let data;
 
@@ -760,22 +760,21 @@ Fancy.copyText = (text) => {
       if (!multi) {
         me.sorters = [];
       } else {
-        me.sorters = me.sorters.filter(sorter => sorter.index !== index);
+        me.sorters = me.sorters.filter(sorter => sorter.column.id !== column.id);
       }
 
       me.sorters.push({
-        index,
-        dir,
-        type: type
+        column,
+        dir
       });
 
       switch (dir) {
         case 'ASC':
         case 'DESC':
           if (me.rowGroups.length) {
-            me.sortedData = me.filters.length ? me.sortGroupDataForFiltering(index, dir, type) : me.sortGroupData(index, dir, type);
+            me.sortedData = me.filters.length ? me.sortGroupDataForFiltering(column, dir) : me.sortGroupData(column, dir);
           } else {
-            me.sortedData = me.sortData(data, index, dir, type);
+            me.sortedData = me.sortData(data, column, dir);
           }
           break;
       }
@@ -791,7 +790,7 @@ Fancy.copyText = (text) => {
       me.prevAction = 'sort';
     },
 
-    sortGroupData(index, dir, type) {
+    sortGroupData(column, dir) {
       const me = this;
       const sortedData = me.displayedData.slice();
 
@@ -807,10 +806,10 @@ Fancy.copyText = (text) => {
 
         if (me.sorters.length) {
           me.sorters.forEach(sorter => {
-            sortedGroupData = me.sortData(sortedGroupData, sorter.index, sorter.dir, sorter.type);
+            sortedGroupData = me.sortData(sortedGroupData, sorter.column, sorter.dir);
           });
         } else {
-          sortedGroupData = me.sortData(groupData, index, dir, type);
+          sortedGroupData = me.sortData(groupData, column, dir);
         }
 
         sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
@@ -819,7 +818,7 @@ Fancy.copyText = (text) => {
       return sortedData;
     },
 
-    sortGroupDataForFiltering(index, dir, type) {
+    sortGroupDataForFiltering(column, dir) {
       const me = this;
       const sortedData = me.displayedData.slice();
 
@@ -835,10 +834,10 @@ Fancy.copyText = (text) => {
 
         if (me.sorters.length) {
           me.sorters.forEach(sorter => {
-            sortedGroupData = me.sortData(sortedGroupData, sorter.index, sorter.dir, sorter.type);
+            sortedGroupData = me.sortData(sortedGroupData, sorter.column, sorter.dir);
           });
         } else {
-          sortedGroupData = me.sortData(groupData, index, dir, type);
+          sortedGroupData = me.sortData(groupData, column, dir);
         }
 
         sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
@@ -851,22 +850,33 @@ Fancy.copyText = (text) => {
       const me = this;
 
       me.sorters.forEach(sorter => {
-        data = me.sortData(data, sorter.index, sorter.dir, sorter.type);
+        data = me.sortData(data, sorter.column, sorter.dir);
       });
 
       return data;
     },
 
-    sortData(data, index, dir, type) {
+    sortData(data, column, dir) {
       let sortedData = [];
 
       switch (dir) {
         case 'ASC':
-          switch (type) {
+          switch (column.type) {
             case 'number':
               sortedData = data.sort((a, b) => {
-                a = a[index];
-                b = b[index];
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  });
+
+                  b = column.getter({
+                    item: b
+                  });
+                }
+                else {
+                  a = a[column.index];
+                  b = b[column.index];
+                }
 
                 if (a === null) {
                   a = Number.MIN_SAFE_INTEGER;
@@ -881,8 +891,19 @@ Fancy.copyText = (text) => {
               break;
             case 'string':
               sortedData = data.sort((a, b) => {
-                a = a[index] || '';
-                b = b[index] || '';
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || '';
+
+                  b = column.getter({
+                    item: b
+                  }) || '';
+                }
+                else {
+                  a = a[column.index] || '';
+                  b = b[column.index] || '';
+                }
 
                 if (!a.localeCompare) {
                   console.error(`${a} is not a string`);
@@ -893,8 +914,18 @@ Fancy.copyText = (text) => {
               break;
             case 'boolean':
               sortedData = data.sort((a, b) => {
-                a = a[index] || false;
-                b = b[index] || false;
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || false;
+                  b = column.getter({
+                    item: b
+                  }) || false;
+                }
+                else {
+                  a = a[column.index] || false;
+                  b = b[column.index] || false;
+                }
 
                 return (a === b) ? 0 : a ? 1 : -1;
               });
@@ -902,11 +933,22 @@ Fancy.copyText = (text) => {
           }
           break;
         case 'DESC':
-          switch (type) {
+          switch (column.type) {
             case 'number':
               sortedData = data.sort((a, b) => {
-                a = a[index];
-                b = b[index];
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  });
+
+                  b = column.getter({
+                    item: b
+                  });
+                }
+                else {
+                  a = a[column.index];
+                  b = b[column.index];
+                }
 
                 if (a === null) {
                   a = Number.MIN_SAFE_INTEGER;
@@ -921,16 +963,37 @@ Fancy.copyText = (text) => {
               break;
             case 'string':
               sortedData = data.sort((a, b) => {
-                a = a[index] || '';
-                b = b[index] || '';
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || '';
+
+                  b = column.getter({
+                    item: b
+                  }) || '';
+                }
+                else {
+                  a = a[column.index] || '';
+                  b = b[column.index] || '';
+                }
 
                 return b.localeCompare(a);
               });
               break;
             case 'boolean':
               sortedData = data.sort((a, b) => {
-                a = a[index] || false;
-                b = b[index] || false;
+                if(column.getter){
+                  a = column.getter({
+                    item: a
+                  }) || false;
+                  b = column.getter({
+                    item: b
+                  }) || false;
+                }
+                else {
+                  a = a[column.index] || false;
+                  b = b[column.index] || false;
+                }
 
                 return (a === b) ? 0 : a ? -1 : 1;
               });
@@ -942,13 +1005,13 @@ Fancy.copyText = (text) => {
       return sortedData;
     },
 
-    clearSort(index, multi) {
+    clearSort(column, multi) {
       const me = this;
 
       me.sortedData = [];
 
-      if (index && multi) {
-        me.sorters = me.sorters.filter(sorter => sorter.index !== index);
+      if (column && multi) {
+        me.sorters = me.sorters.filter(sorter => sorter.column.id !== column.id);
       } else {
         me.sorters = [];
       }
@@ -1045,25 +1108,25 @@ Fancy.copyText = (text) => {
 (()=> {
 
   const StoreFilter = {
-    clearFilter(index, sign) {
+    clearFilter(column, sign) {
       const me = this;
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
-      me.prevFilterIndex = '';
+      me.filters = me.filters.filter(filter => filter.column.id!== column.id);
+      delete me.prevFilterColumn;
 
       me.reFilter(false);
       me.reSort();
     },
 
-    clearFilterForGrouping(index, sign) {
+    clearFilterForGrouping(column, sign) {
       const me = this;
       const data = me.data.slice();
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
-      me.prevFilterIndex = '';
+      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
+      delete me.prevFilterColumn;
 
       me.filteredData = me.filters.reduce((filteredData, filter) => {
-        return me.filterData(filteredData, filter.index, filter.value, filter.sign);
+        return me.filterData(filteredData, filter.column, filter.value, filter.sign);
       }, data);
 
       me.rowGroupDataForFiltering();
@@ -1089,7 +1152,7 @@ Fancy.copyText = (text) => {
       }
 
       me.filteredData = me.filters.reduce((filteredData, filter) => {
-        return me.filterData(filteredData, filter.index, filter.value, filter.sign);
+        return me.filterData(filteredData, filter.column, filter.value, filter.sign);
       }, data);
       me.displayedData = me.filteredData;
 
@@ -1102,26 +1165,26 @@ Fancy.copyText = (text) => {
       me.prevAction = 'filter';
     },
 
-    filter(index, value, sign = '=') {
+    filter(column, value, sign = '=') {
       const me = this;
       let data;
       let totalReFilterRequired = false;
 
       if (me.prevAction === 'sort' && me.sortedData) {
         data = me.sortedData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterIndex !== index && me.filteredData) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && me.filteredData) {
         data = me.filteredData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterIndex === index) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id === column.id) {
         totalReFilterRequired = true;
       } else {
         data = me.data.slice();
       }
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
+      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
 
       if (value !== null) {
         me.filters.push({
-          index,
+          column,
           value,
           sign
         });
@@ -1133,31 +1196,31 @@ Fancy.copyText = (text) => {
         return;
       }
 
-      me.filteredData = me.filterData(data, index, value, sign);
+      me.filteredData = me.filterData(data, column, value, sign);
       me.displayedData = me.filteredData;
 
       me.updateIndexMapAfterFilter();
 
       me.prevAction = 'filter';
-      me.prevFilterIndex = index;
+      me.prevFilterColumn = column;
     },
 
-    filterForRowGrouping(index, value, sign = '=') {
+    filterForRowGrouping(column, value, sign = '=') {
       const me = this;
       const data = me.data.slice();
 
-      me.filters = me.filters.filter(filter => filter.index !== index);
+      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
 
       if (value !== null) {
         me.filters.push({
-          index,
+          column,
           value,
           sign
         });
       }
 
       me.filteredData = me.filters.reduce((filteredData, filter) => {
-        return me.filterData(filteredData, filter.index, filter.value, filter.sign);
+        return me.filterData(filteredData, filter.column, filter.value, filter.sign);
       }, data);
 
       me.rowGroupDataForFiltering();
@@ -1166,7 +1229,7 @@ Fancy.copyText = (text) => {
       me.updateIndexes();
 
       me.prevAction = 'filter';
-      me.prevFilterIndex = index;
+      me.prevFilterColumn = column;
     },
 
     updateIndexMapAfterFilter() {
@@ -1181,16 +1244,30 @@ Fancy.copyText = (text) => {
       });
     },
 
-    filterData(data, index, value, sign) {
+    filterData(data, column, value, sign) {
       let filteredData = [];
 
       value = String(value).toLocaleLowerCase();
+
+      const getItemValue = (item) => {
+        let itemValue;
+        if(column.getter){
+          itemValue = column.getter({
+            item
+          });
+        }
+        else {
+          itemValue = item[column.index];
+        }
+
+        return itemValue;
+      };
 
       switch (sign) {
         // Contains
         case '=':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue.includes(value);
           });
@@ -1198,7 +1275,7 @@ Fancy.copyText = (text) => {
         // Not Contains
         case '!=':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return !itemValue.includes(value);
           });
@@ -1206,7 +1283,7 @@ Fancy.copyText = (text) => {
         // Equals
         case '==':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue === value;
           });
@@ -1214,7 +1291,7 @@ Fancy.copyText = (text) => {
         // Not Equals
         case '!==':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue !== value;
           });
@@ -1222,7 +1299,7 @@ Fancy.copyText = (text) => {
         // Greater Than
         case '>':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue > value;
           });
@@ -1230,7 +1307,7 @@ Fancy.copyText = (text) => {
         // Less Than
         case '<':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue < value;
           });
@@ -1238,7 +1315,7 @@ Fancy.copyText = (text) => {
         // Starts with
         case '_a':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue.startsWith(value);
           });
@@ -1246,7 +1323,7 @@ Fancy.copyText = (text) => {
         // Ends with
         case 'a_':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return itemValue.endsWith(value);
           });
@@ -1254,7 +1331,7 @@ Fancy.copyText = (text) => {
         // Regex
         case 'regex':
           filteredData = data.filter(item => {
-            const itemValue = String(item[index]).toLocaleLowerCase();
+            const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
             return new RegExp(value).test(itemValue);
           });
@@ -1262,7 +1339,7 @@ Fancy.copyText = (text) => {
         // Empty
         case 'empty':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             switch (itemValue) {
               case undefined:
@@ -1277,7 +1354,7 @@ Fancy.copyText = (text) => {
         // Not Empty
         case '!empty':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             switch (itemValue) {
               case undefined:
@@ -1292,7 +1369,7 @@ Fancy.copyText = (text) => {
         // Positive
         case '+':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue >= 0;
           });
@@ -1300,7 +1377,7 @@ Fancy.copyText = (text) => {
         // Negative
         case '-':
           filteredData = data.filter(item => {
-            const itemValue = item[index];
+            const itemValue = getItemValue(item);
 
             return itemValue < 0;
           });
@@ -3093,6 +3170,7 @@ Fancy.copyText = (text) => {
       sortable: false,
       type: 'string',
       rowGroupIndent: true,
+      editable: false,
       render(params){
         const {
           value
@@ -3982,19 +4060,19 @@ Fancy.copyText = (text) => {
         switch (column.sort) {
           case 'ASC':
             if (multi) {
-              me.multiSort(column.index, 'DESC', column.type);
+              me.multiSort(column, 'DESC');
             } else {
-              me.sort(column.index, 'DESC', column.type);
+              me.sort(column, 'DESC');
             }
             break;
           case 'DESC':
-            me.clearSort(column.index, multi);
+            me.clearSort(column, multi);
             break;
           case undefined:
             if (multi) {
-              me.multiSort(column.index, 'ASC', column.type);
+              me.multiSort(column, 'ASC');
             } else {
-              me.sort(column.index, 'ASC', column.type);
+              me.sort(column, 'ASC');
             }
             break;
         }
@@ -5525,7 +5603,7 @@ Fancy.copyText = (text) => {
 (()=> {
 
   const GridMixinSort = {
-    sort(index, dir = 'ASC', type = 'string', multi) {
+    sort(sortingColumn, dir = 'ASC', multi) {
       const me = this;
 
       if (me.sorting) {
@@ -5536,24 +5614,20 @@ Fancy.copyText = (text) => {
 
       let sorterOrdersMap = {};
 
-      me.store.sort(index, dir, type, multi);
+      me.store.sort(sortingColumn, dir, multi);
 
       if (multi) {
         me.store.sorters.forEach((sorter, index) => {
-          sorterOrdersMap[sorter.index] = index + 1;
+          sorterOrdersMap[sorter.column.id] = index + 1;
         });
       }
 
       me.columns.forEach(column => {
-        if (column.index === index) {
+        if (column.id === sortingColumn.id){
           column.sort = dir;
 
-          if (column.type) {
-            type = column.type;
-          }
-
           if (multi && me.store.sorters.length !== 1) {
-            column.sortOrder = sorterOrdersMap[column.index];
+            column.sortOrder = sorterOrdersMap[column.id];
           } else {
             delete column.sortOrder;
           }
@@ -5562,8 +5636,8 @@ Fancy.copyText = (text) => {
             delete column.sort;
           }
 
-          if (sorterOrdersMap[column.index]) {
-            column.sortOrder = sorterOrdersMap[column.index];
+          if (sorterOrdersMap[column.id]) {
+            column.sortOrder = sorterOrdersMap[column.id];
           } else {
             delete column.sortOrder;
           }
@@ -5579,13 +5653,13 @@ Fancy.copyText = (text) => {
       }
     },
 
-    multiSort(index, dir, type) {
+    multiSort(column, dir) {
       const me = this;
 
-      me.sort(index, dir, type, true);
+      me.sort(column, dir, true);
     },
 
-    clearSort(index, multi) {
+    clearSort($column, multi) {
       const me = this;
 
       let i = 0;
@@ -5593,16 +5667,16 @@ Fancy.copyText = (text) => {
       for (; i < me.columns.length; i++) {
         const column = me.columns[i];
 
-        if (!index || !multi) {
+        if (!$column || !multi) {
           delete column.sort;
           delete column.sortOrder;
-        } else if (column.index === index) {
+        } else if (column.id === $column.id) {
           delete column.sort;
           delete column.sortOrder;
         }
       }
 
-      me.store.clearSort(index, multi);
+      me.store.clearSort($column, multi);
 
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
@@ -5765,9 +5839,9 @@ Fancy.copyText = (text) => {
       column.filters = {};
 
       if (value === '') {
-        me.clearFilter(column.index, sign);
+        me.clearFilter(column, sign);
       } else {
-        me.filter(column.index, value, sign);
+        me.filter(column, value, sign);
       }
     },
 
@@ -5806,28 +5880,28 @@ Fancy.copyText = (text) => {
       me.updateAfterFilter();
     },
 
-    filter(index, value, sign = '=') {
+    filter(column, value, sign = '=') {
       const me = this;
       const store = me.store;
 
       if(store.rowGroups.length){
-        me.filterForRowGrouping(index, value, sign);
+        me.filterForRowGrouping(column, value, sign);
         me.updateAfterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
         return;
       }
 
-      store.filter(index, value, sign);
-      me.updateFiltersInColumns(index, value, sign);
+      store.filter(column, value, sign);
+      me.updateFiltersInColumns(column, value, sign);
       me.updateAfterFilter();
     },
 
-    filterForRowGrouping(index, value, sign = '='){
+    filterForRowGrouping(column, value, sign = '='){
       const me = this;
 
-      me.store.filterForRowGrouping(index, value, sign);
-      me.updateFiltersInColumns(index, value, sign);
+      me.store.filterForRowGrouping(column, value, sign);
+      me.updateFiltersInColumns(column, value, sign);
     },
 
     updateFiltersInColumns(index, value, sign){
@@ -7305,7 +7379,8 @@ Fancy.copyText = (text) => {
     SPACE,
     C,
     V,
-    ENTER
+    ENTER,
+    TAB
   } = Fancy.key;
 
   const {
@@ -7356,6 +7431,10 @@ Fancy.copyText = (text) => {
             }
           }
           break;
+        case TAB:
+          event.preventDefault();
+          me.onKeyTAB();
+          break;
         case DOWN:
           if(!me.isEditing){
             event.preventDefault();
@@ -7380,7 +7459,7 @@ Fancy.copyText = (text) => {
           break;
         case ENTER:
           if(!me.isEditing){
-            me.onKeyEnter();
+            me.onKeyENTER();
           }
           break;
       }
@@ -7433,7 +7512,7 @@ Fancy.copyText = (text) => {
         }
       }
     },
-    onKeyEnter(){
+    onKeyENTER(){
       const me = this;
 
       if(me.$preventOpeningEditor){
@@ -7446,6 +7525,21 @@ Fancy.copyText = (text) => {
           return;
         }
         me.openEditorForCell(me.activeCellEl);
+      }
+    },
+    onKeyTAB(){
+      const me = this;
+      if(me.active && me.hasActiveCell()) {
+        if (me.isEditing) {
+          me.hideActiveEditor();
+
+          const activeCell = me.setActiveCellRight();
+          if (activeCell) {
+            me.openEditorForCell(me.activeCellEl);
+          }
+        } else {
+          me.setActiveCellRight();
+        }
       }
     }
   };
@@ -7718,18 +7812,31 @@ Fancy.copyText = (text) => {
 
     openEditorForCell(cell){
       const me = this;
-      const columnIndex = Number(cell.getAttribute('col-index'));
-      const column = me.columns[columnIndex];
+      let columnIndex = Number(cell.getAttribute('col-index'));
+      let column = me.columns[columnIndex];
       let row = cell.closest(`.${ROW}`);
-      const itemId = row.getAttribute('row-id');
-      const rowIndex = row.getAttribute('row-index');
+      let itemId = row.getAttribute('row-id');
+      let rowIndex = row.getAttribute('row-index');
       const item = me.store.idItemMap.get(itemId);
-      const value = item[column.index];
+      let value = item[column.index];
       const rowTop = Fancy.getTranslateY(row);
 
       if(column.editable !== true){
         me.hideActiveEditor();
         return;
+      }
+
+      if(column.getter){
+        const params = {
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value,
+          cell
+        };
+
+        value = column.getter(params);
       }
 
       if(column.editorField){
@@ -7774,14 +7881,40 @@ Fancy.copyText = (text) => {
                 if(me.activeCellEl){
                   cell = me.activeCellEl;
                   row = cell.closest(`.${ROW}`);
+                  columnIndex = Number(cell.getAttribute('col-index'));
+                  column = me.columns[columnIndex];
+                  rowIndex = row.getAttribute('row-index');
+                  itemId = row.getAttribute('row-id');
                 }
 
-                me.store.setById(itemId, column.index, value);
+                if(column.setter){
+                  const params = {
+                    item,
+                    column,
+                    rowIndex,
+                    columnIndex,
+                    value,
+                    cell,
+                    newValue: value
+                  };
+
+                  column.setter(params);
+                }
+                else {
+                  me.store.setById(itemId, column.index, value);
+                }
                 cell?.remove();
 
                 cell = me.createCell(rowIndex, columnIndex);
                 me.activeCellEl = cell;
                 row.appendChild(cell);
+
+                if(column.setter){
+                  me.rowCellsUpdateWithColumnIndex(row);
+                }
+                else {
+                  me.rowCellsUpdateWithColumnRender(row);
+                }
               },
               onEnter(){
                 me.hideActiveEditor();
@@ -7839,6 +7972,46 @@ Fancy.copyText = (text) => {
         me.gridEl.classList.remove(EDITING);
         delete me.editingCell;
       }
+    },
+
+    rowCellsUpdateWithColumnIndex(row){
+      const me = this;
+      const rowIndex = row.getAttribute('row-index');
+      const cells = row.querySelectorAll(`.${CELL}`);
+
+      cells.forEach(cell => {
+        const columnIndex = Number(cell.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+
+        if(column.index === undefined){
+          return;
+        }
+
+        cell?.remove();
+
+        cell = me.createCell(rowIndex, columnIndex);
+        row.appendChild(cell);
+      });
+    },
+
+    rowCellsUpdateWithColumnRender(row){
+      const me = this;
+      const rowIndex = row.getAttribute('row-index');
+      const cells = row.querySelectorAll(`.${CELL}`);
+
+      cells.forEach(cell => {
+        const columnIndex = Number(cell.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+
+        if(column.render === undefined){
+          return;
+        }
+
+        cell?.remove();
+
+        cell = me.createCell(rowIndex, columnIndex);
+        row.appendChild(cell);
+      });
     }
   };
 

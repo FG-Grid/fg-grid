@@ -8,7 +8,8 @@
     SPACE,
     C,
     V,
-    ENTER
+    ENTER,
+    TAB
   } = Fancy.key;
 
   const {
@@ -59,6 +60,10 @@
             }
           }
           break;
+        case TAB:
+          event.preventDefault();
+          me.onKeyTAB();
+          break;
         case DOWN:
           if(!me.isEditing){
             event.preventDefault();
@@ -83,7 +88,7 @@
           break;
         case ENTER:
           if(!me.isEditing){
-            me.onKeyEnter();
+            me.onKeyENTER();
           }
           break;
       }
@@ -136,7 +141,7 @@
         }
       }
     },
-    onKeyEnter(){
+    onKeyENTER(){
       const me = this;
 
       if(me.$preventOpeningEditor){
@@ -149,6 +154,21 @@
           return;
         }
         me.openEditorForCell(me.activeCellEl);
+      }
+    },
+    onKeyTAB(){
+      const me = this;
+      if(me.active && me.hasActiveCell()) {
+        if (me.isEditing) {
+          me.hideActiveEditor();
+
+          const activeCell = me.setActiveCellRight();
+          if (activeCell) {
+            me.openEditorForCell(me.activeCellEl);
+          }
+        } else {
+          me.setActiveCellRight();
+        }
       }
     }
   }

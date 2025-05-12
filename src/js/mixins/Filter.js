@@ -94,9 +94,9 @@
       column.filters = {};
 
       if (value === '') {
-        me.clearFilter(column.index, sign);
+        me.clearFilter(column, sign);
       } else {
-        me.filter(column.index, value, sign);
+        me.filter(column, value, sign);
       }
     },
 
@@ -135,28 +135,28 @@
       me.updateAfterFilter();
     },
 
-    filter(index, value, sign = '=') {
+    filter(column, value, sign = '=') {
       const me = this;
       const store = me.store;
 
       if(store.rowGroups.length){
-        me.filterForRowGrouping(index, value, sign);
+        me.filterForRowGrouping(column, value, sign);
         me.updateAfterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
         return;
       }
 
-      store.filter(index, value, sign);
-      me.updateFiltersInColumns(index, value, sign);
+      store.filter(column, value, sign);
+      me.updateFiltersInColumns(column, value, sign);
       me.updateAfterFilter();
     },
 
-    filterForRowGrouping(index, value, sign = '='){
+    filterForRowGrouping(column, value, sign = '='){
       const me = this;
 
-      me.store.filterForRowGrouping(index, value, sign);
-      me.updateFiltersInColumns(index, value, sign);
+      me.store.filterForRowGrouping(column, value, sign);
+      me.updateFiltersInColumns(column, value, sign);
     },
 
     updateFiltersInColumns(index, value, sign){

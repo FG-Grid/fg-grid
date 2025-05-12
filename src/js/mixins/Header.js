@@ -54,19 +54,19 @@
         switch (column.sort) {
           case 'ASC':
             if (multi) {
-              me.multiSort(column.index, 'DESC', column.type);
+              me.multiSort(column, 'DESC');
             } else {
-              me.sort(column.index, 'DESC', column.type);
+              me.sort(column, 'DESC');
             }
             break;
           case 'DESC':
-            me.clearSort(column.index, multi);
+            me.clearSort(column, multi);
             break;
           case undefined:
             if (multi) {
-              me.multiSort(column.index, 'ASC', column.type);
+              me.multiSort(column, 'ASC');
             } else {
-              me.sort(column.index, 'ASC', column.type);
+              me.sort(column, 'ASC');
             }
             break;
         }

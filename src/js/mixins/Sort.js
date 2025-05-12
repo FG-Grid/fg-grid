@@ -1,7 +1,7 @@
 (()=> {
 
   const GridMixinSort = {
-    sort(index, dir = 'ASC', type = 'string', multi) {
+    sort(sortingColumn, dir = 'ASC', multi) {
       const me = this;
 
       if (me.sorting) {
@@ -12,24 +12,20 @@
 
       let sorterOrdersMap = {};
 
-      me.store.sort(index, dir, type, multi);
+      me.store.sort(sortingColumn, dir, multi);
 
       if (multi) {
         me.store.sorters.forEach((sorter, index) => {
-          sorterOrdersMap[sorter.index] = index + 1;
+          sorterOrdersMap[sorter.column.id] = index + 1;
         });
       }
 
       me.columns.forEach(column => {
-        if (column.index === index) {
+        if (column.id === sortingColumn.id){
           column.sort = dir;
 
-          if (column.type) {
-            type = column.type;
-          }
-
           if (multi && me.store.sorters.length !== 1) {
-            column.sortOrder = sorterOrdersMap[column.index];
+            column.sortOrder = sorterOrdersMap[column.id];
           } else {
             delete column.sortOrder;
           }
@@ -38,8 +34,8 @@
             delete column.sort;
           }
 
-          if (sorterOrdersMap[column.index]) {
-            column.sortOrder = sorterOrdersMap[column.index];
+          if (sorterOrdersMap[column.id]) {
+            column.sortOrder = sorterOrdersMap[column.id];
           } else {
             delete column.sortOrder;
           }
@@ -55,13 +51,13 @@
       }
     },
 
-    multiSort(index, dir, type) {
+    multiSort(column, dir) {
       const me = this;
 
-      me.sort(index, dir, type, true);
+      me.sort(column, dir, true);
     },
 
-    clearSort(index, multi) {
+    clearSort($column, multi) {
       const me = this;
 
       let i = 0;
@@ -69,16 +65,16 @@
       for (; i < me.columns.length; i++) {
         const column = me.columns[i];
 
-        if (!index || !multi) {
+        if (!$column || !multi) {
           delete column.sort;
           delete column.sortOrder;
-        } else if (column.index === index) {
+        } else if (column.id === $column.id) {
           delete column.sort;
           delete column.sortOrder;
         }
       }
 
-      me.store.clearSort(index, multi);
+      me.store.clearSort($column, multi);
 
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
