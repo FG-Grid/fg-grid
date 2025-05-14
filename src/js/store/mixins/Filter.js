@@ -146,7 +146,8 @@
         let itemValue;
         if(column.getter){
           itemValue = column.getter({
-            item
+            item,
+            column
           })
         }
         else {

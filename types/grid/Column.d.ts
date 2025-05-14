@@ -20,6 +20,14 @@ export interface FormatParams extends RenderParams {
   maxDecimal?: number;
 }
 
+export interface GetterParams {
+  item: DataItem;
+}
+
+export interface SetterParams {
+  item: DataItem;
+}
+
 export interface CellStyle {
   [cssProperty: string]: string | number;
 }
@@ -68,6 +76,10 @@ export interface Column<TData = any> {
   currency?: Currencies;
   minDecimal?: number;
   maxDecimal?: number;
+
+  getter?(params: GetterParams): string;
+
+  setter?(params: GetterParams): string|number|undefined|null|object;
 
   agFn?: 'sum' | 'avg' | 'min' | 'max' | ((params: unknown) => number | string);
 }

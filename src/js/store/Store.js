@@ -47,7 +47,6 @@
       me.sortedData = undefined;
       me.filteredData = undefined;
       me.data = data;
-      me.rowGroupExpanded
       me.selectedItemsMap = new Map();
       me.selectedRowGroupsChildren = {};
 

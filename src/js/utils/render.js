@@ -20,6 +20,10 @@ Fancy.render = {
       }
     });
 
+    inputEl.addEventListener('change', (e)=>{
+      column.onCheckBoxChange?.(e, inputEl.checked);
+    });
+
     cell.classList.add(Fancy.cls.CELL_BOOLEAN);
 
     cell.appendChild(inputEl);

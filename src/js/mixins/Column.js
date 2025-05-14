@@ -4,7 +4,8 @@
     ANIMATE_CELLS_POSITION,
     CELL,
     HEADER_CELL,
-    FILTER_BAR_CELL
+    FILTER_BAR_CELL,
+    ROW
   } = Fancy.cls;
 
   const GridMixinColumn = {
@@ -347,6 +348,14 @@
       switch (column.type){
         case 'boolean':
           column.render = Fancy.render.boolean;
+          column.onCheckBoxChange = (event, value) => {
+            const inputEl= event.target;
+            const cell = inputEl.closest(`.${CELL}`);
+            const row = cell.closest(`.${ROW}`);
+            const itemId = row.getAttribute('row-id');
+
+            me.store.setById(itemId, column.index, value);
+          }
           break;
         case 'currency':
           column.format = Fancy.format.currency;

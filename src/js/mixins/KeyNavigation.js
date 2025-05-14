@@ -42,6 +42,7 @@
           }
           break;
         case SPACE:
+          event.preventDefault();
           if(me.activeCell && me.activeCellEl){
             const cell = me.activeCellEl;
             const columnIndex = Number(cell.getAttribute('col-index'));

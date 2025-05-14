@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.7.3',
+  version: '0.7.5',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -414,6 +414,10 @@ Fancy.render = {
       }
     });
 
+    inputEl.addEventListener('change', (e)=>{
+      column.onCheckBoxChange?.(e, inputEl.checked);
+    });
+
     cell.classList.add(Fancy.cls.CELL_BOOLEAN);
 
     cell.appendChild(inputEl);
@@ -533,7 +537,6 @@ Fancy.copyText = (text) => {
       me.sortedData = undefined;
       me.filteredData = undefined;
       me.data = data;
-      me.rowGroupExpanded;
       me.selectedItemsMap = new Map();
       me.selectedRowGroupsChildren = {};
 
@@ -1237,7 +1240,8 @@ Fancy.copyText = (text) => {
         let itemValue;
         if(column.getter){
           itemValue = column.getter({
-            item
+            item,
+            column
           });
         }
         else {
@@ -3600,7 +3604,8 @@ Fancy.copyText = (text) => {
     ANIMATE_CELLS_POSITION,
     CELL,
     HEADER_CELL,
-    FILTER_BAR_CELL
+    FILTER_BAR_CELL,
+    ROW
   } = Fancy.cls;
 
   const GridMixinColumn = {
@@ -3943,6 +3948,14 @@ Fancy.copyText = (text) => {
       switch (column.type){
         case 'boolean':
           column.render = Fancy.render.boolean;
+          column.onCheckBoxChange = (event, value) => {
+            const inputEl= event.target;
+            const cell = inputEl.closest(`.${CELL}`);
+            const row = cell.closest(`.${ROW}`);
+            const itemId = row.getAttribute('row-id');
+
+            me.store.setById(itemId, column.index, value);
+          };
           break;
         case 'currency':
           column.format = Fancy.format.currency;
@@ -6754,18 +6767,31 @@ Fancy.copyText = (text) => {
       me.active = true;
 
       if(me.activeCell){
-        me.setActiveCell(cell);
-        requestAnimationFrame(()=> {
-          document.addEventListener('mousedown', (event) => {
-            if (!event.target.closest(`div.${BODY}`)) {
-              me.clearActiveCell();
-              me.clearSelectionRange();
-            }
+        const setActivateCell = ()=>{
+          me.setActiveCell(cell);
+          requestAnimationFrame(()=> {
+            document.addEventListener('mousedown', (event) => {
+              if (!event.target.closest(`div.${BODY}`)) {
+                me.clearActiveCell();
+                me.clearSelectionRange();
+              }
 
+            }, {
+              once: true
+            });
+          });
+        };
+
+        if(target.getAttribute('type') === 'checkbox'){
+          target.addEventListener('click', ()=>{
+            setActivateCell();
           }, {
             once: true
           });
-        });
+        }
+        else {
+          setActivateCell();
+        }
       }
 
       if(me.selectingCells){
@@ -7284,7 +7310,16 @@ Fancy.copyText = (text) => {
           let cellInner;
           let value = item[column.index];
 
-          if(column.render){
+          if(column.getter){
+            cellInner = column.getter({
+              item,
+              column,
+              rowIndex: i,
+              columnIndex: j,
+              value
+            });
+          }
+          else if(column.render){
             cellInner = column.render({
               item,
               column,
@@ -7309,8 +7344,24 @@ Fancy.copyText = (text) => {
     insertCopiedCells(){
       const me = this;
       const textarea = document.createElement('textarea');
+      textarea.style.display = 'none';
       document.body.appendChild(textarea);
       textarea.focus();
+
+      const getRowsOffSet = (rowIndex, offset = 0) => {
+        const row = me.bodyEl.querySelector(`div[row-index="${rowIndex + offset}"]`);
+
+        if(!row){
+          return offset;
+        }
+
+        if(row.classList.contains(ROW_GROUP)){
+          return getRowsOffSet(rowIndex, offset + 1);
+        }
+
+        return offset;
+      };
+
       document.addEventListener('paste', (event) => {
         const text = event.clipboardData.getData('text');
         if(document.body.contains(textarea)){
@@ -7319,22 +7370,43 @@ Fancy.copyText = (text) => {
 
         const rows = text.split('\n');
         const data = rows.map(row => {
-          const columns = row.split('\t');
-          return [columns[0], Number(columns[1]), Number(columns[2])];
+          const rowData = row.split('\t');
+
+          return rowData;
         });
 
         const activeRowIndex = Number(me.activeCellRowEl.getAttribute('row-index'));
+        let rowOffset = 0;
 
         data.forEach((dataRow, itemRowIndex)=>{
-          const rowIndex = activeRowIndex + itemRowIndex;
+          const extraRowsOffset = getRowsOffSet(activeRowIndex + itemRowIndex + rowOffset);
+          rowOffset += extraRowsOffset;
+
+          const rowIndex = activeRowIndex + itemRowIndex + rowOffset;
           const item = me.store.getItemByRowIndex(rowIndex);
+
+          if(!item){
+            return;
+          }
+
           const rowEl = me.bodyEl.querySelector(`.${ROW}[row-index="${rowIndex}"]`);
 
+          let columnIndex = me.activeCellColumnIndex - 1;
+
           dataRow.forEach((value, itemColumnIndex)=>{
-            const columnIndex = me.activeCellColumnIndex + itemColumnIndex;
+            columnIndex = me.getNextVisibleColumnIndex(columnIndex);
+
             const column = me.columns[columnIndex];
 
+            if(!column || !column.editable){
+              return;
+            }
+
             me.store.setById(item.id,column.index, value);
+
+            if(!rowEl || !column){
+              return;
+            }
 
             let cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 
@@ -7397,6 +7469,7 @@ Fancy.copyText = (text) => {
           }
           break;
         case SPACE:
+          event.preventDefault();
           if(me.activeCell && me.activeCellEl){
             const cell = me.activeCellEl;
             const columnIndex = Number(cell.getAttribute('col-index'));
