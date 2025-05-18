@@ -37,6 +37,8 @@
 
     editorEnterAction = 'stay'; // 'stay' | 'down' | 'right'
 
+    startEditByTyping = true;
+
     $defaultRowGroupColumn = {
       title: 'Group',
       width: 120,

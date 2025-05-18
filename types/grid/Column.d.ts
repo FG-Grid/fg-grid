@@ -60,7 +60,7 @@ export interface Column<TData = any> {
   index?: keyof TData;
   filter?: boolean;
   menu?: boolean;
-  type?: 'string' | 'number' | 'boolean' | 'currency' | 'order';
+  type?: 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'order';
   title?: string;
   editable?: boolean;
 

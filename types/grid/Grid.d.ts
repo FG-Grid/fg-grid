@@ -22,6 +22,7 @@ interface GridConfig {
   rowClsRules?: RowClsRules;
   activeCell?: boolean;
   selectingCells?: boolean;
+  startEditByTyping?: boolean;
   editorEnterAction?: 'stay' | 'down' | 'right';
 }
 

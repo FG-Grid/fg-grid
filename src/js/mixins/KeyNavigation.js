@@ -92,6 +92,25 @@
             me.onKeyENTER();
           }
           break;
+        default:
+          const code = event.code;
+
+          if ( !me.activeEditor && (
+              (code.startsWith('Key') && code.length === 4) || // KeyA - KeyZ
+              (code.startsWith('Digit') && code.length === 6)   // Digit0 - Digit9
+            )
+          ) {
+            if(me.startEditByTyping && me.hasActiveCell()){
+              const cell = me.activeCellEl;
+              const columnIndex = Number(cell.getAttribute('col-index'));
+              const column = me.columns[columnIndex];
+
+              if(column.editable){
+                event.preventDefault();
+                me.openEditorForCell(me.activeCellEl, event.key);
+              }
+            }
+          }
       }
     },
     onKeyUP(shift){

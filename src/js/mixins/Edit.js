@@ -14,16 +14,17 @@
       me.openEditorForCell(cell);
     },
 
-    openEditorForCell(cell){
+    openEditorForCell(cell, startValue){
       const me = this;
       let columnIndex = Number(cell.getAttribute('col-index'));
       let column = me.columns[columnIndex];
       let row = cell.closest(`.${ROW}`);
       let itemId = row.getAttribute('row-id');
       let rowIndex = row.getAttribute('row-index');
-      const item = me.store.idItemMap.get(itemId);
-      let value = item[column.index];
+      let item = me.store.idItemMap.get(itemId);
       const rowTop = Fancy.getTranslateY(row);
+      let value = item[column.index];
+      let valueBeforeEdit = value;
 
       if(column.editable !== true){
         me.hideActiveEditor();
@@ -41,12 +42,62 @@
         }
 
         value = column.getter(params);
+        valueBeforeEdit = value;
+      }
+
+      const memorizeChange = (value)=>{
+        // Re-get cell on case of scroll
+        if(me.activeCellEl){
+          cell = me.activeCellEl;
+          row = cell.closest(`.${ROW}`);
+          columnIndex = Number(cell.getAttribute('col-index'));
+          column = me.columns[columnIndex];
+          rowIndex = row.getAttribute('row-index');
+          itemId = row.getAttribute('row-id');
+          item = me.store.idItemMap.get(itemId);
+        }
+
+        if(column.setter){
+          const params = {
+            item,
+            column,
+            rowIndex,
+            columnIndex,
+            value,
+            cell,
+            newValue: value
+          }
+
+          column.setter(params);
+        }
+        else {
+          me.store.setById(itemId, column.index, value);
+        }
+        cell?.remove();
+
+        cell = me.createCell(rowIndex, columnIndex);
+        me.activeCellEl = cell;
+        row.appendChild(cell);
+
+        if(column.setter){
+          me.rowCellsUpdateWithColumnIndex(row);
+        }
+        else {
+          me.rowCellsUpdateWithColumnRender(row);
+        }
+      }
+
+      if(startValue !== undefined){
+        value = startValue;
+
+        memorizeChange(value);
       }
 
       if(column.editorField){
         switch (column.type){
           case 'string':
           case 'number':
+          case 'date':
             me.setStatusEditing(true);
 
             column.editorField.setValue(value);
@@ -65,6 +116,7 @@
         switch(column.type){
           case 'string':
           case 'number':
+          case 'date':
             me.setStatusEditing(true);
             column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${column.type}Field`)]({
               renderTo: me.editorsContainerEl,
@@ -81,44 +133,7 @@
                   return;
                 }
 
-                // Re-get cell on case of scroll
-                if(me.activeCellEl){
-                  cell = me.activeCellEl;
-                  row = cell.closest(`.${ROW}`);
-                  columnIndex = Number(cell.getAttribute('col-index'));
-                  column = me.columns[columnIndex];
-                  rowIndex = row.getAttribute('row-index');
-                  itemId = row.getAttribute('row-id');
-                }
-
-                if(column.setter){
-                  const params = {
-                    item,
-                    column,
-                    rowIndex,
-                    columnIndex,
-                    value,
-                    cell,
-                    newValue: value
-                  }
-
-                  column.setter(params);
-                }
-                else {
-                  me.store.setById(itemId, column.index, value);
-                }
-                cell?.remove();
-
-                cell = me.createCell(rowIndex, columnIndex);
-                me.activeCellEl = cell;
-                row.appendChild(cell);
-
-                if(column.setter){
-                  me.rowCellsUpdateWithColumnIndex(row);
-                }
-                else {
-                  me.rowCellsUpdateWithColumnRender(row);
-                }
+                memorizeChange(value);
               },
               onEnter(){
                 me.hideActiveEditor();
@@ -140,6 +155,7 @@
                 }
               },
               onESC(){
+                memorizeChange(valueBeforeEdit);
                 me.hideActiveEditor();
               }
             });

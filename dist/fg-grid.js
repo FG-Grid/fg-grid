@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.7.5',
+  version: '0.7.7',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -3167,6 +3167,8 @@ Fancy.copyText = (text) => {
     selectingCells = true;
 
     editorEnterAction = 'stay'; // 'stay' | 'down' | 'right'
+
+    startEditByTyping = true;
 
     $defaultRowGroupColumn = {
       title: 'Group',
@@ -7535,6 +7537,25 @@ Fancy.copyText = (text) => {
             me.onKeyENTER();
           }
           break;
+        default:
+          const code = event.code;
+
+          if ( !me.activeEditor && (
+              (code.startsWith('Key') && code.length === 4) || // KeyA - KeyZ
+              (code.startsWith('Digit') && code.length === 6)   // Digit0 - Digit9
+            )
+          ) {
+            if(me.startEditByTyping && me.hasActiveCell()){
+              const cell = me.activeCellEl;
+              const columnIndex = Number(cell.getAttribute('col-index'));
+              const column = me.columns[columnIndex];
+
+              if(column.editable){
+                event.preventDefault();
+                me.openEditorForCell(me.activeCellEl, event.key);
+              }
+            }
+          }
       }
     },
     onKeyUP(shift){
@@ -7883,16 +7904,17 @@ Fancy.copyText = (text) => {
       me.openEditorForCell(cell);
     },
 
-    openEditorForCell(cell){
+    openEditorForCell(cell, startValue){
       const me = this;
       let columnIndex = Number(cell.getAttribute('col-index'));
       let column = me.columns[columnIndex];
       let row = cell.closest(`.${ROW}`);
       let itemId = row.getAttribute('row-id');
       let rowIndex = row.getAttribute('row-index');
-      const item = me.store.idItemMap.get(itemId);
-      let value = item[column.index];
+      let item = me.store.idItemMap.get(itemId);
       const rowTop = Fancy.getTranslateY(row);
+      let value = item[column.index];
+      let valueBeforeEdit = value;
 
       if(column.editable !== true){
         me.hideActiveEditor();
@@ -7910,12 +7932,62 @@ Fancy.copyText = (text) => {
         };
 
         value = column.getter(params);
+        valueBeforeEdit = value;
+      }
+
+      const memorizeChange = (value)=>{
+        // Re-get cell on case of scroll
+        if(me.activeCellEl){
+          cell = me.activeCellEl;
+          row = cell.closest(`.${ROW}`);
+          columnIndex = Number(cell.getAttribute('col-index'));
+          column = me.columns[columnIndex];
+          rowIndex = row.getAttribute('row-index');
+          itemId = row.getAttribute('row-id');
+          item = me.store.idItemMap.get(itemId);
+        }
+
+        if(column.setter){
+          const params = {
+            item,
+            column,
+            rowIndex,
+            columnIndex,
+            value,
+            cell,
+            newValue: value
+          };
+
+          column.setter(params);
+        }
+        else {
+          me.store.setById(itemId, column.index, value);
+        }
+        cell?.remove();
+
+        cell = me.createCell(rowIndex, columnIndex);
+        me.activeCellEl = cell;
+        row.appendChild(cell);
+
+        if(column.setter){
+          me.rowCellsUpdateWithColumnIndex(row);
+        }
+        else {
+          me.rowCellsUpdateWithColumnRender(row);
+        }
+      };
+
+      if(startValue !== undefined){
+        value = startValue;
+
+        memorizeChange(value);
       }
 
       if(column.editorField){
         switch (column.type){
           case 'string':
           case 'number':
+          case 'date':
             me.setStatusEditing(true);
 
             column.editorField.setValue(value);
@@ -7934,6 +8006,7 @@ Fancy.copyText = (text) => {
         switch(column.type){
           case 'string':
           case 'number':
+          case 'date':
             me.setStatusEditing(true);
             column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${column.type}Field`)]({
               renderTo: me.editorsContainerEl,
@@ -7950,44 +8023,7 @@ Fancy.copyText = (text) => {
                   return;
                 }
 
-                // Re-get cell on case of scroll
-                if(me.activeCellEl){
-                  cell = me.activeCellEl;
-                  row = cell.closest(`.${ROW}`);
-                  columnIndex = Number(cell.getAttribute('col-index'));
-                  column = me.columns[columnIndex];
-                  rowIndex = row.getAttribute('row-index');
-                  itemId = row.getAttribute('row-id');
-                }
-
-                if(column.setter){
-                  const params = {
-                    item,
-                    column,
-                    rowIndex,
-                    columnIndex,
-                    value,
-                    cell,
-                    newValue: value
-                  };
-
-                  column.setter(params);
-                }
-                else {
-                  me.store.setById(itemId, column.index, value);
-                }
-                cell?.remove();
-
-                cell = me.createCell(rowIndex, columnIndex);
-                me.activeCellEl = cell;
-                row.appendChild(cell);
-
-                if(column.setter){
-                  me.rowCellsUpdateWithColumnIndex(row);
-                }
-                else {
-                  me.rowCellsUpdateWithColumnRender(row);
-                }
+                memorizeChange(value);
               },
               onEnter(){
                 me.hideActiveEditor();
@@ -8009,6 +8045,7 @@ Fancy.copyText = (text) => {
                 }
               },
               onESC(){
+                memorizeChange(valueBeforeEdit);
                 me.hideActiveEditor();
               }
             });
