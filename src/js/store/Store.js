@@ -31,6 +31,23 @@
       me.defaultRowGroupSort = defaultRowGroupSort || [];
       me.selectedItemsMap = new Map();
       me.selectedRowGroupsChildren = {};
+      me.groupDetails = {};
+      /*
+      me.groupDetails = {};
+      me.levelsWithGroups = [
+        [{
+          root: []
+        }]
+      ];
+      me.groupsChildren = {};
+      me.expandedGroupsWithDataChildren = {};
+      me.expandedGroups = {};
+      me.rowGroupExpanded = [];
+       */
+      //me.rowGroupExpanded = [];
+      //me.expandedGroups = {};
+      //me.expandedGroupsWithDataChildren = {};
+      //me.groupDetails = {};
 
       if (me.data.length && me.rowGroups.length) {
         me.lightSetIds();

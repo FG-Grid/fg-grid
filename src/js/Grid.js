@@ -38,6 +38,8 @@
     editorEnterAction = 'stay'; // 'stay' | 'down' | 'right'
 
     startEditByTyping = true;
+    flashChanges = true;
+    flashChangesColors = ['#e0e5e9','beige'];
 
     $defaultRowGroupColumn = {
       title: 'Group',
@@ -258,7 +260,25 @@
       }
     }
 
-    removeRowById(id){
+    animatedRemoveDomRowById(id){
+      const me = this;
+      const rowEl = me.renderedRowsIdMap.get(id);
+
+      if(rowEl){
+        rowEl.style.opacity = 0;
+        setTimeout(()=>{
+          rowEl.remove();
+        }, 200);
+      }
+      else {
+        console.warn(`Row El with id = ${id} was not found`);
+      }
+
+      me.actualRowsIdSet.delete(id);
+      me.renderedRowsIdMap.delete(id);
+    }
+
+    removeDomRowById(id){
       const me = this;
       const rowEl = me.renderedRowsIdMap.get(id);
 
@@ -360,7 +380,7 @@
       }
 
       const storeConfig = {
-        data: config.data,
+        data: structuredClone(config.data),
         defaultRowGroupSort: config.defaultRowGroupSort || me.defaultRowGroupSort
       }
 
@@ -440,8 +460,11 @@
     setData(data){
       const me = this;
 
-      me.store.setData(data);
+      me.store.$dontDropExpandedGroups = true;
+
+      me.store.setData(structuredClone(data));
       me.reRender();
+      delete me.store.$dontDropExpandedGroups;
     }
 
     reRender(){
@@ -479,6 +502,191 @@
       const me = this;
 
       me.hideActiveEditor();
+    }
+
+    remove(rows){
+      const me = this;
+      const store = me.store;
+
+      if(typeof rows === 'string'){
+        rows = [{
+          id: rows
+        }]
+      }
+      else if(Array.isArray(rows)){
+        rows = rows.map((value)=>{
+          if(typeof value === 'string'){
+            return {
+              id: value
+            }
+          }
+
+          return value;
+        });
+      }
+
+      if(rows.length === 0){
+        return;
+      }
+
+      let itemsToRemove = [];
+      let rowGroups = new Map();
+
+      for(let i = 0;i<rows.length;i++){
+        const row = rows[i];
+
+        me.animatedRemoveDomRowById(row.id);
+
+        let item = me.store.removeItemById(row.id);
+        itemsToRemove.push(item);
+        if(item.$rowGroupValue){
+          let values = rowGroups.get(item.$rowGroupValue) || [];
+          values.push(item.id);
+          rowGroups.set(item.$rowGroupValue, values);
+
+          store.selectRowItem(item, false);
+        }
+      }
+
+      rowGroups.forEach((items, groupValue, c) => {
+        const splitted = groupValue.split('/');
+
+        for(let i = 0;i<splitted.length;i++){
+          const name = splitted.slice(0, splitted.length - i).join('/');
+          const groupDetails = store.groupDetails[name];
+
+          groupDetails.amount -= items.length;
+          if(groupDetails.amount === 0){
+            groupDetails.childrenAmount = 0;
+            me.animatedRemoveDomRowById(groupDetails.id);
+            delete me.store.groupDetails[name];
+            delete me.store.expandedGroupsWithDataChildren[name];
+            delete me.store.groupsChildren[name];
+
+            let item = me.store.removeItemById(groupDetails.id);
+            itemsToRemove.push(item);
+
+            const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+            store.groupsChildren[parentGroup] = store.groupsChildren[parentGroup].filter(item => {
+               return item.id !== groupDetails.id;
+            });
+          }
+          else {
+            store.groupsChildren[name] = store.groupsChildren[name].filter(item => {
+              return items.includes(item.id) === false;
+            });
+          }
+        }
+      });
+
+      const rowIndexes = itemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
+      rowIndexes.forEach((item,index) => {
+        me.store.data.splice(item.originalRowIndex - index, 1)
+      });
+
+      if(me.store.displayedData?.length){
+        const rowIndexes = itemsToRemove.sort((a,b) => a.rowIndex - b.rowIndex);
+
+        rowIndexes.forEach((item,index) => {
+          me.store.displayedData.splice(item.rowIndex - index, 1)
+        });
+      }
+
+      if(rowGroups.size){
+        me.updateRowGroupAmount();
+        me.updateRowGroupRowsAndCheckBoxes();
+      }
+
+      store.updateIndexes();
+
+      me.scroller.calcVisibleRows();
+      me.renderVisibleRows();
+      me.updateAfterAddRemove();
+
+      me.updateHeaderCheckboxesSelection();
+
+      me.updateOrderColumn();
+    }
+
+    add(items, position){
+      const me = this;
+      const store = me.store;
+
+      store.add(items, position);
+
+      if(store.rowGroups.length){
+        me.updateRowGroupAmount();
+        me.updateRowGroupRowsAndCheckBoxes();
+      }
+
+      me.scroller.calcVisibleRows();
+      me.renderVisibleRows();
+      me.updateAfterAddRemove();
+
+      me.updateHeaderCheckboxesSelection();
+
+      me.updateOrderColumn();
+    }
+
+    setById(id, index, value){
+      const me = this;
+      const store = me.store;
+      const row = me.renderedRowsIdMap.get(id);
+      const flashChangesColors = me.flashChangesColors;
+      const rowIndex = row?.getAttribute('row-index');
+
+      const rerenderCell = (cell) => {
+        if(!cell){
+          return;
+        }
+
+        const columnIndex = Number(cell.getAttribute('col-index'));
+
+        const newCell = me.createCell(rowIndex, columnIndex);
+
+        if(cell.innerHTML === newCell.innerHTML){
+          return;
+        }
+
+        cell.remove();
+        cell = newCell;
+        const cellStyle = cell.style;
+        if(me.flashChanges && !cell.style.backgroundColor){
+          cellStyle.transition = 'background-color 2000ms';
+          cellStyle.backgroundColor = flashChangesColors[store.selectedItemsMap.has(id)?1:0];
+
+          setTimeout(()=>{
+            cellStyle.backgroundColor = '';
+          });
+
+          setTimeout(()=>{
+            cellStyle.transition = '';
+            cellStyle.backgroundColor = '';
+          }, 2000);
+        }
+        row.appendChild(cell);
+      }
+
+      if(typeof index === 'object'){
+        for(let p in index){
+          store.setById(id, p, index[p]);
+
+          let cell = row?.querySelector(`div[col-id="${p}"]`);
+          rerenderCell(cell);
+        }
+      }
+      else {
+        store.setById(id, index, value);
+
+        let cell = row?.querySelector(`div[col-id="${index}"]`);
+        rerenderCell(cell);
+      }
+
+      row && me.rowCellsUpdateWithColumnRender(row, me.flashChanges);
+    }
+
+    getItemById(id) {
+      return this.store.idItemMap.get(id);
     }
   }
 

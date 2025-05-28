@@ -384,6 +384,10 @@
       checkboxEl.setAttribute('type', 'checkbox');
       checkboxEl.checked = selected;
 
+      if(item.selectedStatus === 'partly'){
+        checkboxEl.indeterminate = true;
+      }
+
       return checkboxEl;
     },
 
@@ -714,7 +718,7 @@
       const me = this;
 
       me.renderedRowsIdMap.forEach((row, key) => {
-        me.removeRowById(key);
+        me.removeDomRowById(key);
       });
     },
 
@@ -794,7 +798,7 @@
 
       me.renderedRowsIdMap.forEach((rowEl, id) => {
         if (!me.actualRowsIdSet.has(id)) {
-          me.removeRowById(id);
+          me.removeDomRowById(id);
         }
       });
     },
@@ -932,6 +936,29 @@
       const cell = me.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
 
       return cell;
+    },
+
+    updateOrderColumn(){
+      const me = this;
+
+      if(me.columnOrder){
+        const cells = me.bodyEl.querySelectorAll(`div.${CELL_ORDER}`);
+
+        cells.forEach(cell => {
+          const row = cell.closest(`.${ROW}`);
+          if(!row){
+            return;
+          }
+          const itemId = row.getAttribute('row-id');
+          const item = me.store.idItemMap.get(itemId);
+
+          if(!item){
+            return;
+          }
+
+          cell.innerHTML = item.rowIndex + 1;
+        });
+      }
     }
   }
 

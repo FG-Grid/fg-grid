@@ -67,7 +67,7 @@
 
     // Regenerate display group data
     // It is only for case when there is no sorters
-    simpleReGenerateDisplayedGroupedData(index, dir, type) {
+    simpleReGenerateDisplayedGroupedData() {
       const me = this;
       const groupedData = me.displayedData.slice();
 
@@ -128,7 +128,11 @@
         groupLevel = me.rowGroups.length - 1;
         hasChildrenGroups = false;
         me.groupDetails = {};
-        me.levelsWithGroups = [];
+        me.levelsWithGroups = [
+          [{
+            root: []
+          }]
+        ];
         me.expandedGroupsWithDataChildren = {};
       }
 
@@ -295,8 +299,12 @@
       });
     },
 
-    set$rowGroupValue() {
-      this.data.forEach(rowData => {
+    set$rowGroupValue(data) {
+      if(data === undefined){
+        data = this.data;
+      }
+
+      data.forEach(rowData => {
         let $rowGroupValues = [];
 
         this.rowGroups.forEach(group => {
@@ -305,6 +313,8 @@
 
         rowData.$rowGroupValue = $rowGroupValues.join('/');
       });
+
+      return data;
     },
 
     setExpandedGroups() {
@@ -698,8 +708,11 @@
 
       me.prevAction = '';
 
-      me.rowGroupExpanded = [];
-      me.expandedGroups = {};
+      if(!me.$dontDropExpandedGroups){
+        me.rowGroupExpanded = [];
+        me.expandedGroups = {};
+      }
+
       delete me.groupsChildren;
       if (rowGroups.length === 0) {
         me.clearGroups();
@@ -761,6 +774,104 @@
 
       return sortedData;
     },
+
+    addGroup(group){
+      const me = this;
+      const splitted = group.split('/');
+
+      me.levelsWithGroups = me.levelsWithGroups || [
+        [{
+          root: []
+        }]
+      ];
+      me.groupsChildren = me.groupsChildren || {};
+      me.expandedGroupsWithDataChildren = me.expandedGroupsWithDataChildren || {};
+      me.expandedGroups = me.expandedGroups || {};
+      if(typeof me.rowGroupExpanded === 'function'){
+        me.rowGroupExpanded = [];
+      }
+
+      me.expandedGroupsWithDataChildren[group] = true;
+
+      const addToGroupsChildren = [];
+
+      for(let i = 0;i<splitted.length;i++){
+        const name = splitted.slice(0, splitted.length - i).join('/');
+        const groupLevel = name.split('/').length - 1;
+
+        if(me.groupDetails[name]) {
+          break;
+        }
+
+        const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+
+        if(groupLevel === 0){
+          if(!me.levelsWithGroups[0][0].root.includes(name)){
+            me.levelsWithGroups[0][0].root.push(name);
+          }
+        }
+        else{
+          if(me.levelsWithGroups === undefined){
+            me.levelsWithGroups = [
+              [{
+                root: []
+              }]
+            ];
+          }
+
+          if(me.levelsWithGroups[groupLevel] === undefined){
+            me.levelsWithGroups[groupLevel] = [{}];
+          }
+
+          if(!me.levelsWithGroups[groupLevel][0][parentGroup]){
+            me.levelsWithGroups[groupLevel][0][parentGroup] = [];
+          }
+
+          me.levelsWithGroups[groupLevel][0][parentGroup].push(name);
+        }
+
+        if(!me.expandedGroups[name]){
+          me.rowGroupExpanded.push(name);
+        }
+
+        me.expandedGroups[name] = true;
+        me.groupsChildren[name] = [];
+
+        me.groupDetails[name] = {
+          $rowGroupValue: name,
+          $rowDisplayGroupValue: splitted[splitted.length - i - 1],
+          $groupLevel: groupLevel,
+          $isGroupRow: true,
+          $hasChildrenGroups: group !== name,
+          id: me.generateId(),
+          childrenAmount: 0,
+          amount: 0,
+          expanded: true,
+          $agValues: {}
+        }
+
+        addToGroupsChildren.push(name);
+      }
+
+      addToGroupsChildren.forEach(group => {
+        const splitted = group.split('/');
+        const parentGroup = splitted.slice(0, splitted.length - 1).join('/');
+
+        me.groupsChildren[parentGroup] = me.groupsChildren[parentGroup] || [];
+
+        me.groupsChildren[parentGroup].push(me.groupDetails[group]);
+        if(me.groupDetails[parentGroup].$hasChildrenGroups){
+          me.groupsChildren[parentGroup].sort((groupA, groupB) => {
+            switch (me.defaultRowGroupSort) {
+              case 'asc-amount':
+                return groupA.amount - groupB.amount;
+              case 'desc-amount':
+                return groupB.amount - groupA.amount;
+            }
+          });
+        }
+      })
+    }
   }
 
   Object.assign(Fancy.Store.prototype, RowGroup);

@@ -186,7 +186,7 @@
 
           me.timeOutRemoveRows = setTimeout(() => {
             itemsToRemove.forEach(item => {
-              me.removeRowById(item.id);
+              me.removeDomRowById(item.id);
             });
 
             newExpendedRowEls.forEach(rowEl => {
@@ -203,22 +203,22 @@
     updateRowGroupAmount() {
       const me = this;
       const store = me.store;
+      const filters = store.filters;
       const rowAmounts = me.bodyEl.querySelectorAll(`.${ROW_GROUP_CELL_AMOUNT}`);
 
       rowAmounts.forEach(amountEl => {
         const row = amountEl.closest(`.${ROW_GROUP}`);
         const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
-        const groupDetail = store.groupDetailsForFiltering[$rowGroupValue];
+        const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
 
-        if(store.filters.length && !groupDetail){
+        if(filters.length || !groupDetail){
           return;
         }
 
-        let amount = store.filters.length? groupDetail.amount:store.groupDetails[$rowGroupValue].amount;
-        amount = ` (${amount})`;
+        let amount = ` (${groupDetail.amount})`;
         const domAmount = Number(amountEl.innerHTML);
 
-        if(domAmount !== amount){
+        if(domAmount !== groupDetail.amount){
           amountEl.innerHTML = amount;
         }
       })
@@ -227,15 +227,20 @@
     reConfigRowGroups(){
       const me = this;
       const store = me.store;
-      const rowGroups = [];
+      let rowGroups = [];
 
       me.grouping = true;
 
       me.terminateVisibleRows();
 
-      me.rowGroupBarItemColumns.forEach(column => {
-        rowGroups.push(column.index);
-      });
+      if(me.rowGroupBarItemColumns?.length){
+        me.rowGroupBarItemColumns.forEach(column => {
+          rowGroups.push(column.index);
+        });
+      }
+      else{
+        rowGroups = store.rowGroups
+      }
 
       store.reConfigRowGroups(rowGroups);
 

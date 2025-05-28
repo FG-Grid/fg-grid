@@ -22,7 +22,9 @@
           splitted.pop();
           const parentGroup = splitted.join('/');
 
-          me.updateSelectedRowGroupsChildren(parentGroup, value, groupItem);
+          if(value || !groupItem.selectedStatus){
+            me.updateSelectedRowGroupsChildren(parentGroup, value, groupItem);
+          }
           me.updateSelectedStatus(parentGroup);
         }
       }
@@ -127,8 +129,26 @@
         groupItem.$selected = false;
         me.selectedItemsMap.delete(groupDetail.id);
       } else if (me.groupsChildren[group].length === me.selectedRowGroupsChildren[group].size) {
-        groupSelectedStatus = 'full';
-        groupItem.$selected = true;
+        let childIsPartlySelected = false;
+        if(groupItem.$hasChildrenGroups){
+          const groupChildren = me.groupsChildren[group];
+          for(let i = 0;i<groupChildren.length;i++){
+            const subGroupItem = groupChildren[i];
+            if(subGroupItem.selectedStatus === 'partly'){
+              childIsPartlySelected = true;
+              break;
+            }
+          }
+        }
+
+        if(childIsPartlySelected){
+          groupSelectedStatus = 'partly';
+          delete groupItem.$selected;
+        }
+        else{
+          groupSelectedStatus = 'full';
+          groupItem.$selected = true;
+        }
         //me.updateSelectedRowGroupsChildren()
       } else {
         groupSelectedStatus = 'partly';

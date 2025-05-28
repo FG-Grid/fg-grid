@@ -138,6 +138,10 @@
       groupItemEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
       me.activeRowGroupBarItemEl = groupItemEl;
 
+      if(me.isEditing){
+        me.hideActiveEditor();
+      }
+
       me.columnDragging = {
         column,
         inBar: true,

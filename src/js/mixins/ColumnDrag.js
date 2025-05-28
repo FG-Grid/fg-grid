@@ -84,6 +84,10 @@
         }
       }
       else{
+        if(me.isEditing){
+          me.hideActiveEditor();
+        }
+
         const deltaX = Math.abs(event.pageX - me.columnDragDownX);
         const deltaY = Math.abs(event.pageY - me.columnDragDownY);
 

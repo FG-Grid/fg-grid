@@ -100,12 +100,7 @@
         row.classList.remove(ROW_SELECTED);
       }
 
-      me.scroller.columnsViewRange.forEach(columnIndex => {
-        const column = me.columns[columnIndex];
-        if(column.headerCheckboxSelection){
-          me.updateHeaderCheckboxSelection(column);
-        }
-      });
+      me.updateHeaderCheckboxesSelection();
 
       store.groupsChildren[group].forEach(child => {
         const childRow = me.bodyEl.querySelector(`[row-id="${child.id}"]`);
@@ -136,14 +131,31 @@
       }
     },
 
+    updateHeaderCheckboxesSelection(){
+      const me = this;
+
+      me.scroller.columnsViewRange.forEach(columnIndex => {
+        const column = me.columns[columnIndex];
+        if(column.headerCheckboxSelection){
+          me.updateHeaderCheckboxSelection(column);
+        }
+      });
+    },
+
     updateRowGroupRowsAndCheckBoxes(){
       const me = this;
       const store = me.store;
 
       me.bodyEl.querySelectorAll(`.${ROW_GROUP}`).forEach(row => {
         const group = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
-        const checkBoxEl = row.querySelector(`.${ROW_GROUP_CELL_SELECTION} .${INPUT_CHECKBOX}`)
-        const groupSelectedStatus = store.groupDetails[group].selectedStatus;
+        const checkBoxEl = row.querySelector(`.${ROW_GROUP_CELL_SELECTION} .${INPUT_CHECKBOX}`);
+        const groupDetail = store.groupDetails[group];
+
+        if(!groupDetail){
+          return;
+        }
+
+        const groupSelectedStatus = groupDetail.selectedStatus;
 
         switch (groupSelectedStatus){
           case false:
@@ -740,36 +752,61 @@
       };
       const data = [];
 
+      const getCellInner = (options) => {
+        const column = options.column;
+        const value = options.value;
+        let cellInner;
+
+        if(column.getter){
+          cellInner = column.getter(options)
+        }
+        else if(column.render){
+          cellInner = column.render()
+        }
+        else {
+          cellInner = value;
+        }
+
+        return cellInner;
+      }
+
+      if(rows.length === 0 && me.activeCellEl){
+        const row = me.activeCellEl.closest(`.${ROW}`);
+        if(!row){
+          return;
+        }
+        const itemId = row.getAttribute('row-id');
+        const item = me.store.idItemMap.get(itemId);
+        const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+        const rowIndex = row.getAttribute('row-index');
+
+        const value = item[column.index];
+        const cellInner = getCellInner({
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value
+        });
+
+        return cellInner;
+      }
+
       for(let i = rows[0];i<=rows[1];i++){
         let item = me.store.getItemByRowIndex(i);
         const rowData = [];
 
         for(let j = columns[0];j<=columns[1];j++){
           const column = me.columns[j];
-          let cellInner;
-          let value = item[column.index];
-
-          if(column.getter){
-            cellInner = column.getter({
-              item,
-              column,
-              rowIndex: i,
-              columnIndex: j,
-              value
-            })
-          }
-          else if(column.render){
-            cellInner = column.render({
-              item,
-              column,
-              rowIndex: i,
-              columnIndex: j,
-              value
-            })
-          }
-          else {
-            cellInner = value;
-          }
+          const value = item[column.index];
+          const cellInner = getCellInner({
+            item,
+            column,
+            rowIndex: i,
+            columnIndex: j,
+            value
+          });
 
           rowData.push(cellInner);
         }

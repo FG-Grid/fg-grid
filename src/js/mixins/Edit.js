@@ -214,23 +214,74 @@
       });
     },
 
-    rowCellsUpdateWithColumnRender(row){
+    rowCellsUpdateWithColumnRender(row, flash){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
+      const itemId = row.getAttribute('row-id');
       const cells = row.querySelectorAll(`.${CELL}`)
 
       cells.forEach(cell => {
         const columnIndex = Number(cell.getAttribute('col-index'));
         const column = me.columns[columnIndex];
 
-        if(column.render === undefined){
+        if(column.render === undefined || column.type === 'order' || column.index === 'id'){
           return;
         }
 
+        const newCell = me.createCell(rowIndex, columnIndex);
+        if(cell.innerHTML === newCell.innerHTML){
+          return;
+        }
         cell?.remove();
+        cell = newCell;
 
-        cell = me.createCell(rowIndex, columnIndex);
+        const cellStyle = cell.style;
+
+        if(flash && !cell.style.backgroundColor){
+          cellStyle.transition = 'background-color 2000ms';
+          cellStyle.backgroundColor = me.flashChangesColors[me.store.selectedItemsMap.has(itemId)?1:0];
+
+          setTimeout(()=>{
+            cellStyle.backgroundColor = '';
+          });
+
+          setTimeout(()=>{
+            cellStyle.transition = '';
+            cellStyle.backgroundColor = '';
+          }, 2000);
+        }
         row.appendChild(cell);
+      });
+    },
+
+    updateAfterAddRemove(){
+      const me = this;
+
+      me.scroller.calcMaxScrollTop();
+      me.scroller.updateScrollTop();
+      me.scroller.calcViewRange();
+      me.scroller.setVerticalSize();
+      me.scroller.updateHorizontalScrollSize();
+      me.updateVisibleHeight();
+
+      me.updateVisibleRowsAfterRemove();
+      me.store.memorizePrevRowIndexesMap();
+      me.updateHeaderCells();
+    },
+
+    updateVisibleRowsAfterRemove() {
+      const me = this;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          me.renderedRowsIdMap.forEach((rowEl, id) => {
+            const item = me.store.idItemMap.get(id);
+
+            if (me.actualRowsIdSet.has(item.id)) {
+              me.updateRowPosition(item);
+            }
+          });
+        });
       });
     }
   }

@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.7.7',
+  version: '0.7.8',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -521,6 +521,23 @@ Fancy.copyText = (text) => {
       me.defaultRowGroupSort = defaultRowGroupSort || [];
       me.selectedItemsMap = new Map();
       me.selectedRowGroupsChildren = {};
+      me.groupDetails = {};
+      /*
+      me.groupDetails = {};
+      me.levelsWithGroups = [
+        [{
+          root: []
+        }]
+      ];
+      me.groupsChildren = {};
+      me.expandedGroupsWithDataChildren = {};
+      me.expandedGroups = {};
+      me.rowGroupExpanded = [];
+       */
+      //me.rowGroupExpanded = [];
+      //me.expandedGroups = {};
+      //me.expandedGroupsWithDataChildren = {};
+      //me.groupDetails = {};
 
       if (me.data.length && me.rowGroups.length) {
         me.lightSetIds();
@@ -1449,7 +1466,7 @@ Fancy.copyText = (text) => {
 
     // Regenerate display group data
     // It is only for case when there is no sorters
-    simpleReGenerateDisplayedGroupedData(index, dir, type) {
+    simpleReGenerateDisplayedGroupedData() {
       const me = this;
       const groupedData = me.displayedData.slice();
 
@@ -1510,7 +1527,11 @@ Fancy.copyText = (text) => {
         groupLevel = me.rowGroups.length - 1;
         hasChildrenGroups = false;
         me.groupDetails = {};
-        me.levelsWithGroups = [];
+        me.levelsWithGroups = [
+          [{
+            root: []
+          }]
+        ];
         me.expandedGroupsWithDataChildren = {};
       }
 
@@ -1672,8 +1693,12 @@ Fancy.copyText = (text) => {
       });
     },
 
-    set$rowGroupValue() {
-      this.data.forEach(rowData => {
+    set$rowGroupValue(data) {
+      if(data === undefined){
+        data = this.data;
+      }
+
+      data.forEach(rowData => {
         let $rowGroupValues = [];
 
         this.rowGroups.forEach(group => {
@@ -1682,6 +1707,8 @@ Fancy.copyText = (text) => {
 
         rowData.$rowGroupValue = $rowGroupValues.join('/');
       });
+
+      return data;
     },
 
     setExpandedGroups() {
@@ -2075,8 +2102,11 @@ Fancy.copyText = (text) => {
 
       me.prevAction = '';
 
-      me.rowGroupExpanded = [];
-      me.expandedGroups = {};
+      if(!me.$dontDropExpandedGroups){
+        me.rowGroupExpanded = [];
+        me.expandedGroups = {};
+      }
+
       delete me.groupsChildren;
       if (rowGroups.length === 0) {
         me.clearGroups();
@@ -2138,6 +2168,104 @@ Fancy.copyText = (text) => {
 
       return sortedData;
     },
+
+    addGroup(group){
+      const me = this;
+      const splitted = group.split('/');
+
+      me.levelsWithGroups = me.levelsWithGroups || [
+        [{
+          root: []
+        }]
+      ];
+      me.groupsChildren = me.groupsChildren || {};
+      me.expandedGroupsWithDataChildren = me.expandedGroupsWithDataChildren || {};
+      me.expandedGroups = me.expandedGroups || {};
+      if(typeof me.rowGroupExpanded === 'function'){
+        me.rowGroupExpanded = [];
+      }
+
+      me.expandedGroupsWithDataChildren[group] = true;
+
+      const addToGroupsChildren = [];
+
+      for(let i = 0;i<splitted.length;i++){
+        const name = splitted.slice(0, splitted.length - i).join('/');
+        const groupLevel = name.split('/').length - 1;
+
+        if(me.groupDetails[name]) {
+          break;
+        }
+
+        const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+
+        if(groupLevel === 0){
+          if(!me.levelsWithGroups[0][0].root.includes(name)){
+            me.levelsWithGroups[0][0].root.push(name);
+          }
+        }
+        else {
+          if(me.levelsWithGroups === undefined){
+            me.levelsWithGroups = [
+              [{
+                root: []
+              }]
+            ];
+          }
+
+          if(me.levelsWithGroups[groupLevel] === undefined){
+            me.levelsWithGroups[groupLevel] = [{}];
+          }
+
+          if(!me.levelsWithGroups[groupLevel][0][parentGroup]){
+            me.levelsWithGroups[groupLevel][0][parentGroup] = [];
+          }
+
+          me.levelsWithGroups[groupLevel][0][parentGroup].push(name);
+        }
+
+        if(!me.expandedGroups[name]){
+          me.rowGroupExpanded.push(name);
+        }
+
+        me.expandedGroups[name] = true;
+        me.groupsChildren[name] = [];
+
+        me.groupDetails[name] = {
+          $rowGroupValue: name,
+          $rowDisplayGroupValue: splitted[splitted.length - i - 1],
+          $groupLevel: groupLevel,
+          $isGroupRow: true,
+          $hasChildrenGroups: group !== name,
+          id: me.generateId(),
+          childrenAmount: 0,
+          amount: 0,
+          expanded: true,
+          $agValues: {}
+        };
+
+        addToGroupsChildren.push(name);
+      }
+
+      addToGroupsChildren.forEach(group => {
+        const splitted = group.split('/');
+        const parentGroup = splitted.slice(0, splitted.length - 1).join('/');
+
+        me.groupsChildren[parentGroup] = me.groupsChildren[parentGroup] || [];
+
+        me.groupsChildren[parentGroup].push(me.groupDetails[group]);
+        if(me.groupDetails[parentGroup].$hasChildrenGroups){
+          me.groupsChildren[parentGroup].sort((groupA, groupB) => {
+            switch (me.defaultRowGroupSort) {
+              case 'asc-amount':
+                return groupA.amount - groupB.amount;
+              case 'desc-amount':
+                return groupB.amount - groupA.amount;
+            }
+          });
+        }
+      });
+    }
   };
 
   Object.assign(Fancy.Store.prototype, RowGroup);
@@ -2168,7 +2296,9 @@ Fancy.copyText = (text) => {
           splitted.pop();
           const parentGroup = splitted.join('/');
 
-          me.updateSelectedRowGroupsChildren(parentGroup, value, groupItem);
+          if(value || !groupItem.selectedStatus){
+            me.updateSelectedRowGroupsChildren(parentGroup, value, groupItem);
+          }
           me.updateSelectedStatus(parentGroup);
         }
       }
@@ -2273,8 +2403,26 @@ Fancy.copyText = (text) => {
         groupItem.$selected = false;
         me.selectedItemsMap.delete(groupDetail.id);
       } else if (me.groupsChildren[group].length === me.selectedRowGroupsChildren[group].size) {
-        groupSelectedStatus = 'full';
-        groupItem.$selected = true;
+        let childIsPartlySelected = false;
+        if(groupItem.$hasChildrenGroups){
+          const groupChildren = me.groupsChildren[group];
+          for(let i = 0;i<groupChildren.length;i++){
+            const subGroupItem = groupChildren[i];
+            if(subGroupItem.selectedStatus === 'partly'){
+              childIsPartlySelected = true;
+              break;
+            }
+          }
+        }
+
+        if(childIsPartlySelected){
+          groupSelectedStatus = 'partly';
+          delete groupItem.$selected;
+        }
+        else {
+          groupSelectedStatus = 'full';
+          groupItem.$selected = true;
+        }
         //me.updateSelectedRowGroupsChildren()
       } else {
         groupSelectedStatus = 'partly';
@@ -2346,6 +2494,10 @@ Fancy.copyText = (text) => {
       const me = this;
       const item = me.idItemMap.get(id);
 
+      if(!item){
+        return false;
+      }
+
       if(typeof key === 'object'){
         for(let p in key){
           item[p] = key[p];
@@ -2354,6 +2506,85 @@ Fancy.copyText = (text) => {
       else {
         item[key] = value;
       }
+
+      return item;
+    },
+    removeItemById(id){
+      const me = this;
+      const item = me.idItemMap.get(id);
+      const rowIndex = item.originalRowIndex;
+
+      me.idItemMap.delete(id);
+      me.idRowIndexesMap.delete(id);
+      me.selectedItemsMap.delete(id);
+
+      me.data[rowIndex] = undefined;
+
+      return item;
+    },
+    add(items, position){
+      const me = this;
+
+      items.forEach(item => {
+        if (!item.id) {
+          item.id = me.generateId();
+        }
+      });
+
+      if(me.rowGroups.length) {
+        items = me.set$rowGroupValue(items);
+        items.forEach(item => {
+          const group = item.$rowGroupValue;
+          let groupDetail = me.groupDetails[group];
+
+          if (!groupDetail) {
+            me.addGroup(group);
+          }
+
+          me.groupsChildren[group].push(item);
+
+          const splitted = group.split('/');
+
+          for(let i = 0;i<splitted.length;i++) {
+            const name = splitted.slice(0, splitted.length - i).join('/');
+            const groupDetails = me.groupDetails[name];
+
+            groupDetails.amount++;
+            groupDetails.childrenAmount++;
+          }
+
+          me.data.push(item);
+        });
+
+        me.rowGroupExpanded.sort();
+
+        me.generateDisplayedGroupedData();
+        me.setIndexAndItemsMaps();
+
+        return;
+      }
+
+      if(position === undefined){
+        me.data.push(...items);
+
+        if(me.displayedData){
+          me.displayedData.push(...items);
+        }
+      }
+      else if(position === 0){
+        me.data.unshift(...items);
+        if(me.displayedData){
+          me.displayedData.unshift(...items);
+        }
+      }
+      else if(typeof position === 'object'){
+        me.data.splice(position.originalRowIndex, 0, ...items);
+        if(me.displayedData){
+          me.displayedData.splice(position.rowIndex, 0, ...items);
+        }
+      }
+
+      me.updateIndexes();
     }
   };
 
@@ -3153,6 +3384,8 @@ Fancy.copyText = (text) => {
     editorEnterAction = 'stay'; // 'stay' | 'down' | 'right'
 
     startEditByTyping = true;
+    flashChanges = true;
+    flashChangesColors = ['#e0e5e9','beige'];
 
     $defaultRowGroupColumn = {
       title: 'Group',
@@ -3373,7 +3606,25 @@ Fancy.copyText = (text) => {
       }
     }
 
-    removeRowById(id){
+    animatedRemoveDomRowById(id){
+      const me = this;
+      const rowEl = me.renderedRowsIdMap.get(id);
+
+      if(rowEl){
+        rowEl.style.opacity = 0;
+        setTimeout(()=>{
+          rowEl.remove();
+        }, 200);
+      }
+      else {
+        console.warn(`Row El with id = ${id} was not found`);
+      }
+
+      me.actualRowsIdSet.delete(id);
+      me.renderedRowsIdMap.delete(id);
+    }
+
+    removeDomRowById(id){
       const me = this;
       const rowEl = me.renderedRowsIdMap.get(id);
 
@@ -3475,7 +3726,7 @@ Fancy.copyText = (text) => {
       }
 
       const storeConfig = {
-        data: config.data,
+        data: structuredClone(config.data),
         defaultRowGroupSort: config.defaultRowGroupSort || me.defaultRowGroupSort
       };
 
@@ -3553,8 +3804,11 @@ Fancy.copyText = (text) => {
     setData(data){
       const me = this;
 
-      me.store.setData(data);
+      me.store.$dontDropExpandedGroups = true;
+
+      me.store.setData(structuredClone(data));
       me.reRender();
+      delete me.store.$dontDropExpandedGroups;
     }
 
     reRender(){
@@ -3592,6 +3846,191 @@ Fancy.copyText = (text) => {
       const me = this;
 
       me.hideActiveEditor();
+    }
+
+    remove(rows){
+      const me = this;
+      const store = me.store;
+
+      if(typeof rows === 'string'){
+        rows = [{
+          id: rows
+        }];
+      }
+      else if(Array.isArray(rows)){
+        rows = rows.map((value)=>{
+          if(typeof value === 'string'){
+            return {
+              id: value
+            }
+          }
+
+          return value;
+        });
+      }
+
+      if(rows.length === 0){
+        return;
+      }
+
+      let itemsToRemove = [];
+      let rowGroups = new Map();
+
+      for(let i = 0;i<rows.length;i++){
+        const row = rows[i];
+
+        me.animatedRemoveDomRowById(row.id);
+
+        let item = me.store.removeItemById(row.id);
+        itemsToRemove.push(item);
+        if(item.$rowGroupValue){
+          let values = rowGroups.get(item.$rowGroupValue) || [];
+          values.push(item.id);
+          rowGroups.set(item.$rowGroupValue, values);
+
+          store.selectRowItem(item, false);
+        }
+      }
+
+      rowGroups.forEach((items, groupValue, c) => {
+        const splitted = groupValue.split('/');
+
+        for(let i = 0;i<splitted.length;i++){
+          const name = splitted.slice(0, splitted.length - i).join('/');
+          const groupDetails = store.groupDetails[name];
+
+          groupDetails.amount -= items.length;
+          if(groupDetails.amount === 0){
+            groupDetails.childrenAmount = 0;
+            me.animatedRemoveDomRowById(groupDetails.id);
+            delete me.store.groupDetails[name];
+            delete me.store.expandedGroupsWithDataChildren[name];
+            delete me.store.groupsChildren[name];
+
+            let item = me.store.removeItemById(groupDetails.id);
+            itemsToRemove.push(item);
+
+            const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+            store.groupsChildren[parentGroup] = store.groupsChildren[parentGroup].filter(item => {
+               return item.id !== groupDetails.id;
+            });
+          }
+          else {
+            store.groupsChildren[name] = store.groupsChildren[name].filter(item => {
+              return items.includes(item.id) === false;
+            });
+          }
+        }
+      });
+
+      const rowIndexes = itemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
+      rowIndexes.forEach((item,index) => {
+        me.store.data.splice(item.originalRowIndex - index, 1);
+      });
+
+      if(me.store.displayedData?.length){
+        const rowIndexes = itemsToRemove.sort((a,b) => a.rowIndex - b.rowIndex);
+
+        rowIndexes.forEach((item,index) => {
+          me.store.displayedData.splice(item.rowIndex - index, 1);
+        });
+      }
+
+      if(rowGroups.size){
+        me.updateRowGroupAmount();
+        me.updateRowGroupRowsAndCheckBoxes();
+      }
+
+      store.updateIndexes();
+
+      me.scroller.calcVisibleRows();
+      me.renderVisibleRows();
+      me.updateAfterAddRemove();
+
+      me.updateHeaderCheckboxesSelection();
+
+      me.updateOrderColumn();
+    }
+
+    add(items, position){
+      const me = this;
+      const store = me.store;
+
+      store.add(items, position);
+
+      if(store.rowGroups.length){
+        me.updateRowGroupAmount();
+        me.updateRowGroupRowsAndCheckBoxes();
+      }
+
+      me.scroller.calcVisibleRows();
+      me.renderVisibleRows();
+      me.updateAfterAddRemove();
+
+      me.updateHeaderCheckboxesSelection();
+
+      me.updateOrderColumn();
+    }
+
+    setById(id, index, value){
+      const me = this;
+      const store = me.store;
+      const row = me.renderedRowsIdMap.get(id);
+      const flashChangesColors = me.flashChangesColors;
+      const rowIndex = row?.getAttribute('row-index');
+
+      const rerenderCell = (cell) => {
+        if(!cell){
+          return;
+        }
+
+        const columnIndex = Number(cell.getAttribute('col-index'));
+
+        const newCell = me.createCell(rowIndex, columnIndex);
+
+        if(cell.innerHTML === newCell.innerHTML){
+          return;
+        }
+
+        cell.remove();
+        cell = newCell;
+        const cellStyle = cell.style;
+        if(me.flashChanges && !cell.style.backgroundColor){
+          cellStyle.transition = 'background-color 2000ms';
+          cellStyle.backgroundColor = flashChangesColors[store.selectedItemsMap.has(id)?1:0];
+
+          setTimeout(()=>{
+            cellStyle.backgroundColor = '';
+          });
+
+          setTimeout(()=>{
+            cellStyle.transition = '';
+            cellStyle.backgroundColor = '';
+          }, 2000);
+        }
+        row.appendChild(cell);
+      };
+
+      if(typeof index === 'object'){
+        for(let p in index){
+          store.setById(id, p, index[p]);
+
+          let cell = row?.querySelector(`div[col-id="${p}"]`);
+          rerenderCell(cell);
+        }
+      }
+      else {
+        store.setById(id, index, value);
+
+        let cell = row?.querySelector(`div[col-id="${index}"]`);
+        rerenderCell(cell);
+      }
+
+      row && me.rowCellsUpdateWithColumnRender(row, me.flashChanges);
+    }
+
+    getItemById(id) {
+      return this.store.idItemMap.get(id);
     }
   }
 
@@ -4953,6 +5392,10 @@ Fancy.copyText = (text) => {
       checkboxEl.setAttribute('type', 'checkbox');
       checkboxEl.checked = selected;
 
+      if(item.selectedStatus === 'partly'){
+        checkboxEl.indeterminate = true;
+      }
+
       return checkboxEl;
     },
 
@@ -5283,7 +5726,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       me.renderedRowsIdMap.forEach((row, key) => {
-        me.removeRowById(key);
+        me.removeDomRowById(key);
       });
     },
 
@@ -5363,7 +5806,7 @@ Fancy.copyText = (text) => {
 
       me.renderedRowsIdMap.forEach((rowEl, id) => {
         if (!me.actualRowsIdSet.has(id)) {
-          me.removeRowById(id);
+          me.removeDomRowById(id);
         }
       });
     },
@@ -5500,6 +5943,29 @@ Fancy.copyText = (text) => {
       const cell = me.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
 
       return cell;
+    },
+
+    updateOrderColumn(){
+      const me = this;
+
+      if(me.columnOrder){
+        const cells = me.bodyEl.querySelectorAll(`div.${CELL_ORDER}`);
+
+        cells.forEach(cell => {
+          const row = cell.closest(`.${ROW}`);
+          if(!row){
+            return;
+          }
+          const itemId = row.getAttribute('row-id');
+          const item = me.store.idItemMap.get(itemId);
+
+          if(!item){
+            return;
+          }
+
+          cell.innerHTML = item.rowIndex + 1;
+        });
+      }
     }
   };
 
@@ -5607,6 +6073,10 @@ Fancy.copyText = (text) => {
 
       if (me.sorting) {
         return;
+      }
+
+      if(me.isEditing){
+        me.hideActiveEditor();
       }
 
       me.sorting = true;
@@ -5728,7 +6198,7 @@ Fancy.copyText = (text) => {
 
           me.timeOutRemoveRows = setTimeout(() => {
             itemsToRemove.forEach(item => {
-              me.removeRowById(item.id);
+              me.removeDomRowById(item.id);
             });
 
             me.sorting = false;
@@ -5970,7 +6440,7 @@ Fancy.copyText = (text) => {
 
           me.timeOutRemoveRows = setTimeout(() => {
             itemsToRemove.forEach(item => {
-              me.removeRowById(item.id);
+              me.removeDomRowById(item.id);
             });
 
             me.filtering = false;
@@ -6172,7 +6642,7 @@ Fancy.copyText = (text) => {
 
           me.timeOutRemoveRows = setTimeout(() => {
             itemsToRemove.forEach(item => {
-              me.removeRowById(item.id);
+              me.removeDomRowById(item.id);
             });
 
             newExpendedRowEls.forEach(rowEl => {
@@ -6189,22 +6659,22 @@ Fancy.copyText = (text) => {
     updateRowGroupAmount() {
       const me = this;
       const store = me.store;
+      const filters = store.filters;
       const rowAmounts = me.bodyEl.querySelectorAll(`.${ROW_GROUP_CELL_AMOUNT}`);
 
       rowAmounts.forEach(amountEl => {
         const row = amountEl.closest(`.${ROW_GROUP}`);
         const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
-        const groupDetail = store.groupDetailsForFiltering[$rowGroupValue];
+        const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
 
-        if(store.filters.length && !groupDetail){
+        if(filters.length || !groupDetail){
           return;
         }
 
-        let amount = store.filters.length? groupDetail.amount:store.groupDetails[$rowGroupValue].amount;
-        amount = ` (${amount})`;
+        let amount = ` (${groupDetail.amount})`;
         const domAmount = Number(amountEl.innerHTML);
 
-        if(domAmount !== amount){
+        if(domAmount !== groupDetail.amount){
           amountEl.innerHTML = amount;
         }
       });
@@ -6213,15 +6683,20 @@ Fancy.copyText = (text) => {
     reConfigRowGroups(){
       const me = this;
       const store = me.store;
-      const rowGroups = [];
+      let rowGroups = [];
 
       me.grouping = true;
 
       me.terminateVisibleRows();
 
-      me.rowGroupBarItemColumns.forEach(column => {
-        rowGroups.push(column.index);
-      });
+      if(me.rowGroupBarItemColumns?.length){
+        me.rowGroupBarItemColumns.forEach(column => {
+          rowGroups.push(column.index);
+        });
+      }
+      else {
+        rowGroups = store.rowGroups;
+      }
 
       store.reConfigRowGroups(rowGroups);
 
@@ -6384,6 +6859,10 @@ Fancy.copyText = (text) => {
 
       groupItemEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
       me.activeRowGroupBarItemEl = groupItemEl;
+
+      if(me.isEditing){
+        me.hideActiveEditor();
+      }
 
       me.columnDragging = {
         column,
@@ -6663,12 +7142,7 @@ Fancy.copyText = (text) => {
         row.classList.remove(ROW_SELECTED);
       }
 
-      me.scroller.columnsViewRange.forEach(columnIndex => {
-        const column = me.columns[columnIndex];
-        if(column.headerCheckboxSelection){
-          me.updateHeaderCheckboxSelection(column);
-        }
-      });
+      me.updateHeaderCheckboxesSelection();
 
       store.groupsChildren[group].forEach(child => {
         const childRow = me.bodyEl.querySelector(`[row-id="${child.id}"]`);
@@ -6699,6 +7173,17 @@ Fancy.copyText = (text) => {
       }
     },
 
+    updateHeaderCheckboxesSelection(){
+      const me = this;
+
+      me.scroller.columnsViewRange.forEach(columnIndex => {
+        const column = me.columns[columnIndex];
+        if(column.headerCheckboxSelection){
+          me.updateHeaderCheckboxSelection(column);
+        }
+      });
+    },
+
     updateRowGroupRowsAndCheckBoxes(){
       const me = this;
       const store = me.store;
@@ -6706,7 +7191,13 @@ Fancy.copyText = (text) => {
       me.bodyEl.querySelectorAll(`.${ROW_GROUP}`).forEach(row => {
         const group = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
         const checkBoxEl = row.querySelector(`.${ROW_GROUP_CELL_SELECTION} .${INPUT_CHECKBOX}`);
-        const groupSelectedStatus = store.groupDetails[group].selectedStatus;
+        const groupDetail = store.groupDetails[group];
+
+        if(!groupDetail){
+          return;
+        }
+
+        const groupSelectedStatus = groupDetail.selectedStatus;
 
         switch (groupSelectedStatus){
           case false:
@@ -7303,36 +7794,61 @@ Fancy.copyText = (text) => {
       };
       const data = [];
 
+      const getCellInner = (options) => {
+        const column = options.column;
+        const value = options.value;
+        let cellInner;
+
+        if(column.getter){
+          cellInner = column.getter(options);
+        }
+        else if(column.render){
+          cellInner = column.render();
+        }
+        else {
+          cellInner = value;
+        }
+
+        return cellInner;
+      };
+
+      if(rows.length === 0 && me.activeCellEl){
+        const row = me.activeCellEl.closest(`.${ROW}`);
+        if(!row){
+          return;
+        }
+        const itemId = row.getAttribute('row-id');
+        const item = me.store.idItemMap.get(itemId);
+        const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+        const rowIndex = row.getAttribute('row-index');
+
+        const value = item[column.index];
+        const cellInner = getCellInner({
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value
+        });
+
+        return cellInner;
+      }
+
       for(let i = rows[0];i<=rows[1];i++){
         let item = me.store.getItemByRowIndex(i);
         const rowData = [];
 
         for(let j = columns[0];j<=columns[1];j++){
           const column = me.columns[j];
-          let cellInner;
-          let value = item[column.index];
-
-          if(column.getter){
-            cellInner = column.getter({
-              item,
-              column,
-              rowIndex: i,
-              columnIndex: j,
-              value
-            });
-          }
-          else if(column.render){
-            cellInner = column.render({
-              item,
-              column,
-              rowIndex: i,
-              columnIndex: j,
-              value
-            });
-          }
-          else {
-            cellInner = value;
-          }
+          const value = item[column.index];
+          const cellInner = getCellInner({
+            item,
+            column,
+            rowIndex: i,
+            columnIndex: j,
+            value
+          });
 
           rowData.push(cellInner);
         }
@@ -7712,6 +8228,10 @@ Fancy.copyText = (text) => {
         }
       }
       else {
+        if(me.isEditing){
+          me.hideActiveEditor();
+        }
+
         const deltaX = Math.abs(event.pageX - me.columnDragDownX);
         const deltaY = Math.abs(event.pageY - me.columnDragDownY);
 
@@ -8088,23 +8608,74 @@ Fancy.copyText = (text) => {
       });
     },
 
-    rowCellsUpdateWithColumnRender(row){
+    rowCellsUpdateWithColumnRender(row, flash){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
+      const itemId = row.getAttribute('row-id');
       const cells = row.querySelectorAll(`.${CELL}`);
 
       cells.forEach(cell => {
         const columnIndex = Number(cell.getAttribute('col-index'));
         const column = me.columns[columnIndex];
 
-        if(column.render === undefined){
+        if(column.render === undefined || column.type === 'order' || column.index === 'id'){
           return;
         }
 
+        const newCell = me.createCell(rowIndex, columnIndex);
+        if(cell.innerHTML === newCell.innerHTML){
+          return;
+        }
         cell?.remove();
+        cell = newCell;
 
-        cell = me.createCell(rowIndex, columnIndex);
+        const cellStyle = cell.style;
+
+        if(flash && !cell.style.backgroundColor){
+          cellStyle.transition = 'background-color 2000ms';
+          cellStyle.backgroundColor = me.flashChangesColors[me.store.selectedItemsMap.has(itemId)?1:0];
+
+          setTimeout(()=>{
+            cellStyle.backgroundColor = '';
+          });
+
+          setTimeout(()=>{
+            cellStyle.transition = '';
+            cellStyle.backgroundColor = '';
+          }, 2000);
+        }
         row.appendChild(cell);
+      });
+    },
+
+    updateAfterAddRemove(){
+      const me = this;
+
+      me.scroller.calcMaxScrollTop();
+      me.scroller.updateScrollTop();
+      me.scroller.calcViewRange();
+      me.scroller.setVerticalSize();
+      me.scroller.updateHorizontalScrollSize();
+      me.updateVisibleHeight();
+
+      me.updateVisibleRowsAfterRemove();
+      me.store.memorizePrevRowIndexesMap();
+      me.updateHeaderCells();
+    },
+
+    updateVisibleRowsAfterRemove() {
+      const me = this;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          me.renderedRowsIdMap.forEach((rowEl, id) => {
+            const item = me.store.idItemMap.get(id);
+
+            if (me.actualRowsIdSet.has(item.id)) {
+              me.updateRowPosition(item);
+            }
+          });
+        });
       });
     }
   };

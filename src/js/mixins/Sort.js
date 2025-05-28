@@ -8,6 +8,10 @@
         return;
       }
 
+      if(me.isEditing){
+        me.hideActiveEditor();
+      }
+
       me.sorting = true;
 
       let sorterOrdersMap = {};
@@ -127,7 +131,7 @@
 
           me.timeOutRemoveRows = setTimeout(() => {
             itemsToRemove.forEach(item => {
-              me.removeRowById(item.id);
+              me.removeDomRowById(item.id);
             });
 
             me.sorting = false;

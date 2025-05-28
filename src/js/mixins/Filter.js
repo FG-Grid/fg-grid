@@ -226,7 +226,7 @@
 
           me.timeOutRemoveRows = setTimeout(() => {
             itemsToRemove.forEach(item => {
-              me.removeRowById(item.id);
+              me.removeDomRowById(item.id);
             });
 
             me.filtering = false;
