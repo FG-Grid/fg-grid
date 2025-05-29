@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.7.8',
+  version: '0.7.9',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -9,7 +9,7 @@ const Fancy$1 = {
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
-  deepClone(obj) {
+  deepClone(obj){
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
@@ -2575,6 +2575,12 @@ Fancy.copyText = (text) => {
         me.data.unshift(...items);
         if(me.displayedData){
           me.displayedData.unshift(...items);
+        }
+      }
+      else if(typeof position === 'number'){
+        me.data.splice(position, 0, ...items);
+        if(me.displayedData){
+          me.displayedData.splice(position, 0, ...items);
         }
       }
       else if(typeof position === 'object'){

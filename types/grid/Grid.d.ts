@@ -35,6 +35,10 @@ declare class Grid implements GridConfig {
   setData(data: unknown[]): void;
   setColumns(columns: Column[]): void;
   destroy(): void;
+  setById(id: string, index: string, value: string|number|boolean|undefined|null): void;
+  getItemById(id: string): DataItem;
+  remove(rows: string|DataItem): void;
+  add(items: DataItem[], position?: number|DataItem): void;
 
   columns: Column[];
   data: DataItem[];

@@ -87,6 +87,12 @@
           me.displayedData.unshift(...items);
         }
       }
+      else if(typeof position === 'number'){
+        me.data.splice(position, 0, ...items);
+        if(me.displayedData){
+          me.displayedData.splice(position, 0, ...items);
+        }
+      }
       else if(typeof position === 'object'){
         me.data.splice(position.originalRowIndex, 0, ...items);
         if(me.displayedData){

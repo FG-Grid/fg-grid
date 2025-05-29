@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '0.7.8',
+  version: '0.7.9',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -9,7 +9,7 @@ const Fancy = {
   capitalizeFirstLetter(str){
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
-  deepClone(obj) {
+  deepClone(obj){
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
