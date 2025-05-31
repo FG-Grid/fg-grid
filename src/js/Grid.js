@@ -513,6 +513,9 @@
           id: rows
         }]
       }
+      else if(typeof rows === 'object'){
+        rows = [rows];
+      }
       else if(Array.isArray(rows)){
         rows = rows.map((value)=>{
           if(typeof value === 'string'){

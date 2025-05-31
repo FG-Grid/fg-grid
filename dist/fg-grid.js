@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.7.9',
+  version: '0.7.10',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -538,22 +538,6 @@ Fancy.copyText = (text) => {
       me.selectedItemsMap = new Map();
       me.selectedRowGroupsChildren = {};
       me.groupDetails = {};
-      /*
-      me.groupDetails = {};
-      me.levelsWithGroups = [
-        [{
-          root: []
-        }]
-      ];
-      me.groupsChildren = {};
-      me.expandedGroupsWithDataChildren = {};
-      me.expandedGroups = {};
-      me.rowGroupExpanded = [];
-       */
-      //me.rowGroupExpanded = [];
-      //me.expandedGroups = {};
-      //me.expandedGroupsWithDataChildren = {};
-      //me.groupDetails = {};
 
       if (me.data.length && me.rowGroups.length) {
         me.lightSetIds();
@@ -2541,6 +2525,10 @@ Fancy.copyText = (text) => {
     add(items, position){
       const me = this;
 
+      if(typeof items === 'object'){
+        items = [items];
+      }
+
       items.forEach(item => {
         if (!item.id) {
           item.id = me.generateId();
@@ -3878,6 +3866,9 @@ Fancy.copyText = (text) => {
         rows = [{
           id: rows
         }];
+      }
+      else if(typeof rows === 'object'){
+        rows = [rows];
       }
       else if(Array.isArray(rows)){
         rows = rows.map((value)=>{

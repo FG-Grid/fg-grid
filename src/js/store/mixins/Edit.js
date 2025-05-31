@@ -35,6 +35,10 @@
     add(items, position){
       const me = this;
 
+      if(typeof items === 'object'){
+        items = [items];
+      }
+
       items.forEach(item => {
         if (!item.id) {
           item.id = me.generateId();
