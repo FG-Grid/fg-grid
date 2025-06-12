@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.7.10',
+  version: '0.7.11',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -58,6 +58,44 @@ const Fancy$1 = {
 
     const parts = values[1].split(', ').map(parseFloat);
     return parts.length === 6 ? parts[5] : 0;
+  },
+  typeOf(value) {
+    if (value === null) {
+      return 'null';
+    }
+
+    const type = typeof value;
+    if(type === 'undefined' || type === 'string' || type === 'number' || type === 'boolean'){
+      return type;
+    }
+
+    const toString = Object.prototype.toString,
+      typeToString = toString.call(value);
+
+    if (value.length !== undefined && typeof value !== 'function') {
+      return 'array';
+    }
+
+    switch(typeToString){
+      case '[object Array]':
+        return 'array';
+      case '[object Date]':
+        return 'date';
+      case '[object Boolean]':
+        return 'boolean';
+      case '[object Number]':
+        return 'number';
+      case '[object RegExp]':
+        return 'regexp';
+    }
+
+    if(type === 'function'){
+      return 'function';
+    }
+
+    if(type === 'object'){
+      return 'object';
+    }
   }
 };
 
@@ -2489,6 +2527,8 @@ Fancy.copyText = (text) => {
 })();
 
 (()=> {
+  const typeOf = Fancy.typeOf;
+
   const StoreEdit = {
     setById(id, key, value){
       const me = this;
@@ -2498,7 +2538,7 @@ Fancy.copyText = (text) => {
         return false;
       }
 
-      if(typeof key === 'object'){
+      if(typeOf(key) === 'object'){
         for(let p in key){
           item[p] = key[p];
         }
@@ -2525,7 +2565,7 @@ Fancy.copyText = (text) => {
     add(items, position){
       const me = this;
 
-      if(typeof items === 'object'){
+      if(typeOf(items) === 'object'){
         items = [items];
       }
 
@@ -2581,13 +2621,13 @@ Fancy.copyText = (text) => {
           me.displayedData.unshift(...items);
         }
       }
-      else if(typeof position === 'number'){
+      else if(typeOf(position) === 'number'){
         me.data.splice(position, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position, 0, ...items);
         }
       }
-      else if(typeof position === 'object'){
+      else if(typeOf(position) === 'object'){
         me.data.splice(position.originalRowIndex, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position.rowIndex, 0, ...items);
@@ -3862,24 +3902,26 @@ Fancy.copyText = (text) => {
       const me = this;
       const store = me.store;
 
-      if(typeof rows === 'string'){
-        rows = [{
-          id: rows
-        }];
-      }
-      else if(typeof rows === 'object'){
-        rows = [rows];
-      }
-      else if(Array.isArray(rows)){
-        rows = rows.map((value)=>{
-          if(typeof value === 'string'){
-            return {
-              id: value
+      switch (Fancy.typeOf(rows)){
+        case 'string':
+          rows = [{
+            id: rows
+          }];
+          break;
+        case 'object':
+          rows = [rows];
+          break;
+        case 'array':
+          rows = rows.map((value)=>{
+            if(typeof value === 'string'){
+              return {
+                id: value
+              }
             }
-          }
 
-          return value;
-        });
+            return value;
+          });
+          break;
       }
 
       if(rows.length === 0){
@@ -6702,7 +6744,7 @@ Fancy.copyText = (text) => {
 
       me.terminateVisibleRows();
 
-      if(me.rowGroupBarItemColumns?.length){
+      if(me.rowGroupBarItemColumns?.length !== undefined){
         me.rowGroupBarItemColumns.forEach(column => {
           rowGroups.push(column.index);
         });

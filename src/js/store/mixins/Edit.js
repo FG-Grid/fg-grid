@@ -1,4 +1,6 @@
 (()=> {
+  const typeOf = Fancy.typeOf;
+
   const StoreEdit = {
     setById(id, key, value){
       const me = this;
@@ -8,7 +10,7 @@
         return false;
       }
 
-      if(typeof key === 'object'){
+      if(typeOf(key) === 'object'){
         for(let p in key){
           item[p] = key[p];
         }
@@ -35,7 +37,7 @@
     add(items, position){
       const me = this;
 
-      if(typeof items === 'object'){
+      if(typeOf(items) === 'object'){
         items = [items];
       }
 
@@ -91,13 +93,13 @@
           me.displayedData.unshift(...items);
         }
       }
-      else if(typeof position === 'number'){
+      else if(typeOf(position) === 'number'){
         me.data.splice(position, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position, 0, ...items);
         }
       }
-      else if(typeof position === 'object'){
+      else if(typeOf(position) === 'object'){
         me.data.splice(position.originalRowIndex, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position.rowIndex, 0, ...items);

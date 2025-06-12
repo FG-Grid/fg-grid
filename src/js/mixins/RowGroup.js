@@ -233,7 +233,7 @@
 
       me.terminateVisibleRows();
 
-      if(me.rowGroupBarItemColumns?.length){
+      if(me.rowGroupBarItemColumns?.length !== undefined){
         me.rowGroupBarItemColumns.forEach(column => {
           rowGroups.push(column.index);
         });

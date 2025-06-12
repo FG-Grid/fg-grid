@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '0.7.10',
+  version: '0.7.11',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -42,6 +42,44 @@ const Fancy = {
 
     const parts = values[1].split(', ').map(parseFloat);
     return parts.length === 6 ? parts[5] : 0;
+  },
+  typeOf(value) {
+    if (value === null) {
+      return 'null';
+    }
+
+    const type = typeof value;
+    if(type === 'undefined' || type === 'string' || type === 'number' || type === 'boolean'){
+      return type;
+    }
+
+    const toString = Object.prototype.toString,
+      typeToString = toString.call(value);
+
+    if (value.length !== undefined && typeof value !== 'function') {
+      return 'array';
+    }
+
+    switch(typeToString){
+      case '[object Array]':
+        return 'array';
+      case '[object Date]':
+        return 'date';
+      case '[object Boolean]':
+        return 'boolean';
+      case '[object Number]':
+        return 'number';
+      case '[object RegExp]':
+        return 'regexp';
+    }
+
+    if(type === 'function'){
+      return 'function';
+    }
+
+    if(type === 'object'){
+      return 'object';
+    }
   }
 };
 

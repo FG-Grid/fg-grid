@@ -508,24 +508,26 @@
       const me = this;
       const store = me.store;
 
-      if(typeof rows === 'string'){
-        rows = [{
-          id: rows
-        }]
-      }
-      else if(typeof rows === 'object'){
-        rows = [rows];
-      }
-      else if(Array.isArray(rows)){
-        rows = rows.map((value)=>{
-          if(typeof value === 'string'){
-            return {
-              id: value
+      switch (Fancy.typeOf(rows)){
+        case 'string':
+          rows = [{
+            id: rows
+          }]
+          break;
+        case 'object':
+          rows = [rows];
+          break;
+        case 'array':
+          rows = rows.map((value)=>{
+            if(typeof value === 'string'){
+              return {
+                id: value
+              }
             }
-          }
 
-          return value;
-        });
+            return value;
+          });
+          break;
       }
 
       if(rows.length === 0){
