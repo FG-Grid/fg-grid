@@ -1,6 +1,10 @@
 (()=> {
 
-  const StoreSelection = {
+  /**
+   * @mixin StoreMixinSelection
+   */
+
+  const StoreMixinSelection = {
     selectRowItem(item, value = true) {
       const me = this;
       const group = item.$rowGroupValue;
@@ -211,5 +215,5 @@
     }
   }
 
-  Object.assign(Fancy.Store.prototype, StoreSelection);
+  Object.assign(Fancy.Store.prototype, StoreMixinSelection);
 })();

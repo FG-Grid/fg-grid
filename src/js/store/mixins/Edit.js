@@ -1,7 +1,11 @@
 (()=> {
   const typeOf = Fancy.typeOf;
 
-  const StoreEdit = {
+  /**
+   * @mixin StoreMixinEdit
+   */
+
+  const StoreMixinEdit = {
     setById(id, key, value){
       const me = this;
       const item = me.idItemMap.get(id);
@@ -24,7 +28,8 @@
     removeItemById(id){
       const me = this;
       const item = me.idItemMap.get(id);
-      const rowIndex = item.originalRowIndex;
+      //const rowIndex = item.originalRowIndex;
+      const rowIndex = item.originalDataRowIndex;
 
       me.idItemMap.delete(id);
       me.idRowIndexesMap.delete(id);
@@ -110,6 +115,6 @@
     }
   }
 
-  Object.assign(Fancy.Store.prototype, StoreEdit);
+  Object.assign(Fancy.Store.prototype, StoreMixinEdit);
 
 })();

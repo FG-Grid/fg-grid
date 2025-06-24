@@ -1,5 +1,9 @@
 (()=> {
 
+  /**
+   * @mixin GridMixinScroll
+   */
+
   const GridMixinScroll = {
     initScroller() {
       const me = this;
@@ -11,18 +15,19 @@
 
     onMouseWheel(event) {
       const me = this;
+      const delta = 'wheelDelta' in event ? event.wheelDelta : event.deltaY;
       let changed = false;
 
       me.wheelScrolling = true;
 
       if(Math.abs(event.deltaY) > Math.abs(event.deltaX)){
         // Vertical scroll
-        changed = me.scroller.deltaChange(event.wheelDelta);
+        changed = me.scroller.deltaChange(delta);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
       }
       else{
         // Horizontal scroll
-        changed = me.scroller.horizontalDeltaChange(event.wheelDelta);
+        changed = me.scroller.horizontalDeltaChange(delta);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
       }
 

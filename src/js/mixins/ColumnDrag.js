@@ -14,6 +14,10 @@
 
   const OFFSET_DRAG_CELL = 10;
 
+  /**
+   * @mixin GridMixinColumnDrag
+   */
+
   const GridMixinColumnDrag = {
     onColumnDragMouseMove(event){
       const me = this;

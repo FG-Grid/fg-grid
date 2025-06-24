@@ -4,6 +4,10 @@
     ROW_GROUP_CELL_AMOUNT
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinRowGroup
+   */
+
   const GridMixinRowGroup = {
     toggleExpand(group) {
       const me = this;
@@ -211,7 +215,8 @@
         const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
         const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
 
-        if(filters.length || !groupDetail){
+        //if(filters.length || !groupDetail){
+        if(!groupDetail){
           return;
         }
 

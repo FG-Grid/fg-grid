@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.7.11',
+  version: '0.7.12',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -544,6 +544,14 @@ Fancy.copyText = (text) => {
 
 (()=> {
 
+  /**
+   * @mixes StoreMixinEdit
+   * @mixes StoreMixinFilter
+   * @mixes StoreMixinRowGroup
+   * @mixes StoreMixinSelection
+   * @mixes StoreMixinSort
+   */
+
   class Store {
     data = [];
     sortedData = undefined;
@@ -561,7 +569,6 @@ Fancy.copyText = (text) => {
     idSeed = 0;
 
     prevAction = '';
-    prevFilterIndex = '';
 
     constructor({data, rowGroups, rowGroupExpanded, aggregations, defaultRowGroupSort}) {
       const me = this;
@@ -628,6 +635,9 @@ Fancy.copyText = (text) => {
         if (!item.id) {
           item.id = me.generateId();
         }
+        else if(typeof item.id === 'number'){
+          item.id = String(item.id);
+        }
       });
     }
 
@@ -641,10 +651,18 @@ Fancy.copyText = (text) => {
       me.updateIndexes();
     }
 
+    // TODO: something wrong
+    // Serious bug
     updateIndexes() {
       const me = this;
       const data = me.displayedData || me.data;
       //const data = me.displayedData || me.filteredData || me.data;
+
+      if(!me.$isOriginalDataIndexesSet){
+        me.data.forEach((item, index) => {
+          item.originalDataRowIndex = index;
+        });
+      }
 
       me.idRowIndexesMap = new Map();
 
@@ -655,6 +673,25 @@ Fancy.copyText = (text) => {
         item.rowIndex = index;
         item.originalRowIndex = index;
       });
+
+      /*
+      me.data.forEach((item, index) => {
+        me.idRowIndexesMap.set(item.id, index);
+        me.idItemMap.set(item.id, item);
+
+        item.originalRowIndex = index;
+        if(me.displayedData === undefined){
+          item.rowIndex = index;
+        }
+      });
+
+      me.displayedData?.forEach((item, index) => {
+        me.idRowIndexesMap.set(item.id, index);
+        me.idItemMap.set(item.id, item);
+
+        item.rowIndex = index;
+      });
+       */
     }
 
     setIds() {
@@ -756,7 +793,11 @@ Fancy.copyText = (text) => {
 
 (()=> {
 
-  const StoreSort = {
+  /**
+   * @mixin StoreMixinSort
+   */
+
+  const StoreMixinSort = {
     reSort() {
       const me = this;
       let data;
@@ -1143,13 +1184,17 @@ Fancy.copyText = (text) => {
     }
   };
 
-  Object.assign(Fancy.Store.prototype, StoreSort);
+  Object.assign(Fancy.Store.prototype, StoreMixinSort);
 
 })();
 
 (()=> {
 
-  const StoreFilter = {
+  /**
+   * @mixin StoreMixinFilter
+   */
+
+  const StoreMixinFilter = {
     clearFilter(column, sign) {
       const me = this;
 
@@ -1431,7 +1476,7 @@ Fancy.copyText = (text) => {
     }
   };
 
-  Object.assign(Fancy.Store.prototype, StoreFilter);
+  Object.assign(Fancy.Store.prototype, StoreMixinFilter);
 
 })();
 
@@ -1463,7 +1508,11 @@ Fancy.copyText = (text) => {
 
 (()=> {
 
-  const RowGroup = {
+  /**
+   * @mixin StoreMixinRowGroup
+   */
+
+  const StoreMixinRowGroup = {
     rowGroupData() {
       const me = this;
 
@@ -1503,7 +1552,7 @@ Fancy.copyText = (text) => {
     },
 
     // Regenerate display group data
-    // It is only for case when there is no sorters
+    // It is only for case when there are no sorters
     simpleReGenerateDisplayedGroupedData() {
       const me = this;
       const groupedData = me.displayedData.slice();
@@ -1870,6 +1919,7 @@ Fancy.copyText = (text) => {
         });
       };
 
+
       switch (me.defaultRowGroupSort) {
         case 'desc-string':
           displayedGroupsSorted = Array.from(Object.keys(me.displayedGroups)).sort();
@@ -2086,6 +2136,7 @@ Fancy.copyText = (text) => {
       if (!groupDetails.$hasChildrenGroups && me.sorters.length) {
         groupChildren = me.sortPieceOfData(groupChildren);
       } else {
+        // TODO:Requires to take data from levelsWithGroups
         groupChildren.sort((groupA, groupB) => {
           switch (me.defaultRowGroupSort) {
             case 'asc-amount':
@@ -2151,7 +2202,7 @@ Fancy.copyText = (text) => {
         if (!(sorters.length || filters.length)) {
           delete me.displayedData;
         } else {
-          // Requires resort and refilter because sorted and filtered data will be different for grouping.
+          // Requires resort and re-filter because sorted and filtered data will be different for grouping.
           if (filters.length) {
             me.reFilter(false);
           }
@@ -2178,7 +2229,7 @@ Fancy.copyText = (text) => {
         }
       }
 
-      //??? Maybe bug, maybe it requires to test sorters.length
+      //??? Maybe a bug, maybe it requires testing sorters.length
       if (!filters.length || !rowGroups.length) {
         me.setIndexAndItemsMaps();
       }
@@ -2306,13 +2357,17 @@ Fancy.copyText = (text) => {
     }
   };
 
-  Object.assign(Fancy.Store.prototype, RowGroup);
+  Object.assign(Fancy.Store.prototype, StoreMixinRowGroup);
 
 })();
 
 (()=> {
 
-  const StoreSelection = {
+  /**
+   * @mixin StoreMixinSelection
+   */
+
+  const StoreMixinSelection = {
     selectRowItem(item, value = true) {
       const me = this;
       const group = item.$rowGroupValue;
@@ -2523,13 +2578,17 @@ Fancy.copyText = (text) => {
     }
   };
 
-  Object.assign(Fancy.Store.prototype, StoreSelection);
+  Object.assign(Fancy.Store.prototype, StoreMixinSelection);
 })();
 
 (()=> {
   const typeOf = Fancy.typeOf;
 
-  const StoreEdit = {
+  /**
+   * @mixin StoreMixinEdit
+   */
+
+  const StoreMixinEdit = {
     setById(id, key, value){
       const me = this;
       const item = me.idItemMap.get(id);
@@ -2552,7 +2611,8 @@ Fancy.copyText = (text) => {
     removeItemById(id){
       const me = this;
       const item = me.idItemMap.get(id);
-      const rowIndex = item.originalRowIndex;
+      //const rowIndex = item.originalRowIndex;
+      const rowIndex = item.originalDataRowIndex;
 
       me.idItemMap.delete(id);
       me.idRowIndexesMap.delete(id);
@@ -2638,7 +2698,7 @@ Fancy.copyText = (text) => {
     }
   };
 
-  Object.assign(Fancy.Store.prototype, StoreEdit);
+  Object.assign(Fancy.Store.prototype, StoreMixinEdit);
 
 })();
 
@@ -2660,7 +2720,6 @@ Fancy.copyText = (text) => {
     scrollTop = 0;
     scrollLeft = 0;
     maxScrollTop = 0;
-    deltaRowHeight = 50;
 
     topBufferRows = 10;
     bufferRows = 30;
@@ -3409,6 +3468,21 @@ Fancy.copyText = (text) => {
     TOUCH
   } = Fancy.cls;
 
+  /**
+   * @mixes GridMixinBody
+   * @mixes GridMixinColumn
+   * @mixes GridMixinColumnDrag
+   * @mixes GridMixinEdit
+   * @mixes GridMixinFilter
+   * @mixes GridMixinHeader
+   * @mixes GridMixinKeyNavigation
+   * @mixes GridMixinRowGroup
+   * @mixes GridMixinRowGroupBar
+   * @mixes GridMixinScroll
+   * @mixes GridMixinSelection
+   * @mixes GridMixinSort
+   */
+
   class Grid {
     theme = 'default';
     defaultColumnWidth = 120;
@@ -3436,6 +3510,11 @@ Fancy.copyText = (text) => {
     startEditByTyping = true;
     flashChanges = true;
     flashChangesColors = ['#e0e5e9','beige'];
+
+    filterBar = false;
+    cellsRightBorder = false;
+    columnLines = false;
+    rowGroupBar = false;
 
     $defaultRowGroupColumn = {
       title: 'Group',
@@ -3474,8 +3553,9 @@ Fancy.copyText = (text) => {
       me.checkSize();
       me.initScroller();
       me.render();
-      me.scroller.calcMaxScrollTop();
-      me.scroller.calcVisibleRows();
+      const scroller = me.scroller;
+      scroller.calcMaxScrollTop();
+      scroller.calcVisibleRows();
       me.renderVisibleRows();
       me.renderVisibleHeaderCells();
       if(me.filterBar){
@@ -3863,24 +3943,25 @@ Fancy.copyText = (text) => {
 
     reRender(){
       const me = this;
-      me.store;
+      const store = me.store;
+      const scroller = me.scroller;
 
       if(me.store.rowGroups.length){
         me.reConfigRowGroups();
       }
       else {
         me.terminateVisibleRows();
-        me.scroller.calcMaxScrollTop();
-        me.scroller.updateScrollTop();
-        me.scroller.calcViewRange();
-        me.scroller.setVerticalSize();
-        me.scroller.updateHorizontalScrollSize();
+        scroller.calcMaxScrollTop();
+        scroller.updateScrollTop();
+        scroller.calcViewRange();
+        scroller.setVerticalSize();
+        scroller.updateHorizontalScrollSize();
         me.updateVisibleHeight();
 
-        me.scroller.calcVisibleRows();
+        scroller.calcVisibleRows();
 
         me.renderVisibleRows();
-        me.store.memorizePrevRowIndexesMap();
+        store.memorizePrevRowIndexesMap();
       }
     }
 
@@ -3892,7 +3973,7 @@ Fancy.copyText = (text) => {
       me.gridEl.remove();
     }
 
-    onBodyCellClick(event){
+    onBodyCellClick(){
       const me = this;
 
       me.hideActiveEditor();
@@ -3929,6 +4010,7 @@ Fancy.copyText = (text) => {
       }
 
       let itemsToRemove = [];
+      let dataItemsToRemove = [];
       let rowGroups = new Map();
 
       for(let i = 0;i<rows.length;i++){
@@ -3945,9 +4027,13 @@ Fancy.copyText = (text) => {
 
           store.selectRowItem(item, false);
         }
+
+        if (item.$isGroupRow !== true) {
+          dataItemsToRemove.push(item);
+        }
       }
 
-      rowGroups.forEach((items, groupValue, c) => {
+      rowGroups.forEach((items, groupValue) => {
         const splitted = groupValue.split('/');
 
         for(let i = 0;i<splitted.length;i++){
@@ -3967,26 +4053,64 @@ Fancy.copyText = (text) => {
 
             const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
             store.groupsChildren[parentGroup] = store.groupsChildren[parentGroup].filter(item => {
-               return item.id !== groupDetails.id;
+              return item.id !== groupDetails.id;
             });
           }
           else {
             store.groupsChildren[name] = store.groupsChildren[name].filter(item => {
-              return items.includes(item.id) === false;
+                return items.includes(item.id) === false;
             });
+          }
+
+          if(store.groupDetailsForFiltering){
+            const groupDetailsForFiltering = store.groupDetailsForFiltering[name];
+
+            groupDetailsForFiltering.amount -= items.length;
+            if(groupDetailsForFiltering.amount <= 0){
+              groupDetailsForFiltering.childrenAmount = 0;
+              delete me.store.groupDetailsForFiltering[name];
+              delete me.store.expandedGroupsWithDataChildrenForFiltering[name];
+              delete me.store.groupsChildrenForFiltering[name];
+
+              const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+              store.groupsChildrenForFiltering[parentGroup] = store.groupsChildrenForFiltering[parentGroup].filter(item => {
+                return item.id !== groupDetails.id;
+              });
+            }
+            else {
+              store.groupsChildrenForFiltering[name] = store.groupsChildrenForFiltering[name].filter(item => {
+                return items.includes(item.id) === false;
+              });
+            }
           }
         }
       });
 
-      const rowIndexes = itemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
-      rowIndexes.forEach((item,index) => {
-        me.store.data.splice(item.originalRowIndex - index, 1);
+      /*
+      if(!me.$isOriginalDataIndexesSet){
+        me.data.forEach((item, index) => {
+          item.originalDataRowIndex = index;
+        });
+      }
+       */
+
+      const rowIndexes = dataItemsToRemove.sort((a, b) => a.originalDataRowIndex - b.originalDataRowIndex);
+      rowIndexes.forEach((item, index) => {
+        me.store.data.splice(item.originalDataRowIndex - index, 1);
       });
+      delete me.store.$isOriginalDataIndexesSet;
+
+      /*
+      const rowIndexes = dataItemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
+      rowIndexes.forEach((item,index) => {
+        me.store.data.splice(item.originalRowIndex - index, 1)
+      });
+      */
 
       if(me.store.displayedData?.length){
-        const rowIndexes = itemsToRemove.sort((a,b) => a.rowIndex - b.rowIndex);
+        const rowIndexes = itemsToRemove.sort((a, b) => a.rowIndex - b.rowIndex);
 
-        rowIndexes.forEach((item,index) => {
+        rowIndexes.forEach((item, index) => {
           me.store.displayedData.splice(item.rowIndex - index, 1);
         });
       }
@@ -4103,6 +4227,10 @@ Fancy.copyText = (text) => {
     FILTER_BAR_CELL,
     ROW
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinColumn
+   */
 
   const GridMixinColumn = {
     showColumn(column, animate){
@@ -4431,6 +4559,7 @@ Fancy.copyText = (text) => {
       const orderedColumns = [];
       newColumnsOrderMap.forEach((columnId, index) => {
         const column = me.columnIdsMap.get(columnId);
+
         orderedColumns[index] = column;
       });
 
@@ -4524,6 +4653,10 @@ Fancy.copyText = (text) => {
     INPUT_CHECKBOX,
     ROW_GROUP_BAR_ITEM_ACTIVE
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinHeader
+   */
 
   const GridMixinHeader = {
     deltaStartColumnDrag: 10,
@@ -4840,7 +4973,7 @@ Fancy.copyText = (text) => {
       });
     },
 
-    onResizeMouseUp(event) {
+    onResizeMouseUp() {
       const me = this;
 
       me.columnResizing = false;
@@ -4918,7 +5051,7 @@ Fancy.copyText = (text) => {
       }
     },
 
-    showHeaderCellMenuList(event, column, columnIndex) {
+    showHeaderCellMenuList(event, column) {
       const me = this;
       const el = document.createElement('div');
       const elMenuRect = column.elMenu.getBoundingClientRect();
@@ -5087,6 +5220,10 @@ Fancy.copyText = (text) => {
     SVG_ITEM,
     SVG_CHEVRON_RIGHT
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinBody
+   */
 
   const GridMixinBody = {
     addColumnCells(columnIndexes = []) {
@@ -5881,18 +6018,17 @@ Fancy.copyText = (text) => {
     },
 
     onRowMouseLeave(event) {
-
       event.target.classList.remove(ROW_HOVER);
     },
 
-    onRowGroupExpanderClick(e, b) {
+    onRowGroupExpanderClick(event) {
       const me = this;
 
       if(me.grouping){
         return;
       }
 
-      const cell = e.target.closest(`.${ROW_GROUP_CELL}`);
+      const cell = event.target.closest(`.${ROW_GROUP_CELL}`);
       const row = cell.closest(`.${ROW_GROUP}`);
       const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
 
@@ -6030,6 +6166,10 @@ Fancy.copyText = (text) => {
 
 (()=> {
 
+  /**
+   * @mixin GridMixinScroll
+   */
+
   const GridMixinScroll = {
     initScroller() {
       const me = this;
@@ -6041,18 +6181,19 @@ Fancy.copyText = (text) => {
 
     onMouseWheel(event) {
       const me = this;
+      const delta = 'wheelDelta' in event ? event.wheelDelta : event.deltaY;
       let changed = false;
 
       me.wheelScrolling = true;
 
       if(Math.abs(event.deltaY) > Math.abs(event.deltaX)){
         // Vertical scroll
-        changed = me.scroller.deltaChange(event.wheelDelta);
+        changed = me.scroller.deltaChange(delta);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
       }
       else {
         // Horizontal scroll
-        changed = me.scroller.horizontalDeltaChange(event.wheelDelta);
+        changed = me.scroller.horizontalDeltaChange(delta);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
       }
 
@@ -6121,6 +6262,10 @@ Fancy.copyText = (text) => {
 })();
 
 (()=> {
+
+  /**
+   * @mixin GridMixinSort
+   */
 
   const GridMixinSort = {
     sort(sortingColumn, dir = 'ASC', multi) {
@@ -6274,6 +6419,10 @@ Fancy.copyText = (text) => {
     FILTER_BAR_INNER,
     FILTER_BAR_INNER_CONTAINER
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinFilter
+   */
 
   const GridMixinFilter = {
     renderVisibleFilterBarCells() {
@@ -6515,6 +6664,10 @@ Fancy.copyText = (text) => {
     ROW_GROUP_CELL_AMOUNT
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinRowGroup
+   */
+
   const GridMixinRowGroup = {
     toggleExpand(group) {
       const me = this;
@@ -6722,7 +6875,8 @@ Fancy.copyText = (text) => {
         const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
         const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
 
-        if(filters.length || !groupDetail){
+        //if(filters.length || !groupDetail){
+        if(!groupDetail){
           return;
         }
 
@@ -6791,6 +6945,10 @@ Fancy.copyText = (text) => {
     SVG_REMOVE
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinRowGroupBar
+   */
+
   const GridMixinRowGroupBar = {
     renderRowGroupBar() {
       const me = this;
@@ -6831,7 +6989,7 @@ Fancy.copyText = (text) => {
     },
 
     // Syntactic mouse enter because cursor is over dragging cell
-    onRowGroupBarMouseEnter(event){
+    onRowGroupBarMouseEnter(){
       const me = this;
 
       me.addGroupInBar(me.columnDragging.column);
@@ -6933,7 +7091,7 @@ Fancy.copyText = (text) => {
 
       me.onColumnDragMouseMoveFn = me.onColumnDragMouseMove.bind(this);
       document.body.addEventListener('mousemove', me.onColumnDragMouseMoveFn);
-      document.addEventListener('mouseup', (event) => {
+      document.addEventListener('mouseup', () => {
         const columnDragging = me.columnDragging;
         const {
           dragItemFromRowGroupBar,
@@ -6977,10 +7135,8 @@ Fancy.copyText = (text) => {
     },
 
     // Syntactic mouse leave because cursor is over dragging cell
-    onRowGroupBarMouseLeave(event){
-      const me = this;
-
-      me.removeGroupInBar();
+    onRowGroupBarMouseLeave(){
+      this.removeGroupInBar();
     },
 
     removeGroupInBar(column){
@@ -7109,6 +7265,10 @@ Fancy.copyText = (text) => {
     INPUT_CHECKBOX,
     BODY
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinSelection
+   */
 
   const GridMixinSelection = {
     onRowCellSelectionClick(event) {
@@ -7989,9 +8149,90 @@ Fancy.copyText = (text) => {
             rowEl.appendChild(cell);
           });
         });
-
-
       });
+    },
+
+    setBlankForSelectedCells(){
+      const me = this;
+      const {
+        rows,
+        columns
+      } = me.selectionCellsRange || {
+        rows: [],
+        columns: []
+      };
+
+      const getCellSetterValue = (options) => {
+        const column = options.column;
+        let value = options.value;
+
+        if(column.setter){
+          value = column.setter(options);
+        }
+
+        return value;
+      };
+
+      if(rows.length === 0 && me.activeCellEl){
+        const rowEl = me.activeCellEl.closest(`.${ROW}`);
+        if(!rowEl){
+          return;
+        }
+        const rowIndex = rowEl.getAttribute('row-index');
+        const itemId = rowEl.getAttribute('row-id');
+        const item = me.store.idItemMap.get(itemId);
+        const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+        const value = getCellSetterValue({
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value: ''
+        });
+
+        me.store.setById(itemId ,column.index, value);
+
+        me.activeCellEl.remove();
+
+        const cell = me.createCell(rowIndex, columnIndex);
+        rowEl.appendChild(cell);
+        me.activeCellEl = cell;
+
+        return;
+      }
+
+      for(let i = rows[0];i<=rows[1];i++){
+        const rowIndex = i;
+        let item = me.store.getItemByRowIndex(i);
+        const rowEl = me.bodyEl.querySelector(`.${ROW}[row-index="${rowIndex}"]`);
+
+        for(let j = columns[0];j<=columns[1];j++){
+          const column = me.columns[j];
+          const columnIndex = j;
+
+          const value = getCellSetterValue({
+            item,
+            column,
+            rowIndex: rowIndex,
+            columnIndex: columnIndex,
+            value: ''
+          });
+
+          me.store.setById(item.id ,column.index, value);
+
+          if(!rowEl || !column){
+            return;
+          }
+
+          let cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
+
+          cell?.remove();
+
+          cell = me.createCell(rowIndex, columnIndex);
+          rowEl.appendChild(cell);
+        }
+      }
     }
   };
 
@@ -8009,12 +8250,18 @@ Fancy.copyText = (text) => {
     C,
     V,
     ENTER,
-    TAB
+    TAB,
+    DELETE,
+    BACKSPACE
   } = Fancy.key;
 
   const {
     ROW
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinKeyNavigation
+   */
 
   const GridMixinKeyNavigation = {
     initKeyNavigation(){
@@ -8090,6 +8337,12 @@ Fancy.copyText = (text) => {
         case ENTER:
           if(!me.isEditing){
             me.onKeyENTER();
+          }
+          break;
+        case BACKSPACE:
+        case DELETE:
+          if(!me.isEditing){
+            me.setBlankForSelectedCells();
           }
           break;
         default:
@@ -8212,6 +8465,10 @@ Fancy.copyText = (text) => {
   } = Fancy.cls;
 
   const OFFSET_DRAG_CELL = 10;
+
+  /**
+   * @mixin GridMixinColumnDrag
+   */
 
   const GridMixinColumnDrag = {
     onColumnDragMouseMove(event){
@@ -8453,6 +8710,10 @@ Fancy.copyText = (text) => {
     ROW,
     EDITING
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinEdit
+   */
 
   const GridMixinEdit = {
     onBodyCellDBLClick(event){
@@ -9120,8 +9381,8 @@ Fancy.copyText = (text) => {
     ons() {
       const me = this;
 
-      //me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
-      //me.input.addEventListener('input', me.debouceInputFn);
+      //me.debounceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
+      //me.input.addEventListener('input', me.debounceInputFn);
       me.input.addEventListener('input', me.onInput.bind(me));
       me.input.addEventListener('keydown', me.onKeyDown.bind(me));
     }
@@ -9239,8 +9500,8 @@ Fancy.copyText = (text) => {
     ons() {
       const me = this;
 
-      //me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
-      //me.input.addEventListener('input', me.debouceInputFn);
+      //me.debounceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
+      //me.input.addEventListener('input', me.debounceInputFn);
       me.input.addEventListener('input', me.onInput.bind(me));
       me.input.addEventListener('keydown', me.onKeyDown.bind(me));
     }

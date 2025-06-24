@@ -1,6 +1,10 @@
 (()=> {
 
-  const StoreSort = {
+  /**
+   * @mixin StoreMixinSort
+   */
+
+  const StoreMixinSort = {
     reSort() {
       const me = this;
       let data;
@@ -387,6 +391,6 @@
     }
   }
 
-  Object.assign(Fancy.Store.prototype, StoreSort);
+  Object.assign(Fancy.Store.prototype, StoreMixinSort);
 
 })();

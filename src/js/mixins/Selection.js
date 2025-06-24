@@ -13,6 +13,10 @@
     BODY
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinSelection
+   */
+
   const GridMixinSelection = {
     onRowCellSelectionClick(event) {
       const me = this;
@@ -892,9 +896,90 @@
             rowEl.appendChild(cell);
           });
         });
-
-
       });
+    },
+
+    setBlankForSelectedCells(){
+      const me = this;
+      const {
+        rows,
+        columns
+      } = me.selectionCellsRange || {
+        rows: [],
+        columns: []
+      };
+
+      const getCellSetterValue = (options) => {
+        const column = options.column;
+        let value = options.value;
+
+        if(column.setter){
+          value = column.setter(options)
+        }
+
+        return value;
+      }
+
+      if(rows.length === 0 && me.activeCellEl){
+        const rowEl = me.activeCellEl.closest(`.${ROW}`);
+        if(!rowEl){
+          return;
+        }
+        const rowIndex = rowEl.getAttribute('row-index');
+        const itemId = rowEl.getAttribute('row-id');
+        const item = me.store.idItemMap.get(itemId);
+        const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
+        const column = me.columns[columnIndex];
+        const value = getCellSetterValue({
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value: ''
+        });
+
+        me.store.setById(itemId ,column.index, value);
+
+        me.activeCellEl.remove();
+
+        const cell = me.createCell(rowIndex, columnIndex);
+        rowEl.appendChild(cell);
+        me.activeCellEl = cell;
+
+        return;
+      }
+
+      for(let i = rows[0];i<=rows[1];i++){
+        const rowIndex = i;
+        let item = me.store.getItemByRowIndex(i);
+        const rowEl = me.bodyEl.querySelector(`.${ROW}[row-index="${rowIndex}"]`);
+
+        for(let j = columns[0];j<=columns[1];j++){
+          const column = me.columns[j];
+          const columnIndex = j;
+
+          const value = getCellSetterValue({
+            item,
+            column,
+            rowIndex: rowIndex,
+            columnIndex: columnIndex,
+            value: ''
+          });
+
+          me.store.setById(item.id ,column.index, value);
+
+          if(!rowEl || !column){
+            return;
+          }
+
+          let cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
+
+          cell?.remove();
+
+          cell = me.createCell(rowIndex, columnIndex);
+          rowEl.appendChild(cell);
+        }
+      }
     }
   }
 

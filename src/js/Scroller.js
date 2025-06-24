@@ -16,7 +16,6 @@
     scrollTop = 0;
     scrollLeft = 0;
     maxScrollTop = 0;
-    deltaRowHeight = 50;
 
     topBufferRows = 10;
     bufferRows = 30;

@@ -1,5 +1,13 @@
 (()=> {
 
+  /**
+   * @mixes StoreMixinEdit
+   * @mixes StoreMixinFilter
+   * @mixes StoreMixinRowGroup
+   * @mixes StoreMixinSelection
+   * @mixes StoreMixinSort
+   */
+
   class Store {
     data = [];
     sortedData = undefined;
@@ -17,7 +25,6 @@
     idSeed = 0;
 
     prevAction = '';
-    prevFilterIndex = '';
 
     constructor({data, rowGroups, rowGroupExpanded, aggregations, defaultRowGroupSort}) {
       const me = this;
@@ -84,6 +91,9 @@
         if (!item.id) {
           item.id = me.generateId();
         }
+        else if(typeof item.id === 'number'){
+          item.id = String(item.id);
+        }
       });
     }
 
@@ -97,10 +107,18 @@
       me.updateIndexes();
     }
 
+    // TODO: something wrong
+    // Serious bug
     updateIndexes() {
       const me = this;
       const data = me.displayedData || me.data;
       //const data = me.displayedData || me.filteredData || me.data;
+
+      if(!me.$isOriginalDataIndexesSet){
+        me.data.forEach((item, index) => {
+          item.originalDataRowIndex = index;
+        });
+      }
 
       me.idRowIndexesMap = new Map();
 
@@ -111,6 +129,25 @@
         item.rowIndex = index;
         item.originalRowIndex = index;
       });
+
+      /*
+      me.data.forEach((item, index) => {
+        me.idRowIndexesMap.set(item.id, index);
+        me.idItemMap.set(item.id, item);
+
+        item.originalRowIndex = index;
+        if(me.displayedData === undefined){
+          item.rowIndex = index;
+        }
+      });
+
+      me.displayedData?.forEach((item, index) => {
+        me.idRowIndexesMap.set(item.id, index);
+        me.idItemMap.set(item.id, item);
+
+        item.rowIndex = index;
+      });
+       */
     }
 
     setIds() {

@@ -1,6 +1,10 @@
 (()=> {
 
-  const StoreFilter = {
+  /**
+   * @mixin StoreMixinFilter
+   */
+
+  const StoreMixinFilter = {
     clearFilter(column, sign) {
       const me = this;
 
@@ -282,6 +286,6 @@
     }
   }
 
-  Object.assign(Fancy.Store.prototype, StoreFilter);
+  Object.assign(Fancy.Store.prototype, StoreMixinFilter);
 
 })();

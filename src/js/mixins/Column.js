@@ -8,6 +8,10 @@
     ROW
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinColumn
+   */
+
   const GridMixinColumn = {
     showColumn(column, animate){
       const me = this;
@@ -335,6 +339,7 @@
       const orderedColumns = [];
       newColumnsOrderMap.forEach((columnId, index) => {
         const column = me.columnIdsMap.get(columnId);
+
         orderedColumns[index] = column;
       });
 

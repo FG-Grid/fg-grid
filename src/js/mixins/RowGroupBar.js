@@ -14,6 +14,10 @@
     SVG_REMOVE
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinRowGroupBar
+   */
+
   const GridMixinRowGroupBar = {
     renderRowGroupBar() {
       const me = this;
@@ -54,7 +58,7 @@
     },
 
     // Syntactic mouse enter because cursor is over dragging cell
-    onRowGroupBarMouseEnter(event){
+    onRowGroupBarMouseEnter(){
       const me = this;
 
       me.addGroupInBar(me.columnDragging.column);
@@ -156,7 +160,7 @@
 
       me.onColumnDragMouseMoveFn = me.onColumnDragMouseMove.bind(this);
       document.body.addEventListener('mousemove', me.onColumnDragMouseMoveFn);
-      document.addEventListener('mouseup', (event) => {
+      document.addEventListener('mouseup', () => {
         const columnDragging = me.columnDragging;
         const {
           dragItemFromRowGroupBar,
@@ -200,10 +204,8 @@
     },
 
     // Syntactic mouse leave because cursor is over dragging cell
-    onRowGroupBarMouseLeave(event){
-      const me = this;
-
-      me.removeGroupInBar();
+    onRowGroupBarMouseLeave(){
+      this.removeGroupInBar();
     },
 
     removeGroupInBar(column){

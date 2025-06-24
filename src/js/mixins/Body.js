@@ -25,6 +25,10 @@
     SVG_CHEVRON_RIGHT
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinBody
+   */
+
   const GridMixinBody = {
     addColumnCells(columnIndexes = []) {
       const me = this;
@@ -818,19 +822,17 @@
     },
 
     onRowMouseLeave(event) {
-      const me = this;
-
       event.target.classList.remove(ROW_HOVER);
     },
 
-    onRowGroupExpanderClick(e, b) {
+    onRowGroupExpanderClick(event) {
       const me = this;
 
       if(me.grouping){
         return;
       }
 
-      const cell = e.target.closest(`.${ROW_GROUP_CELL}`);
+      const cell = event.target.closest(`.${ROW_GROUP_CELL}`);
       const row = cell.closest(`.${ROW_GROUP}`);
       const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
 

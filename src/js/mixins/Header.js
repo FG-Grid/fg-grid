@@ -26,6 +26,10 @@
     ROW_GROUP_BAR_ITEM_ACTIVE
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinHeader
+   */
+
   const GridMixinHeader = {
     deltaStartColumnDrag: 10,
     onHeaderMouseDown(event) {
@@ -341,7 +345,7 @@
       });
     },
 
-    onResizeMouseUp(event) {
+    onResizeMouseUp() {
       const me = this;
 
       me.columnResizing = false;
@@ -419,7 +423,7 @@
       }
     },
 
-    showHeaderCellMenuList(event, column, columnIndex) {
+    showHeaderCellMenuList(event, column) {
       const me = this;
       const el = document.createElement('div');
       const elMenuRect = column.elMenu.getBoundingClientRect();

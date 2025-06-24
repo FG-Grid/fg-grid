@@ -5,6 +5,10 @@
     EDITING
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinEdit
+   */
+
   const GridMixinEdit = {
     onBodyCellDBLClick(event){
       const me = this;

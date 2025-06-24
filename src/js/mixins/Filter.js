@@ -6,6 +6,10 @@
     FILTER_BAR_INNER_CONTAINER
   } = Fancy.cls;
 
+  /**
+   * @mixin GridMixinFilter
+   */
+
   const GridMixinFilter = {
     renderVisibleFilterBarCells() {
       const me = this;

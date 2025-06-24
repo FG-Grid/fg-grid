@@ -9,12 +9,18 @@
     C,
     V,
     ENTER,
-    TAB
+    TAB,
+    DELETE,
+    BACKSPACE
   } = Fancy.key;
 
   const {
     ROW
   } = Fancy.cls;
+
+  /**
+   * @mixin GridMixinKeyNavigation
+   */
 
   const GridMixinKeyNavigation = {
     initKeyNavigation(){
@@ -90,6 +96,12 @@
         case ENTER:
           if(!me.isEditing){
             me.onKeyENTER();
+          }
+          break;
+        case BACKSPACE:
+        case DELETE:
+          if(!me.isEditing){
+            me.setBlankForSelectedCells();
           }
           break;
         default:

@@ -55,8 +55,8 @@
     ons() {
       const me = this;
 
-      //me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
-      //me.input.addEventListener('input', me.debouceInputFn);
+      //me.debounceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
+      //me.input.addEventListener('input', me.debounceInputFn);
       me.input.addEventListener('input', me.onInput.bind(me));
       me.input.addEventListener('keydown', me.onKeyDown.bind(me));
     }

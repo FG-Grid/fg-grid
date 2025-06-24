@@ -13,6 +13,21 @@
     TOUCH
   } = Fancy.cls;
 
+  /**
+   * @mixes GridMixinBody
+   * @mixes GridMixinColumn
+   * @mixes GridMixinColumnDrag
+   * @mixes GridMixinEdit
+   * @mixes GridMixinFilter
+   * @mixes GridMixinHeader
+   * @mixes GridMixinKeyNavigation
+   * @mixes GridMixinRowGroup
+   * @mixes GridMixinRowGroupBar
+   * @mixes GridMixinScroll
+   * @mixes GridMixinSelection
+   * @mixes GridMixinSort
+   */
+
   class Grid {
     theme = 'default';
     defaultColumnWidth = 120;
@@ -40,6 +55,11 @@
     startEditByTyping = true;
     flashChanges = true;
     flashChangesColors = ['#e0e5e9','beige'];
+
+    filterBar = false;
+    cellsRightBorder = false;
+    columnLines = false;
+    rowGroupBar = false;
 
     $defaultRowGroupColumn = {
       title: 'Group',
@@ -78,8 +98,9 @@
       me.checkSize();
       me.initScroller();
       me.render();
-      me.scroller.calcMaxScrollTop();
-      me.scroller.calcVisibleRows();
+      const scroller = me.scroller;
+      scroller.calcMaxScrollTop();
+      scroller.calcVisibleRows();
       me.renderVisibleRows();
       me.renderVisibleHeaderCells();
       if(me.filterBar){
@@ -470,23 +491,24 @@
     reRender(){
       const me = this;
       const store = me.store;
+      const scroller = me.scroller;
 
       if(me.store.rowGroups.length){
         me.reConfigRowGroups();
       }
       else{
         me.terminateVisibleRows();
-        me.scroller.calcMaxScrollTop();
-        me.scroller.updateScrollTop();
-        me.scroller.calcViewRange();
-        me.scroller.setVerticalSize();
-        me.scroller.updateHorizontalScrollSize();
+        scroller.calcMaxScrollTop();
+        scroller.updateScrollTop();
+        scroller.calcViewRange();
+        scroller.setVerticalSize();
+        scroller.updateHorizontalScrollSize();
         me.updateVisibleHeight();
 
-        me.scroller.calcVisibleRows();
+        scroller.calcVisibleRows();
 
         me.renderVisibleRows();
-        me.store.memorizePrevRowIndexesMap();
+        store.memorizePrevRowIndexesMap();
       }
     }
 
@@ -498,7 +520,7 @@
       me.gridEl.remove();
     }
 
-    onBodyCellClick(event){
+    onBodyCellClick(){
       const me = this;
 
       me.hideActiveEditor();
@@ -535,6 +557,7 @@
       }
 
       let itemsToRemove = [];
+      let dataItemsToRemove = [];
       let rowGroups = new Map();
 
       for(let i = 0;i<rows.length;i++){
@@ -551,9 +574,13 @@
 
           store.selectRowItem(item, false);
         }
+
+        if (item.$isGroupRow !== true) {
+          dataItemsToRemove.push(item);
+        }
       }
 
-      rowGroups.forEach((items, groupValue, c) => {
+      rowGroups.forEach((items, groupValue) => {
         const splitted = groupValue.split('/');
 
         for(let i = 0;i<splitted.length;i++){
@@ -573,27 +600,65 @@
 
             const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
             store.groupsChildren[parentGroup] = store.groupsChildren[parentGroup].filter(item => {
-               return item.id !== groupDetails.id;
+              return item.id !== groupDetails.id;
             });
           }
           else {
             store.groupsChildren[name] = store.groupsChildren[name].filter(item => {
-              return items.includes(item.id) === false;
+                return items.includes(item.id) === false;
             });
+          }
+
+          if(store.groupDetailsForFiltering){
+            const groupDetailsForFiltering = store.groupDetailsForFiltering[name];
+
+            groupDetailsForFiltering.amount -= items.length;
+            if(groupDetailsForFiltering.amount <= 0){
+              groupDetailsForFiltering.childrenAmount = 0;
+              delete me.store.groupDetailsForFiltering[name];
+              delete me.store.expandedGroupsWithDataChildrenForFiltering[name];
+              delete me.store.groupsChildrenForFiltering[name];
+
+              const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+              store.groupsChildrenForFiltering[parentGroup] = store.groupsChildrenForFiltering[parentGroup].filter(item => {
+                return item.id !== groupDetails.id;
+              });
+            }
+            else{
+              store.groupsChildrenForFiltering[name] = store.groupsChildrenForFiltering[name].filter(item => {
+                return items.includes(item.id) === false;
+              });
+            }
           }
         }
       });
 
-      const rowIndexes = itemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
+      /*
+      if(!me.$isOriginalDataIndexesSet){
+        me.data.forEach((item, index) => {
+          item.originalDataRowIndex = index;
+        });
+      }
+       */
+
+      const rowIndexes = dataItemsToRemove.sort((a, b) => a.originalDataRowIndex - b.originalDataRowIndex);
+      rowIndexes.forEach((item, index) => {
+        me.store.data.splice(item.originalDataRowIndex - index, 1);
+      });
+      delete me.store.$isOriginalDataIndexesSet;
+
+      /*
+      const rowIndexes = dataItemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
       rowIndexes.forEach((item,index) => {
         me.store.data.splice(item.originalRowIndex - index, 1)
       });
+      */
 
       if(me.store.displayedData?.length){
-        const rowIndexes = itemsToRemove.sort((a,b) => a.rowIndex - b.rowIndex);
+        const rowIndexes = itemsToRemove.sort((a, b) => a.rowIndex - b.rowIndex);
 
-        rowIndexes.forEach((item,index) => {
-          me.store.displayedData.splice(item.rowIndex - index, 1)
+        rowIndexes.forEach((item, index) => {
+          me.store.displayedData.splice(item.rowIndex - index, 1);
         });
       }
 

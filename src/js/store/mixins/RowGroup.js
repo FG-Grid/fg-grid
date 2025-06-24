@@ -26,7 +26,11 @@
 
 (()=> {
 
-  const RowGroup = {
+  /**
+   * @mixin StoreMixinRowGroup
+   */
+
+  const StoreMixinRowGroup = {
     rowGroupData() {
       const me = this;
 
@@ -66,7 +70,7 @@
     },
 
     // Regenerate display group data
-    // It is only for case when there is no sorters
+    // It is only for case when there are no sorters
     simpleReGenerateDisplayedGroupedData() {
       const me = this;
       const groupedData = me.displayedData.slice();
@@ -438,6 +442,7 @@
         });
       }
 
+
       switch (me.defaultRowGroupSort) {
         case 'desc-string':
           displayedGroupsSorted = Array.from(Object.keys(me.displayedGroups)).sort();
@@ -654,6 +659,7 @@
       if (!groupDetails.$hasChildrenGroups && me.sorters.length) {
         groupChildren = me.sortPieceOfData(groupChildren);
       } else {
+        // TODO:Requires to take data from levelsWithGroups
         groupChildren.sort((groupA, groupB) => {
           switch (me.defaultRowGroupSort) {
             case 'asc-amount':
@@ -719,7 +725,7 @@
         if (!(sorters.length || filters.length)) {
           delete me.displayedData;
         } else {
-          // Requires resort and refilter because sorted and filtered data will be different for grouping.
+          // Requires resort and re-filter because sorted and filtered data will be different for grouping.
           if (filters.length) {
             me.reFilter(false);
           }
@@ -746,7 +752,7 @@
         }
       }
 
-      //??? Maybe bug, maybe it requires to test sorters.length
+      //??? Maybe a bug, maybe it requires testing sorters.length
       if (!filters.length || !rowGroups.length) {
         me.setIndexAndItemsMaps();
       }
@@ -874,6 +880,6 @@
     }
   }
 
-  Object.assign(Fancy.Store.prototype, RowGroup);
+  Object.assign(Fancy.Store.prototype, StoreMixinRowGroup);
 
 })();

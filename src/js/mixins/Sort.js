@@ -1,5 +1,9 @@
 (()=> {
 
+  /**
+   * @mixin GridMixinSort
+   */
+
   const GridMixinSort = {
     sort(sortingColumn, dir = 'ASC', multi) {
       const me = this;
