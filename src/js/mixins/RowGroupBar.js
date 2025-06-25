@@ -55,9 +55,10 @@
 
         me.addGroupInBar(column, false);
       });
+      delete me.activeRowGroupBarItemEl;
     },
 
-    // Syntactic mouse enter because cursor is over dragging cell
+    // Syntactic mouseenter because cursor is over dragging cell
     onRowGroupBarMouseEnter(){
       const me = this;
 
@@ -205,7 +206,7 @@
 
     // Syntactic mouse leave because cursor is over dragging cell
     onRowGroupBarMouseLeave(){
-      this.removeGroupInBar();
+      this.removeGroupInBar(this.columnDragging.column);
     },
 
     removeGroupInBar(column){

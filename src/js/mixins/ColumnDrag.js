@@ -44,7 +44,7 @@
               }
             });
 
-            if((isColumnPresentedInRowGroupBar && !columnDragging.dragItemFromRowGroupBar) || columnDragging.column.$rowGroups){
+            if((isColumnPresentedInRowGroupBar && !columnDragging.dragItemFromRowGroupBar) || columnDragging.column.$isRowGroupColumn){
               dragColumnCellEl.classList.add(FAKE_COLUMN_CELL_DRAGGING_DENY);
               dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_ALLOW);
             }
@@ -199,6 +199,9 @@
       const cursorInColumnIndex = me.isCursorInAnotherColumn(event);
 
       if(cursorInColumnIndex !== undefined && me.columnDragMouseDownColumnIndex !== cursorInColumnIndex){
+        if(me.columns[cursorInColumnIndex]?.type === 'order'){
+          return;
+        }
         me.moveColumn(me.columnDragMouseDownColumnIndex, cursorInColumnIndex);
         me.columnDragMouseDownColumnIndex = cursorInColumnIndex;
       }

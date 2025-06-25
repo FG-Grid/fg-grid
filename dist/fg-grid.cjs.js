@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.7.12',
+  version: '0.7.13',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -462,13 +462,13 @@ Fancy.render = {
   },
   order(params){
     const {
-      item,
       cell,
       rowIndex
     } = params;
 
-    if(item.$isGroupRow){
-      return;
+    // For copy CTRL + C
+    if(!cell){
+      return Number(rowIndex) + 1;
     }
 
     cell.classList.add(Fancy.cls.CELL_ORDER);
@@ -3798,7 +3798,7 @@ Fancy.copyText = (text) => {
 
         if(config.rowGroupColumn){
           let rowGroupColumn = Object.assign({
-            $rowGroups: rowGroups
+            $isRowGroupColumn: true
           }, me.$defaultRowGroupColumn);
 
           rowGroupColumn.id = rowGroupColumn.id || me.getAutoColumnIdSeed();
@@ -3806,15 +3806,21 @@ Fancy.copyText = (text) => {
           Object.assign(rowGroupColumn, config.rowGroupColumn);
           me.$rowGroupColumn = rowGroupColumn;
           if(rowGroups.length && me.$rowGroupColumn){
-            config.columns.unshift(rowGroupColumn);
+            if(config.columns[0].type === 'order'){
+              config.columns.splice(1, 0, rowGroupColumn);
+            }
+            else {
+              config.columns.unshift(rowGroupColumn);
+            }
           }
         }
 
         config.columns.forEach(column => {
           switch(column.type){
             case 'order':
-              if(rowGroups.length || config.rowGroupBar){
-                console.error('Order column is not supported for row grouping');
+              if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
+                console.error('Order column is not supported for row grouping with rowGroupType equals to "row"');
+                console.error('For order column use rowGroupType equals to "column"');
               }
               break;
           }
@@ -4895,8 +4901,16 @@ Fancy.copyText = (text) => {
             delete me.$requiresReSetGroupColumn;
             if(me.rowGroupBarItemColumns.length === 1){
               setTimeout(()=>{
+                let indexToAddColumn = 0;
                 me.$rowGroupColumn.hidden = true;
-                me.columns.unshift(me.$rowGroupColumn);
+                if(me.columns[0].type === 'order'){
+                  me.columns.splice(1, 0, me.$rowGroupColumn);
+                  indexToAddColumn = 1;
+                }
+                else {
+                  me.columns.unshift(me.$rowGroupColumn);
+                }
+
                 me.scroller.generateNewRange(false);
                 me.reSetVisibleHeaderColumnsIndex();
 
@@ -4904,7 +4918,7 @@ Fancy.copyText = (text) => {
                 //me.reCalcColumnsPositions();
                 //me.updateWidth();
                 //me.updateCellPositions();
-                me.showColumn(me.columns[0]);
+                me.showColumn(me.columns[indexToAddColumn]);
               },1);
             }
           }
@@ -5048,7 +5062,7 @@ Fancy.copyText = (text) => {
       el.style.left = `${left}px`;
 
       el.innerHTML = me.columns.map((column, index) => {
-        if(column.$rowGroups){
+        if(column.$isRowGroupColumn){
           return '';
         }
 
@@ -5237,7 +5251,7 @@ Fancy.copyText = (text) => {
 
       if(rowEl.classList.contains(ROW_GROUP)){
         const column = me.columns[columnIndex];
-        if(me.rowGroupType === 'column' && column.$rowGroups){
+        if(me.rowGroupType === 'column' && column.$isRowGroupColumn){
           const cell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
           rowEl.appendChild(cell);
         }
@@ -5337,7 +5351,7 @@ Fancy.copyText = (text) => {
           cellInner = value;
         }
 
-        if(column.$rowGroups || column.rowGroupIndent){
+        if(column.$isRowGroupColumn || column.rowGroupIndent){
           cell.classList.add(ROW_GROUP_VALUE_CELL);
         }
 
@@ -5359,7 +5373,7 @@ Fancy.copyText = (text) => {
           cell.appendChild(wrapperEl);
           cell.classList.add(CELL_SELECTION);
         }
-        else if(column.$rowGroups){
+        else if(column.$isRowGroupColumn){
           const wrapperEl = document.createElement('div');
           wrapperEl.classList.add(CELL_WRAPPER);
 
@@ -5416,7 +5430,7 @@ Fancy.copyText = (text) => {
       const me = this;
       const column = me.columns[columnIndex];
 
-      if(column.$rowGroups){
+      if(column.$isRowGroupColumn){
         const cell = me.generateGroupCell(rowIndex, item, column);
 
         cell.setAttribute('col-index', columnIndex);
@@ -6970,9 +6984,10 @@ Fancy.copyText = (text) => {
 
         me.addGroupInBar(column, false);
       });
+      delete me.activeRowGroupBarItemEl;
     },
 
-    // Syntactic mouse enter because cursor is over dragging cell
+    // Syntactic mouseenter because cursor is over dragging cell
     onRowGroupBarMouseEnter(){
       const me = this;
 
@@ -7120,7 +7135,7 @@ Fancy.copyText = (text) => {
 
     // Syntactic mouse leave because cursor is over dragging cell
     onRowGroupBarMouseLeave(){
-      this.removeGroupInBar();
+      this.removeGroupInBar(this.columnDragging.column);
     },
 
     removeGroupInBar(column){
@@ -8002,7 +8017,12 @@ Fancy.copyText = (text) => {
           cellInner = column.getter(options);
         }
         else if(column.render){
-          cellInner = column.render();
+          // For cases when column.render uses dom cell
+          try {
+            cellInner = column.render(options);
+          } catch (e) {
+            cellInner = value;
+          }
         }
         else {
           cellInner = value;
@@ -8480,7 +8500,7 @@ Fancy.copyText = (text) => {
               }
             });
 
-            if((isColumnPresentedInRowGroupBar && !columnDragging.dragItemFromRowGroupBar) || columnDragging.column.$rowGroups){
+            if((isColumnPresentedInRowGroupBar && !columnDragging.dragItemFromRowGroupBar) || columnDragging.column.$isRowGroupColumn){
               dragColumnCellEl.classList.add(FAKE_COLUMN_CELL_DRAGGING_DENY);
               dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_ALLOW);
             }
@@ -8635,6 +8655,9 @@ Fancy.copyText = (text) => {
       const cursorInColumnIndex = me.isCursorInAnotherColumn(event);
 
       if(cursorInColumnIndex !== undefined && me.columnDragMouseDownColumnIndex !== cursorInColumnIndex){
+        if(me.columns[cursorInColumnIndex]?.type === 'order'){
+          return;
+        }
         me.moveColumn(me.columnDragMouseDownColumnIndex, cursorInColumnIndex);
         me.columnDragMouseDownColumnIndex = cursorInColumnIndex;
       }

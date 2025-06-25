@@ -359,7 +359,7 @@
 
         if(config.rowGroupColumn){
           let rowGroupColumn = Object.assign({
-            $rowGroups: rowGroups
+            $isRowGroupColumn: true
           }, me.$defaultRowGroupColumn);
 
           rowGroupColumn.id = rowGroupColumn.id || me.getAutoColumnIdSeed();
@@ -367,15 +367,21 @@
           Object.assign(rowGroupColumn, config.rowGroupColumn);
           me.$rowGroupColumn = rowGroupColumn;
           if(rowGroups.length && me.$rowGroupColumn){
-            config.columns.unshift(rowGroupColumn);
+            if(config.columns[0].type === 'order'){
+              config.columns.splice(1, 0, rowGroupColumn);
+            }
+            else{
+              config.columns.unshift(rowGroupColumn);
+            }
           }
         }
 
         config.columns.forEach(column => {
           switch(column.type){
             case 'order':
-              if(rowGroups.length || config.rowGroupBar){
-                console.error('Order column is not supported for row grouping');
+              if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
+                console.error('Order column is not supported for row grouping with rowGroupType equals to "row"');
+                console.error('For order column use rowGroupType equals to "column"');
               }
               break;
           }

@@ -57,7 +57,7 @@
 
       if(rowEl.classList.contains(ROW_GROUP)){
         const column = me.columns[columnIndex];
-        if(me.rowGroupType === 'column' && column.$rowGroups){
+        if(me.rowGroupType === 'column' && column.$isRowGroupColumn){
           const cell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
           rowEl.appendChild(cell);
         }
@@ -157,7 +157,7 @@
           cellInner = value;
         }
 
-        if(column.$rowGroups || column.rowGroupIndent){
+        if(column.$isRowGroupColumn || column.rowGroupIndent){
           cell.classList.add(ROW_GROUP_VALUE_CELL);
         }
 
@@ -179,7 +179,7 @@
           cell.appendChild(wrapperEl);
           cell.classList.add(CELL_SELECTION);
         }
-        else if(column.$rowGroups){
+        else if(column.$isRowGroupColumn){
           const wrapperEl = document.createElement('div');
           wrapperEl.classList.add(CELL_WRAPPER);
 
@@ -236,7 +236,7 @@
       const me = this;
       const column = me.columns[columnIndex];
 
-      if(column.$rowGroups){
+      if(column.$isRowGroupColumn){
         const cell = me.generateGroupCell(rowIndex, item, column);
 
         cell.setAttribute('col-index', columnIndex);

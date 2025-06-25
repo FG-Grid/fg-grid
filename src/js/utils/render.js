@@ -30,13 +30,13 @@ Fancy.render = {
   },
   order(params){
     const {
-      item,
       cell,
       rowIndex
     } = params;
 
-    if(item.$isGroupRow){
-      return;
+    // For copy CTRL + C
+    if(!cell){
+      return Number(rowIndex) + 1;
     }
 
     cell.classList.add(Fancy.cls.CELL_ORDER);

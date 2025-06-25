@@ -283,8 +283,16 @@
             delete me.$requiresReSetGroupColumn;
             if(me.rowGroupBarItemColumns.length === 1){
               setTimeout(()=>{
+                let indexToAddColumn = 0;
                 me.$rowGroupColumn.hidden = true;
-                me.columns.unshift(me.$rowGroupColumn);
+                if(me.columns[0].type === 'order'){
+                  me.columns.splice(1, 0, me.$rowGroupColumn);
+                  indexToAddColumn = 1;
+                }
+                else{
+                  me.columns.unshift(me.$rowGroupColumn);
+                }
+
                 me.scroller.generateNewRange(false);
                 me.reSetVisibleHeaderColumnsIndex();
 
@@ -292,7 +300,7 @@
                 //me.reCalcColumnsPositions();
                 //me.updateWidth();
                 //me.updateCellPositions();
-                me.showColumn(me.columns[0]);
+                me.showColumn(me.columns[indexToAddColumn]);
               },1);
             }
           }
@@ -436,7 +444,7 @@
       el.style.left = `${left}px`;
 
       el.innerHTML = me.columns.map((column, index) => {
-        if(column.$rowGroups){
+        if(column.$isRowGroupColumn){
           return '';
         }
 

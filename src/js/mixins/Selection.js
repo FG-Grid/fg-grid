@@ -762,10 +762,15 @@
         let cellInner;
 
         if(column.getter){
-          cellInner = column.getter(options)
+          cellInner = column.getter(options);
         }
         else if(column.render){
-          cellInner = column.render()
+          // For cases when column.render uses dom cell
+          try {
+            cellInner = column.render(options);
+          } catch (e) {
+            cellInner = value;
+          }
         }
         else {
           cellInner = value;
