@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.7.13',
+  version: '0.7.14',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -96,6 +96,48 @@ const Fancy$1 = {
     if(type === 'object'){
       return 'object';
     }
+  },
+  // shortcut to creat div
+  /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   */
+  div(cls = [], style = {}){
+    return Fancy$1.newElement('div', cls, style);
+  },
+  /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   */
+  span(cls = [], style = {}){
+    return Fancy$1.newElement('span', cls, style);
+  },
+  /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   */
+  input(cls = [], style = {}){
+    return Fancy$1.newElement('input', cls, style);
+  },
+  /**
+   * @param {String} tag
+   * @param {String|Array} cls
+   * @param {Object} style
+   */
+  newElement(tag, cls, style = {}){
+    const el = document.createElement(tag);
+
+    if(Array.isArray(cls)){
+      el.classList.add(...cls);
+    } else if(typeof cls === 'string'){
+      el.classList.add(cls);
+    }
+
+    for(let p in style){
+      el.style[p] = style[p];
+    }
+
+    return el;
   }
 };
 
@@ -199,6 +241,7 @@ Fancy.cls = {
 
   // Cell
   CELL: 'fg-cell',
+  CELL_VALUE: 'fg-cell-value',
   ANIMATE_CELLS_POSITION: 'fg-animate-cells-position',
   GRID_CELLS_RIGHT_BORDER: 'fg-enabled-cell-right-border',
   CELL_BOOLEAN: 'fg-cell-boolean',
@@ -531,8 +574,7 @@ Fancy.copyText = (text) => {
   if(navigator.clipboard){
     navigator.clipboard.writeText(text)
       .catch(err => console.error('Error copying: ', err));
-  }
-  else {
+  } else {
     const textarea = document.createElement('textarea');
     textarea.value = text;
     document.body.appendChild(textarea);
@@ -1803,38 +1845,41 @@ Fancy.copyText = (text) => {
 
       me.expandedGroups = {};
 
-      if (typeof me.rowGroupExpanded === 'function') {
-        const groupNames = Object.keys(Object.groupBy(me.data, row => row.$rowGroupValue));
-        const parentGroups = {};
-        groupNames.forEach(group => {
-          const splitted = group.split('/');
-          const iL = splitted.length;
+      switch(typeof me.rowGroupExpanded){
+        case 'function':
+        case 'boolean':
+          const groupNames = Object.keys(Object.groupBy(me.data, row => row.$rowGroupValue));
+          const parentGroups = {};
+          groupNames.forEach(group => {
+            const splitted = group.split('/');
+            const iL = splitted.length;
 
-          for (let i = 0; i < iL; i++) {
-            splitted.pop();
-            parentGroups[splitted.join('/')] = true;
-          }
-        });
+            for (let i = 0; i < iL; i++) {
+              splitted.pop();
+              parentGroups[splitted.join('/')] = true;
+            }
+          });
 
-        const parentGroupNames = Object.keys(parentGroups);
+          const parentGroupNames = Object.keys(parentGroups);
 
-        const rowGroupExpanded = [].concat(groupNames).concat(parentGroupNames).sort();
+          const rowGroupExpanded = [].concat(groupNames).concat(parentGroupNames).sort();
 
-        rowGroupExpanded.forEach(group => {
-          const expanded = me.rowGroupExpanded(group);
+          rowGroupExpanded.forEach(group => {
+            const expanded = me.rowGroupExpanded === true? true: me.rowGroupExpanded(group);
 
-          me.expandedGroups[group] = expanded;
+            me.expandedGroups[group] = expanded;
 
-          if (expanded) {
-            rowGroupExpanded.push(group);
-          }
-        });
+            if (expanded && !rowGroupExpanded.includes(group)) {
+              rowGroupExpanded.push(group);
+            }
+          });
 
-        me.rowGroupExpanded = rowGroupExpanded;
-      } else {
-        me.rowGroupExpanded.forEach(group => {
-          me.expandedGroups[group] = true;
-        });
+          me.rowGroupExpanded = rowGroupExpanded;
+          break;
+        default:
+          me.rowGroupExpanded.forEach(group => {
+            me.expandedGroups[group] = true;
+          });
       }
     },
 
@@ -2338,10 +2383,14 @@ Fancy.copyText = (text) => {
 
       addToGroupsChildren.forEach(group => {
         const splitted = group.split('/');
+
+        if(splitted.length === 1){
+          return;
+        }
+
         const parentGroup = splitted.slice(0, splitted.length - 1).join('/');
 
         me.groupsChildren[parentGroup] = me.groupsChildren[parentGroup] || [];
-
         me.groupsChildren[parentGroup].push(me.groupDetails[group]);
         if(me.groupDetails[parentGroup].$hasChildrenGroups){
           me.groupsChildren[parentGroup].sort((groupA, groupB) => {
@@ -2354,6 +2403,77 @@ Fancy.copyText = (text) => {
           });
         }
       });
+    },
+
+    agGroupUpdateData(groupName, items, sign = '-'){
+      const me = this;
+      const groupDetails = me.groupDetails[groupName];
+
+      // group was removed
+      if(!groupDetails){
+        return;
+      }
+
+      const groupAgValues = groupDetails.$agValues || {};
+      const groupChildren = me.groupsChildren[groupName];
+
+      me.aggregations?.forEach(aggregation => {
+        const index = aggregation.index;
+        items.forEach(item => {
+          if (item.$rowGroupValue.includes(groupName) === false){
+            return;
+          }
+
+          // Fast update for parent aggregation value
+          if (aggregation.fn === 'sum' && sign !== 'update'){
+            if (groupAgValues[index] === undefined) {
+              groupAgValues[index] = 0;
+            }
+
+            switch (sign) {
+              case '-':
+                groupAgValues[index] -= item[index];
+                break;
+              case '+':
+                groupAgValues[index] += item[index];
+                break;
+            }
+          }
+          else {
+            const values = groupChildren.map(child => {
+              let value = child.$agValues ? child.$agValues[index] : child[index];
+              value = Number(value);
+              if(isNaN(value)){
+                value = 0;
+              }
+
+              return value;
+            });
+            groupAgValues[index] = me.getAggregationResult(aggregation, values);
+          }
+        });
+      });
+    },
+
+    isItemInCollapsedGroup(item){
+      const splitted = item.$rowGroupValue.split('/');
+
+      if(item.$isGroupRow){
+        splitted.pop();
+      }
+
+      for(let i = 0;i<splitted.length;i++) {
+        const name = splitted.join('/');
+        const expanded = this.expandedGroups[name];
+
+        if(!expanded){
+          return true;
+        }
+
+        splitted.pop();
+      }
+
+      return false;
     }
   };
 
@@ -2601,8 +2721,7 @@ Fancy.copyText = (text) => {
         for(let p in key){
           item[p] = key[p];
         }
-      }
-      else {
+      } else {
         item[key] = value;
       }
 
@@ -2674,20 +2793,17 @@ Fancy.copyText = (text) => {
         if(me.displayedData){
           me.displayedData.push(...items);
         }
-      }
-      else if(position === 0){
+      } else if(position === 0){
         me.data.unshift(...items);
         if(me.displayedData){
           me.displayedData.unshift(...items);
         }
-      }
-      else if(typeOf(position) === 'number'){
+      } else if(typeOf(position) === 'number'){
         me.data.splice(position, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position, 0, ...items);
         }
-      }
-      else if(typeOf(position) === 'object'){
+      } else if(typeOf(position) === 'object'){
         me.data.splice(position.originalRowIndex, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position.rowIndex, 0, ...items);
@@ -2695,6 +2811,29 @@ Fancy.copyText = (text) => {
       }
 
       me.updateIndexes();
+    },
+    clearGroup(groupName){
+      const me = this;
+
+      me.rowGroupExpanded = me.rowGroupExpanded.filter(value => value !== groupName);
+
+      const splitted = groupName.split('/');
+      const level = splitted.length - 1;
+      if(level === 0){
+        me.levelsWithGroups[0][0].root = me.levelsWithGroups[0][0].root.filter(value => value !== groupName);
+      }
+      else {
+        splitted.pop();
+        const parentGroupName = splitted.join('/');
+        me.levelsWithGroups[level][0][parentGroupName] = me.levelsWithGroups[level][0][parentGroupName].filter(value => value !== groupName);
+
+        // Go to group level to remove group that has subgroups
+        const groupDetail = me.groupDetails[groupName];
+        if(groupDetail?.$hasChildrenGroups && me.levelsWithGroups[level + 1]){
+          delete me.levelsWithGroups[level + 1][0][groupName];
+        }
+      }
+
     }
   };
 
@@ -2712,6 +2851,8 @@ Fancy.copyText = (text) => {
     BODY_HORIZONTAL_SCROLL_SIZE,
     SCROLLBAR_INVISIBLE
   } = Fancy.cls;
+
+  const div = Fancy.div;
 
   class Scroller {
     startRow = 0;
@@ -2895,20 +3036,19 @@ Fancy.copyText = (text) => {
     renderVerticalScroll() {
       const me = this;
 
-      const verticalScrollEl = document.createElement('div');
-      verticalScrollEl.classList.add(BODY_VERTICAL_SCROLL);
+      const verticalScrollEl = div(BODY_VERTICAL_SCROLL);
 
       if (me.isDomInvisibleScrollbar) {
         verticalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
       }
 
-      const verticalScrollContainerEl = document.createElement('div');
-      verticalScrollContainerEl.classList.add(BODY_VERTICAL_SCROLL_CONTAINER);
-      verticalScrollContainerEl.style.width = me.scrollBarWidth + 'px';
+      const verticalScrollContainerEl = div(BODY_VERTICAL_SCROLL_CONTAINER,{
+        width: me.scrollBarWidth + 'px'
+      });
 
-      const verticalScrollSizeEl = document.createElement('div');
-      verticalScrollSizeEl.classList.add(BODY_VERTICAL_SCROLL_SIZE);
-      verticalScrollSizeEl.style.width = me.scrollBarWidth + 'px';
+      const verticalScrollSizeEl = div(BODY_VERTICAL_SCROLL_SIZE, {
+        width: me.scrollBarWidth + 'px'
+      });
 
       verticalScrollContainerEl.appendChild(verticalScrollSizeEl);
       verticalScrollEl.appendChild(verticalScrollContainerEl);
@@ -2924,34 +3064,29 @@ Fancy.copyText = (text) => {
     renderHorizontalScroll() {
       const me = this;
 
-      const horizontalScrollEl = document.createElement('div');
-      horizontalScrollEl.classList.add(BODY_HORIZONTAL_SCROLL);
+      const horizontalScrollEl = div(BODY_HORIZONTAL_SCROLL,{
+        height: me.scrollBarWidth + 'px',
+        minHeight: me.scrollBarWidth + 'px',
+        maxHeight: me.scrollBarWidth + 'px',
+        width: (me.isDomInvisibleScrollbar || !me.isVerticalVisible())? `100%`:
+          `calc(100% - ${me.scrollBarWidth}px)`
+      });
 
       if (me.isDomInvisibleScrollbar) {
         horizontalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
       }
 
-      horizontalScrollEl.style.height = me.scrollBarWidth + 'px';
-      horizontalScrollEl.style.minHeight = me.scrollBarWidth + 'px';
-      horizontalScrollEl.style.maxHeight = me.scrollBarWidth + 'px';
+      const horizontalScrollContainerEl = div(BODY_HORIZONTAL_SCROLL_CONTAINER, {
+        height: me.scrollBarWidth + 'px',
+        minHeight: me.scrollBarWidth + 'px',
+        maxHeight: me.scrollBarWidth + 'px'
+      });
 
-      if (me.isDomInvisibleScrollbar || !me.isVerticalVisible()) {
-        horizontalScrollEl.style.width = `100%`;
-      } else {
-        horizontalScrollEl.style.width = `calc(100% - ${me.scrollBarWidth}px)`;
-      }
-
-      const horizontalScrollContainerEl = document.createElement('div');
-      horizontalScrollContainerEl.classList.add(BODY_HORIZONTAL_SCROLL_CONTAINER);
-      horizontalScrollContainerEl.style.height = me.scrollBarWidth + 'px';
-      horizontalScrollContainerEl.style.minHeight = me.scrollBarWidth + 'px';
-      horizontalScrollContainerEl.style.maxHeight = me.scrollBarWidth + 'px';
-
-      const horizontalScrollSizeEl = document.createElement('div');
-      horizontalScrollSizeEl.classList.add(BODY_HORIZONTAL_SCROLL_SIZE);
-      horizontalScrollSizeEl.style.height = me.scrollBarWidth + 'px';
-      horizontalScrollSizeEl.style.minHeight = me.scrollBarWidth + 'px';
-      horizontalScrollSizeEl.style.maxHeight = me.scrollBarWidth + 'px';
+      const horizontalScrollSizeEl = div(BODY_HORIZONTAL_SCROLL_SIZE, {
+        height: me.scrollBarWidth + 'px',
+        minHeight: me.scrollBarWidth + 'px',
+        maxHeight: me.scrollBarWidth + 'px'
+      });
 
       horizontalScrollContainerEl.appendChild(horizontalScrollSizeEl);
       horizontalScrollEl.appendChild(horizontalScrollContainerEl);
@@ -3218,15 +3353,17 @@ Fancy.copyText = (text) => {
 
     getScrollbarWidth() {
       const body = document.body;
-      const div = document.createElement('div');
-      div.style.width = div.style.height = '100px';
-      div.style.opacity = '0';
-      div.style.overflow = 'scroll';
-      div.style.msOverflowStyle = 'scrollbar'; // needed for WinJS apps
-      div.style.position = 'absolute';
-      body.appendChild(div);
+      const el = div([],{
+        width: '100px',
+        height: '100px',
+        opacity: '0',
+        overflow: 'scroll',
+        msOverflowStyle: 'scrollbar', // needed for WinJS apps
+        position: 'absolute'
+      });
+      body.appendChild(el);
 
-      let width = div.offsetWidth - div.clientWidth;
+      let width = el.offsetWidth - el.clientWidth;
       // if width is 0 and client width is 0, means the DOM isn't ready
       /*
       if (width === 0 && div.clientWidth === 0) {
@@ -3234,8 +3371,8 @@ Fancy.copyText = (text) => {
       }
        */
 
-      if (div.parentNode) {
-        div.parentNode.removeChild(div);
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
       }
 
       if (width === 0) {
@@ -3366,8 +3503,7 @@ Fancy.copyText = (text) => {
       if(!me.direction){
         if(Math.abs(deltaY) > Math.abs(deltaX)){
           me.direction = 'vertical';
-        }
-        else {
+        } else {
           me.direction = 'horizontal';
         }
       }
@@ -3377,8 +3513,7 @@ Fancy.copyText = (text) => {
           deltaX: 0,
           deltaY
         });
-      }
-      else {
+      } else {
         Object.assign(e, {
           deltaX,
           deltaY: 0
@@ -3417,8 +3552,7 @@ Fancy.copyText = (text) => {
         }
 
         // Continue scrolling until the speed exceeds the threshold
-        if(Math.abs(me.velocityX) <= threshold && Math.abs(me.velocityY) <= threshold);
-        else {
+        if(Math.abs(me.velocityX) <= threshold && Math.abs(me.velocityY) <= threshold); else {
           requestAnimationFrame(()=> {
             requestAnimationFrame(step);
           });
@@ -3467,6 +3601,8 @@ Fancy.copyText = (text) => {
     EDITORS_CONTAINER,
     TOUCH
   } = Fancy.cls;
+
+  const div = Fancy.div;
 
   /**
    * @mixes GridMixinBody
@@ -3574,8 +3710,7 @@ Fancy.copyText = (text) => {
 
       if(renderTo.tagName){
         me.containerEl = renderTo;
-      }
-      else if(typeof renderTo === 'string'){
+      } else if(typeof renderTo === 'string'){
         me.containerEl = document.getElementById(renderTo);
 
         if(!me.containerEl){
@@ -3605,10 +3740,9 @@ Fancy.copyText = (text) => {
 
     render() {
       const me = this;
-      const gridEl = document.createElement('div');
+      const gridEl = div(GRID);
 
       gridEl.setAttribute('id', me.id);
-      gridEl.classList.add(GRID);
       if(me.rowAnimation){
         gridEl.classList.add(ROW_ANIMATION);
       }
@@ -3662,18 +3796,19 @@ Fancy.copyText = (text) => {
     renderHeader() {
       const me = this;
 
-      const headerEl = document.createElement('div');
-      headerEl.classList.add(HEADER);
-      headerEl.style.height = (this.headerRowHeight + 1) + 'px';
+      const headerEl = div(HEADER, {
+        height: (this.headerRowHeight + 1) + 'px'
+      });
 
-      const headerInnerEl = document.createElement('div');
-      headerInnerEl.classList.add(HEADER_INNER);
-      headerInnerEl.style.width = (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px';
+      const headerInnerEl = div(HEADER_INNER, {
+        width: (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px'
+      });
 
-      const headerInnerContainerEl = document.createElement('div');
-      headerInnerContainerEl.classList.add(HEADER_INNER_CONTAINER);
-      headerInnerContainerEl.style.height = me.headerRowHeight + 'px';
-      headerInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
+      const headerInnerContainerEl = div(HEADER_INNER_CONTAINER, {
+        height: me.headerRowHeight + 'px',
+        width: me.getTotalColumnsWidth() + 'px'
+      });
+
 
       headerInnerEl.appendChild(headerInnerContainerEl);
       headerEl.appendChild(headerInnerEl);
@@ -3686,28 +3821,14 @@ Fancy.copyText = (text) => {
 
     renderBody() {
       const me = this;
-
-      const bodyEl = document.createElement('div');
-
-      bodyEl.classList.add(BODY);
-
-      const bodyInnerEl = document.createElement('div');
-      bodyInnerEl.classList.add(BODY_INNER);
-
-      const bodyInnerContainerEl = document.createElement('div');
-
-      bodyInnerContainerEl.classList.add(BODY_INNER_CONTAINER);
-      if(me.store.rowGroups.length){
-        bodyInnerContainerEl.style.height = (me.store.getDisplayedDataTotal() * me.rowHeight) + 'px';
-      }
-      else {
-        bodyInnerContainerEl.style.height = (me.store.getDataTotal() * me.rowHeight) + 'px';
-      }
-      bodyInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
-
-      const editorsContainerEl = document.createElement('div');
-
-      editorsContainerEl.classList.add(EDITORS_CONTAINER);
+      const bodyEl = div(BODY);
+      const bodyInnerEl = div(BODY_INNER);
+      const bodyInnerContainerEl = div(BODY_INNER_CONTAINER,{
+        width: me.getTotalColumnsWidth() + 'px',
+        height: me.store.rowGroups.length? (me.store.getDisplayedDataTotal() * me.rowHeight) + 'px':
+          (me.store.getDataTotal() * me.rowHeight) + 'px'
+      });
+      const editorsContainerEl = div(EDITORS_CONTAINER);
 
       bodyInnerContainerEl.appendChild(editorsContainerEl);
       bodyInnerEl.appendChild(bodyInnerContainerEl);
@@ -3730,8 +3851,7 @@ Fancy.copyText = (text) => {
 
       if(filters.length || rowGroups.length){
         me.bodyInnerContainerEl.style.height = (store.getDisplayedDataTotal() * me.rowHeight) + 'px';
-      }
-      else {
+      } else {
         me.bodyInnerContainerEl.style.height = (store.getDataTotal() * me.rowHeight) + 'px';
       }
     }
@@ -3745,8 +3865,7 @@ Fancy.copyText = (text) => {
         setTimeout(()=>{
           rowEl.remove();
         }, 200);
-      }
-      else {
+      } else {
         console.warn(`Row El with id = ${id} was not found`);
       }
 
@@ -3760,8 +3879,7 @@ Fancy.copyText = (text) => {
 
       if(rowEl){
         rowEl.remove();
-      }
-      else {
+      } else {
         console.warn(`Row El with id = ${id} was not found`);
       }
 
@@ -3824,8 +3942,7 @@ Fancy.copyText = (text) => {
           if(rowGroups.length && me.$rowGroupColumn){
             if(config.columns[0].type === 'order'){
               config.columns.splice(1, 0, rowGroupColumn);
-            }
-            else {
+            } else {
               config.columns.unshift(rowGroupColumn);
             }
           }
@@ -3954,8 +4071,7 @@ Fancy.copyText = (text) => {
 
       if(me.store.rowGroups.length){
         me.reConfigRowGroups();
-      }
-      else {
+      } else {
         me.terminateVisibleRows();
         scroller.calcMaxScrollTop();
         scroller.updateScrollTop();
@@ -3988,28 +4104,7 @@ Fancy.copyText = (text) => {
     remove(rows){
       const me = this;
       const store = me.store;
-
-      switch (Fancy.typeOf(rows)){
-        case 'string':
-          rows = [{
-            id: rows
-          }];
-          break;
-        case 'object':
-          rows = [rows];
-          break;
-        case 'array':
-          rows = rows.map((value)=>{
-            if(typeof value === 'string'){
-              return {
-                id: value
-              }
-            }
-
-            return value;
-          });
-          break;
-      }
+      rows = me.$processRowsToRemove(rows);
 
       if(rows.length === 0){
         return;
@@ -4024,7 +4119,7 @@ Fancy.copyText = (text) => {
 
         me.animatedRemoveDomRowById(row.id);
 
-        let item = me.store.removeItemById(row.id);
+        let item = store.removeItemById(row.id);
         itemsToRemove.push(item);
         if(item.$rowGroupValue){
           let values = rowGroups.get(item.$rowGroupValue) || [];
@@ -4047,24 +4142,31 @@ Fancy.copyText = (text) => {
           const groupDetails = store.groupDetails[name];
 
           groupDetails.amount -= items.length;
+          if(groupDetails.$hasChildrenGroups === false){
+            groupDetails.childrenAmount -= items.length;
+          }
           if(groupDetails.amount === 0){
             groupDetails.childrenAmount = 0;
             me.animatedRemoveDomRowById(groupDetails.id);
-            delete me.store.groupDetails[name];
-            delete me.store.expandedGroupsWithDataChildren[name];
-            delete me.store.groupsChildren[name];
+            delete store.groupDetails[name];
+            delete store.expandedGroupsWithDataChildren[name];
+            delete store.groupsChildren[name];
 
             let item = me.store.removeItemById(groupDetails.id);
             itemsToRemove.push(item);
 
             const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+            const parentGroupDetails = store.groupDetails[parentGroup];
             store.groupsChildren[parentGroup] = store.groupsChildren[parentGroup].filter(item => {
               return item.id !== groupDetails.id;
             });
-          }
-          else {
+            if(parentGroupDetails) {
+              parentGroupDetails.childrenAmount--;
+            }
+            store.clearGroup(name);
+          } else {
             store.groupsChildren[name] = store.groupsChildren[name].filter(item => {
-                return items.includes(item.id) === false;
+              return items.includes(item.id) === false;
             });
           }
 
@@ -4082,13 +4184,14 @@ Fancy.copyText = (text) => {
               store.groupsChildrenForFiltering[parentGroup] = store.groupsChildrenForFiltering[parentGroup].filter(item => {
                 return item.id !== groupDetails.id;
               });
-            }
-            else {
+            } else {
               store.groupsChildrenForFiltering[name] = store.groupsChildrenForFiltering[name].filter(item => {
                 return items.includes(item.id) === false;
               });
             }
           }
+
+          store.agGroupUpdateData(name, dataItemsToRemove);
         }
       });
 
@@ -4113,8 +4216,18 @@ Fancy.copyText = (text) => {
       });
       */
 
+      // TODO: Here there is problem and bug.
+      // For cases when remove item in hidden group
       if(me.store.displayedData?.length){
-        const rowIndexes = itemsToRemove.sort((a, b) => a.rowIndex - b.rowIndex);
+        // Filter items that are in collapsed groups
+        const displayedItemsToRemove = itemsToRemove.filter(item => {
+          if(!item.$rowGroupValue){
+            return true;
+          }
+
+          return !store.isItemInCollapsedGroup(item);
+        });
+        const rowIndexes = displayedItemsToRemove.sort((a, b) => a.rowIndex - b.rowIndex);
 
         rowIndexes.forEach((item, index) => {
           me.store.displayedData.splice(item.rowIndex - index, 1);
@@ -4123,6 +4236,7 @@ Fancy.copyText = (text) => {
 
       if(rowGroups.size){
         me.updateRowGroupAmount();
+        me.updateRowGroupAggregations();
         me.updateRowGroupRowsAndCheckBoxes();
       }
 
@@ -4144,7 +4258,24 @@ Fancy.copyText = (text) => {
       store.add(items, position);
 
       if(store.rowGroups.length){
+        let rowGroups = {};
+        items.forEach(item => {
+          rowGroups[item.$rowGroupValue] = rowGroups[item.$rowGroupValue] || [];
+          rowGroups[item.$rowGroupValue].push(item);
+        });
+
+        for(let group in rowGroups){
+          const splitted = group.split('/');
+
+          for(let i = 0;i<splitted.length;i++) {
+            const name = splitted.slice(0, splitted.length - i).join('/');
+
+            store.agGroupUpdateData(name, rowGroups[group], '+');
+          }
+        }
+
         me.updateRowGroupAmount();
+        me.updateRowGroupAggregations();
         me.updateRowGroupRowsAndCheckBoxes();
       }
 
@@ -4203,8 +4334,7 @@ Fancy.copyText = (text) => {
           let cell = row?.querySelector(`div[col-id="${p}"]`);
           rerenderCell(cell);
         }
-      }
-      else {
+      } else {
         store.setById(id, index, value);
 
         let cell = row?.querySelector(`div[col-id="${index}"]`);
@@ -4372,8 +4502,7 @@ Fancy.copyText = (text) => {
 
       if(me.columnIdSeed === undefined){
         me.columnIdSeed = 0;
-      }
-      else {
+      } else {
         me.columnIdSeed++;
       }
 
@@ -4394,15 +4523,13 @@ Fancy.copyText = (text) => {
           if(seed === undefined){
             column.id = index || me.getAutoColumnIdSeed();
             seed = 0;
-          }
-          else {
+          } else {
             column.id = `${index}-${seed}`;
           }
 
           seed++;
           columnIdsSeedMap.set(index, seed);
-        }
-        else {
+        } else {
           let seed = columnIdsSeedMap.get(index);
 
           if(seed === undefined){
@@ -4523,8 +4650,7 @@ Fancy.copyText = (text) => {
           if(typeof newColumn.width === 'number' && newColumn.width !== column.width){
             column.width = newColumn.width;
           }
-        }
-        else {
+        } else {
           columnsToRemoveIds.add(column.id);
         }
       });
@@ -4550,8 +4676,7 @@ Fancy.copyText = (text) => {
           seed--;
           if(seed === 0){
             me.columnIdsSeedMap.delete(index);
-          }
-          else {
+          } else {
             me.columnIdsSeedMap.set(index, seed);
           }
         }
@@ -4660,6 +4785,12 @@ Fancy.copyText = (text) => {
     ROW_GROUP_BAR_ITEM_ACTIVE
   } = Fancy.cls;
 
+  const {
+    div,
+    span,
+    input
+  } = Fancy;
+
   /**
    * @mixin GridMixinHeader
    */
@@ -4755,11 +4886,12 @@ Fancy.copyText = (text) => {
 
     createHeaderCell(columnIndex) {
       const me = this;
-      const cell = document.createElement('div');
       const column = me.columns[columnIndex];
+      const cell = div(HEADER_CELL, {
+        width: column.width + 'px',
+        left: column.left + 'px'
+      });
       const value = column.title;
-
-      cell.classList.add(HEADER_CELL);
 
       if(column.sortable && column.type){
         cell.classList.add(HEADER_CELL_SORTABLE);
@@ -4771,21 +4903,14 @@ Fancy.copyText = (text) => {
 
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
-      cell.style.width = column.width + 'px';
-      cell.style.left = column.left + 'px';
 
-      const label = document.createElement('div');
-      label.classList.add(HEADER_CELL_LABEL);
-
-      const cellText = document.createElement('div');
-      cellText.classList.add(HEADER_CELL_TEXT);
+      const label = div(HEADER_CELL_LABEL);
+      const cellText = div(HEADER_CELL_TEXT);
       cellText.innerHTML = value;
 
-      const filterContainer = document.createElement('span');
-      filterContainer.classList.add(FILTER_INDICATOR_CONTAINER);
+      const filterContainer = span(FILTER_INDICATOR_CONTAINER);
 
-      const elFilter = document.createElement('span');
-      elFilter.classList.add(HEADER_FILTER_EL);
+      const elFilter = span(HEADER_FILTER_EL);
       if(!Object.entries(column.filters || {}).length){
         elFilter.classList.add(HIDDEN);
       }
@@ -4793,22 +4918,18 @@ Fancy.copyText = (text) => {
       filterContainer.appendChild(elFilter);
       column.elFilter = elFilter;
 
-      const sortContainer = document.createElement('span');
-      sortContainer.classList.add(SORT_INDICATOR_CONTAINER);
+      const sortContainer = span(SORT_INDICATOR_CONTAINER);
 
-      const elSortOrder = document.createElement('span');
-      elSortOrder.classList.add(SORT_ORDER);
+      const elSortOrder = span(SORT_ORDER);
       if(!column.sortOrder){
         elSortOrder.classList.add(HIDDEN);
-      }
-      else {
+      } else {
         elSortOrder.innerHTML = column.sortOrder;
       }
       sortContainer.appendChild(elSortOrder);
       column.elSortOrder = elSortOrder;
 
-      const elSortAsc = document.createElement('span');
-      elSortAsc.classList.add(SORT_ASC);
+      const elSortAsc = span(SORT_ASC);
       if(column.sort !== 'ASC'){
         elSortAsc.classList.add(HIDDEN);
       }
@@ -4816,7 +4937,7 @@ Fancy.copyText = (text) => {
       sortContainer.appendChild(elSortAsc);
       column.elSortAsc = elSortAsc;
 
-      const elSortDesc = document.createElement('span');
+      const elSortDesc = span();
       elSortDesc.classList.add(SORT_DESC);
       if(column.sort !== 'DESC'){
         elSortDesc.classList.add(HIDDEN);
@@ -4825,26 +4946,22 @@ Fancy.copyText = (text) => {
       sortContainer.appendChild(elSortDesc);
       column.elSortDesc = elSortDesc;
 
-      const cellResize = document.createElement('div');
-      cellResize.classList.add(HEADER_CELL_RESIZE);
+      const cellResize = div(HEADER_CELL_RESIZE);
       cellResize.addEventListener('mousedown', me.onResizeMouseDown.bind(this));
 
       label.appendChild(cellText);
       label.appendChild(filterContainer);
       label.appendChild(sortContainer);
 
-      const elMenu = document.createElement('div');
-      elMenu.classList.add(HEADER_CELL_MENU);
+      const elMenu = div(HEADER_CELL_MENU);
       elMenu.innerHTML = Fancy.svg.menu;
 
       column.elMenu = elMenu;
 
       if(column.headerCheckboxSelection && column.checkboxSelection){
-        const elSelection = document.createElement('div');
-        elSelection.classList.add(HEADER_CELL_SELECTION);
+        const elSelection = div(HEADER_CELL_SELECTION);
 
-        const checkboxEl = document.createElement('input');
-        checkboxEl.classList.add(INPUT_CHECKBOX);
+        const checkboxEl = input(INPUT_CHECKBOX);
         checkboxEl.setAttribute('type', 'checkbox');
         checkboxEl.addEventListener('click', me.onHeaderCheckboxSelectionClick.bind(this));
 
@@ -4922,8 +5039,7 @@ Fancy.copyText = (text) => {
                 if(me.columns[0].type === 'order'){
                   me.columns.splice(1, 0, me.$rowGroupColumn);
                   indexToAddColumn = 1;
-                }
-                else {
+                } else {
                   me.columns.unshift(me.$rowGroupColumn);
                 }
 
@@ -5067,15 +5183,13 @@ Fancy.copyText = (text) => {
 
     showHeaderCellMenuList(event, column) {
       const me = this;
-      const el = document.createElement('div');
       const elMenuRect = column.elMenu.getBoundingClientRect();
       const top = elMenuRect.top - 1 + elMenuRect.height;
       const left = elMenuRect.left;
-
-      el.classList.add(COLUMNS_MENU);
-      el.classList.add('fg-theme-' + me.theme);
-      el.style.top = `${top}px`;
-      el.style.left = `${left}px`;
+      const el = div([COLUMNS_MENU, 'fg-theme-' + me.theme], {
+        top: `${top}px`,
+        left: `${left}px`
+      });
 
       el.innerHTML = me.columns.map((column, index) => {
         if(column.$isRowGroupColumn){
@@ -5211,6 +5325,7 @@ Fancy.copyText = (text) => {
 (()=>{
   const {
     CELL,
+    CELL_VALUE,
     CELL_ORDER,
     CELL_WRAPPER,
     CELL_SELECTION,
@@ -5234,6 +5349,12 @@ Fancy.copyText = (text) => {
     SVG_ITEM,
     SVG_CHEVRON_RIGHT
   } = Fancy.cls;
+
+  const {
+    div,
+    span,
+    input
+  } = Fancy;
 
   /**
    * @mixin GridMixinBody
@@ -5286,7 +5407,10 @@ Fancy.copyText = (text) => {
         const column = me.columns[columnIndex];
         let value = item[column.index];
         let cellInner;
-        const cell = document.createElement('div');
+        const cell = div(CELL,{
+          width: column.width + 'px',
+          left: column.left + 'px'
+        });
         const params = {
           item,
           column,
@@ -5304,9 +5428,6 @@ Fancy.copyText = (text) => {
 
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);
-        cell.classList.add(CELL);
-        cell.style.width = column.width + 'px';
-        cell.style.left = column.left + 'px';
 
         if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
           cell.classList.add(ACTIVE_CELL);
@@ -5332,11 +5453,9 @@ Fancy.copyText = (text) => {
         if(column.cellCls){
           if(typeof column.cellCls === 'string'){
             cell.classList.add(column.cellCls);
-          }
-          else if(Array.isArray(column.cellCls)){
+          } else if(Array.isArray(column.cellCls)){
             cell.classList.add(...column.cellCls);
-          }
-          else if(typeof column.cellCls === 'function'){
+          } else if(typeof column.cellCls === 'function'){
             let cls = column.cellCls(params);
             if(typeof cls === 'string'){
               cls = [cls];
@@ -5362,8 +5481,7 @@ Fancy.copyText = (text) => {
 
         if(column.render){
           cellInner = column.render(params);
-        }
-        else {
+        } else {
           cellInner = value;
         }
 
@@ -5372,8 +5490,7 @@ Fancy.copyText = (text) => {
         }
 
         if(column.checkboxSelection){
-          const wrapperEl = document.createElement('div');
-          wrapperEl.classList.add(CELL_WRAPPER);
+          const wrapperEl = div(CELL_WRAPPER);
 
           if(column.rowGroupIndent){
             wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length + 1}`);
@@ -5388,17 +5505,14 @@ Fancy.copyText = (text) => {
 
           cell.appendChild(wrapperEl);
           cell.classList.add(CELL_SELECTION);
-        }
-        else if(column.$isRowGroupColumn){
-          const wrapperEl = document.createElement('div');
-          wrapperEl.classList.add(CELL_WRAPPER);
+        } else if(column.$isRowGroupColumn){
+          const wrapperEl = div(CELL_WRAPPER);
 
           if(column.rowGroupIndent){
             wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length}`);
           }
 
-          const valueEl = document.createElement('span');
-          valueEl.classList.add('fg-cell-value');
+          const valueEl = span(CELL_VALUE);
 
           if(cellInner === ''){
             cellInner = '&nbsp;';
@@ -5408,8 +5522,7 @@ Fancy.copyText = (text) => {
           wrapperEl.appendChild(valueEl);
 
           cell.appendChild(wrapperEl);
-        }
-        else if (cellInner !== undefined) {
+        } else if (cellInner !== undefined) {
           if(cellInner === ''){
             cellInner = '&nbsp;';
           }
@@ -5458,7 +5571,10 @@ Fancy.copyText = (text) => {
       } else {
         const column = me.columns[columnIndex];
         let value = item.$agValues[column.index] || '';
-        const cell = document.createElement('div');
+        const cell = div(CELL,{
+          width: column.width + 'px',
+          left: column.left + 'px'
+        });
         let cellInner;
 
         if(column.format){
@@ -5481,16 +5597,12 @@ Fancy.copyText = (text) => {
             value,
             cell
           });
-        }
-        else {
+        } else {
           cellInner = value;
         }
 
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);
-        cell.classList.add(CELL);
-        cell.style.width = column.width + 'px';
-        cell.style.left = column.left + 'px';
 
         if(cellInner !== undefined){
           cell.innerHTML = cellInner;
@@ -5509,8 +5621,7 @@ Fancy.copyText = (text) => {
     },
 
     generateSimpleValueEl(cellInner){
-      const valueEl = document.createElement('span');
-      valueEl.classList.add('fg-cell-value');
+      const valueEl = span(CELL_VALUE);
 
       if(cellInner === ''){
         cellInner = '&nbsp;';
@@ -5522,8 +5633,7 @@ Fancy.copyText = (text) => {
 
     generateGroupCell(rowIndex, item, column = {}){
       const me = this;
-      const cell = document.createElement('div');
-      cell.classList.add(ROW_GROUP_CELL);
+      const cell = div(ROW_GROUP_CELL);
 
       if(item.expanded){
         cell.classList.add(ROW_GROUP_EXPANDED_CELL);
@@ -5548,8 +5658,7 @@ Fancy.copyText = (text) => {
     },
 
     generateAmountEl(item){
-      const amountEl = document.createElement('span');
-      amountEl.classList.add(ROW_GROUP_CELL_AMOUNT);
+      const amountEl = span(ROW_GROUP_CELL_AMOUNT);
       amountEl.innerHTML = ` (${item.amount})`;
 
       return amountEl;
@@ -5557,8 +5666,7 @@ Fancy.copyText = (text) => {
 
     generateValueEl(item, rowIndex){
       const displayGroupValue = item.$rowDisplayGroupValue;
-      const valueEl = document.createElement('span');
-      valueEl.classList.add(ROW_GROUP_CELL_VALUE);
+      const valueEl = span(ROW_GROUP_CELL_VALUE);
 
       if(this.groupValueRender){
         const displayValue = this.groupValueRender({
@@ -5571,8 +5679,7 @@ Fancy.copyText = (text) => {
         if(displayValue){
           valueEl.innerHTML = displayValue;
         }
-      }
-      else {
+      } else {
         valueEl.innerHTML = displayGroupValue;
       }
 
@@ -5581,9 +5688,8 @@ Fancy.copyText = (text) => {
 
     generateRowGroupExpanderEl(item){
       const svgChevronRight = Fancy.svg.chevronRight;
-      const expanderEl = document.createElement('span');
+      const expanderEl = span([ROW_GROUP_CELL_EXPANDER, SVG_ITEM, SVG_CHEVRON_RIGHT]);
 
-      expanderEl.classList.add(ROW_GROUP_CELL_EXPANDER, SVG_ITEM, SVG_CHEVRON_RIGHT);
       expanderEl.style.setProperty('--grid-group-level', item.$groupLevel);
       expanderEl.innerHTML = svgChevronRight;
       expanderEl.addEventListener('click', this.onRowGroupExpanderClick.bind(this));
@@ -5593,8 +5699,7 @@ Fancy.copyText = (text) => {
 
     generateRowGroupCheckBoxEl(item){
       const selected = item.$selected || false;
-      const checkboxEl = document.createElement('input');
-      checkboxEl.classList.add(INPUT_CHECKBOX);
+      const checkboxEl = input(INPUT_CHECKBOX);
       checkboxEl.setAttribute('type', 'checkbox');
       checkboxEl.checked = selected;
 
@@ -5606,11 +5711,10 @@ Fancy.copyText = (text) => {
     },
 
     generateRowGroupSelectionEl(item){
-      const selectionEl = document.createElement('span');
+      const selectionEl = span(ROW_GROUP_CELL_SELECTION);
       const checkBoxEl = this.generateRowGroupCheckBoxEl(item);
       checkBoxEl.addEventListener('click', this.onRowGroupCellSelectionClick.bind(this));
 
-      selectionEl.classList.add(ROW_GROUP_CELL_SELECTION);
       selectionEl.appendChild(checkBoxEl);
 
       return selectionEl;
@@ -5648,19 +5752,22 @@ Fancy.copyText = (text) => {
 
     renderRow(index, item, style = {}) {
       const me = this;
-      const rowEl = document.createElement('div');
 
       if (!item) {
         console.warn(`row ${index} does not exist`);
         return;
       }
 
+      const rowEl = div(ROW,{
+        transform: `translateY(${index * me.rowHeight}px)`,
+        ...style
+      });
       const params = {
         rowIndex: index,
         item
       };
 
-      rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+      rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){
         rowEl.classList.add(ACTIVE_CELL_ROW);
@@ -5673,10 +5780,6 @@ Fancy.copyText = (text) => {
         rowEl.classList.add(ROW_SELECTED);
       }
 
-      rowEl.style.transform = `translateY(${index * me.rowHeight}px)`;
-      for(const p in style){
-        rowEl.style[p] = style[p];
-      }
       rowEl.setAttribute('row-id', item.id);
       rowEl.setAttribute('row-index', index);
 
@@ -5740,7 +5843,6 @@ Fancy.copyText = (text) => {
 
     renderRowGroup(index, item, style = {}) {
       const me = this;
-      const rowEl = document.createElement('div');
       const rowGroupType = me.rowGroupType;
 
       if (!item) {
@@ -5748,16 +5850,15 @@ Fancy.copyText = (text) => {
         return;
       }
 
-      rowEl.classList.add(ROW_GROUP, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+      const rowEl = div(ROW_GROUP, style);
+
+      rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(item.$selected){
         rowEl.classList.add(ROW_SELECTED);
       }
 
       rowEl.style.transform = `translateY(${index * me.rowHeight}px)`;
-      for(const p in style){
-        rowEl.style[p] = style[p];
-      }
       rowEl.setAttribute('row-id', item.id);
       rowEl.setAttribute('row-index', index);
       rowEl.setAttribute('row-group', item.$rowGroupValue.replaceAll('-', '$').split('/').join('-'));
@@ -5789,14 +5890,15 @@ Fancy.copyText = (text) => {
 
     renderRowOnPrevPosition(item, smoothPositionAnimate) {
       const me = this;
-      const rowEl = document.createElement('div');
-      const prevIndex = me.store.prevIdRowIndexesMap.get(item.id);
-      const index = item.rowIndex;
 
       if (!item) {
         console.warn(`row ${item.index} does not exist`);
         return;
       }
+
+      const rowEl = div(ROW);
+      const prevIndex = me.store.prevIdRowIndexesMap.get(item.id);
+      const index = item.rowIndex;
 
       let positionY;
 
@@ -5815,7 +5917,7 @@ Fancy.copyText = (text) => {
         item
       };
 
-      rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+      rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
       me.applyExtraRowStyles(rowEl, params);
 
       rowEl.style.transform = `translateY(${positionY}px)`;
@@ -6204,8 +6306,7 @@ Fancy.copyText = (text) => {
         // Vertical scroll
         changed = me.scroller.deltaChange(delta);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
-      }
-      else {
+      } else {
         // Horizontal scroll
         changed = me.scroller.horizontalDeltaChange(delta);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
@@ -6240,8 +6341,7 @@ Fancy.copyText = (text) => {
         // Vertical scroll
         changed = me.scroller.deltaChange(event.deltaY);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
-      }
-      else if(event.deltaX){
+      } else if(event.deltaX) {
         // Horizontal scroll
         changed = me.scroller.horizontalDeltaChange(event.deltaX);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
@@ -6434,6 +6534,8 @@ Fancy.copyText = (text) => {
     FILTER_BAR_INNER_CONTAINER
   } = Fancy.cls;
 
+  const div = Fancy.div;
+
   /**
    * @mixin GridMixinFilter
    */
@@ -6461,18 +6563,18 @@ Fancy.copyText = (text) => {
     renderFilterBar() {
       const me = this;
 
-      const filterBarEl = document.createElement('div');
-      filterBarEl.classList.add(FILTER_BAR);
-      filterBarEl.style.height = (this.headerRowHeight + 1) + 'px';
+      const filterBarEl = div(FILTER_BAR,{
+        height: (this.headerRowHeight + 1) + 'px'
+      });
 
-      const filterBarInnerEl = document.createElement('div');
-      filterBarInnerEl.classList.add(FILTER_BAR_INNER);
-      filterBarInnerEl.style.width = (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px';
+      const filterBarInnerEl = div(FILTER_BAR_INNER, {
+        width: (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px'
+      });
 
-      const filterBarInnerContainerEl = document.createElement('div');
-      filterBarInnerContainerEl.classList.add(FILTER_BAR_INNER_CONTAINER);
-      filterBarInnerContainerEl.style.height = me.headerRowHeight + 'px';
-      filterBarInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
+      const filterBarInnerContainerEl = div(FILTER_BAR_INNER_CONTAINER, {
+        height: me.headerRowHeight + 'px',
+        width: me.getTotalColumnsWidth() + 'px'
+      });
 
       filterBarInnerEl.appendChild(filterBarInnerContainerEl);
       filterBarEl.appendChild(filterBarInnerEl);
@@ -6485,14 +6587,14 @@ Fancy.copyText = (text) => {
 
     createFilterBarCell(columnIndex) {
       const me = this;
-      const cell = document.createElement('div');
       const column = me.columns[columnIndex];
+      const cell = div(FILTER_BAR_CELL, {
+        width: column.width + 'px',
+        left: column.left + 'px'
+      });
 
-      cell.classList.add(FILTER_BAR_CELL);
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
-      cell.style.width = column.width + 'px';
-      cell.style.left = column.left + 'px';
 
       if (column.filter) {
         const filters = Object.entries(column.filters || {});
@@ -6710,8 +6812,7 @@ Fancy.copyText = (text) => {
 
       if(me.store.filters.length){
         me.store.expandForFiltering(group);
-      }
-      else {
+      } else {
         me.store.expand(group);
       }
 
@@ -6753,8 +6854,7 @@ Fancy.copyText = (text) => {
 
       if(me.store.filters.length){
         me.store.collapseForFiltering(group);
-      }
-      else {
+      } else {
         me.store.collapse(group);
       }
 
@@ -6903,6 +7003,42 @@ Fancy.copyText = (text) => {
       });
     },
 
+    updateRowGroupAggregations(){
+      const me = this;
+      const store = me.store;
+      const filters = store.filters;
+
+      // Aggregations work only for rowGroupType equals to 'column'
+      if(me.rowGroupType === 'row'){
+        return;
+      }
+
+      store.aggregations.forEach(ag => {
+        const rowGroups = me.bodyEl.querySelectorAll(`.${ROW_GROUP}`);
+        rowGroups.forEach(row => {
+          const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
+          const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
+
+          // Group was removed because all children were removed
+          if(!groupDetail){
+            return;
+          }
+
+          const item = me.getItemById(groupDetail.id);
+
+          const oldCell = row.querySelector(`div[col-id="${ag.index}"]`);
+          const columnIndex = Number(oldCell.getAttribute('col-index'));
+          const rowIndex = row?.getAttribute('row-index');
+
+          const newCell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
+          if(oldCell.innerHTML != newCell.innerHTML){
+            oldCell.remove();
+            row.appendChild(newCell);
+          }
+        });
+      });
+    },
+
     reConfigRowGroups(){
       const me = this;
       const store = me.store;
@@ -6916,8 +7052,7 @@ Fancy.copyText = (text) => {
         me.rowGroupBarItemColumns.forEach(column => {
           rowGroups.push(column.index);
         });
-      }
-      else {
+      } else {
         rowGroups = store.rowGroups;
       }
 
@@ -6959,6 +7094,11 @@ Fancy.copyText = (text) => {
     SVG_REMOVE
   } = Fancy.cls;
 
+  const {
+    div,
+    span
+  } = Fancy;
+
   /**
    * @mixin GridMixinRowGroupBar
    */
@@ -6967,19 +7107,17 @@ Fancy.copyText = (text) => {
     renderRowGroupBar() {
       const me = this;
 
-      const rowGroupBarEl = document.createElement('div');
-      rowGroupBarEl.classList.add(ROW_GROUP_BAR);
-      rowGroupBarEl.style.height = (this.headerRowHeight + 1) + 'px';
+      const rowGroupBarEl = div(ROW_GROUP_BAR, {
+        height: (this.headerRowHeight + 1) + 'px'
+      });
 
       const svgGroup = Fancy.svg.group;
-      const groupLogoEl = document.createElement('span');
-      groupLogoEl.classList.add(SVG_ITEM, SVG_GROUP);
+      const groupLogoEl = span([SVG_ITEM, SVG_GROUP]);
       groupLogoEl.innerHTML = svgGroup;
 
       rowGroupBarEl.appendChild(groupLogoEl);
 
-      const emptyTextEl = document.createElement('span');
-      emptyTextEl.classList.add(ROW_GROUP_BAR_EMPTY_TEXT);
+      const emptyTextEl = span([ROW_GROUP_BAR_EMPTY_TEXT]);
       emptyTextEl.innerHTML = 'Drag columns here to generate row groups';
 
       rowGroupBarEl.appendChild(emptyTextEl);
@@ -7037,36 +7175,30 @@ Fancy.copyText = (text) => {
     generateRowGroupBarItemEl(column){
       const me = this;
 
-      const containerEl = document.createElement('div');
-      containerEl.classList.add(ROW_GROUP_BAR_ITEM_CONTAINER);
+      const containerEl = div(ROW_GROUP_BAR_ITEM_CONTAINER);
       containerEl.setAttribute('row-group-order-index', String(me.rowGroupBarItems?.length || 0));
 
-      const groupItemEl = document.createElement('span');
-      groupItemEl.classList.add(ROW_GROUP_BAR_ITEM);
+      const groupItemEl = span(ROW_GROUP_BAR_ITEM);
 
-      const dragSvgEl = document.createElement('span');
-      dragSvgEl.classList.add(SVG_ITEM, SVG_DRAG);
+      const dragSvgEl = span([SVG_ITEM, SVG_DRAG]);
       dragSvgEl.innerHTML = Fancy.svg.groupCellDrag;
       groupItemEl.appendChild(dragSvgEl);
 
       dragSvgEl.addEventListener('mousedown', me.onRowGroupBarItemDragElMouseDown.bind(me));
 
-      const groupItemText = document.createElement('span');
-      groupItemText.classList.add(ROW_GROUP_BAR_ITEM_TEXT);
+      const groupItemText = span(ROW_GROUP_BAR_ITEM_TEXT);
       groupItemText.innerHTML = column.title;
       groupItemEl.appendChild(groupItemText);
 
-      const removeSvgEl = document.createElement('span');
-      removeSvgEl.classList.add(SVG_ITEM, SVG_REMOVE);
+      const removeSvgEl = span([SVG_ITEM, SVG_REMOVE]);
       removeSvgEl.innerHTML = Fancy.svg.remove;
       removeSvgEl.addEventListener('click', me.onRowGroupBarItemRemoveClick.bind(me));
       groupItemEl.appendChild(removeSvgEl);
 
       if(me.rowGroupBarItems?.length){
         const svgChevronRight = Fancy.svg.chevronRight;
-        const chevronEl = document.createElement('span');
+        const chevronEl = span([SVG_ITEM, SVG_CHEVRON_RIGHT]);
 
-        chevronEl.classList.add(SVG_ITEM, SVG_CHEVRON_RIGHT);
         chevronEl.innerHTML = svgChevronRight;
 
         if(me.rowGroupBarSeparator){
@@ -7126,8 +7258,7 @@ Fancy.copyText = (text) => {
               me.removeColumn(me.$rowGroupColumn);
             }
           }, 1);
-        }
-        else {
+        } else {
           me.activeRowGroupBarItemEl.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
 
           if(changedRowGroupItemOrderIndex !== undefined && changedRowGroupItemOrderIndex !== originalRowGroupItemOrderIndex){
@@ -7164,8 +7295,7 @@ Fancy.copyText = (text) => {
         me.rowGroupBarItemColumns.splice(columnIndex, 1);
         prevGroupItem.remove();
         me.reSetRowGroupOrderIndex();
-      }
-      else {
+      } else {
         const prevGroupItem = me.rowGroupBarItems.pop();
 
         me.rowGroupBarItemColumns.pop();
@@ -7185,6 +7315,10 @@ Fancy.copyText = (text) => {
       const rowGroupOrderIndex = Number(groupItemEl.getAttribute('row-group-order-index'));
       const groupItemToRemove = me.rowGroupBarItems.splice(rowGroupOrderIndex, 1)[0];
       const column = me.rowGroupBarItemColumns.splice(rowGroupOrderIndex, 1)[0];
+
+      if(me.isEditing){
+        me.hideActiveEditor();
+      }
 
       groupItemToRemove.remove();
       me.showColumn(column, true);
@@ -7207,7 +7341,9 @@ Fancy.copyText = (text) => {
       const me = this;
 
       me.rowGroupBarItems.forEach((item, index) => {
-        item.setAttribute('row-group-order-index', index);
+        if(item.getAttribute('row-group-order-index') !== String(index)){
+          item.setAttribute('row-group-order-index', index);
+        }
       });
     },
 
@@ -7303,8 +7439,7 @@ Fancy.copyText = (text) => {
 
       if(selected){
         row.classList.add(ROW_SELECTED);
-      }
-      else {
+      } else {
         row.classList.remove(ROW_SELECTED);
       }
 
@@ -7336,8 +7471,7 @@ Fancy.copyText = (text) => {
         rowCheckBoxes.forEach(checkBox => {
           checkBox.checked = true;
         });
-      }
-      else {
+      } else {
         row.classList.remove(ROW_SELECTED);
         rowCheckBoxes.forEach(checkBox => {
           checkBox.checked = false;
@@ -7367,8 +7501,7 @@ Fancy.copyText = (text) => {
 
       if(selected){
         row.classList.add(ROW_SELECTED);
-      }
-      else {
+      } else {
         row.classList.remove(ROW_SELECTED);
       }
 
@@ -7388,8 +7521,7 @@ Fancy.copyText = (text) => {
           if(childRowCheckBox){
             childRowCheckBox.checked = true;
           }
-        }
-        else {
+        } else {
           childRow.classList.remove(ROW_SELECTED);
           if(childRowCheckBox){
             childRowCheckBox.checked = false;
@@ -7466,8 +7598,7 @@ Fancy.copyText = (text) => {
           if(checkBoxEl){
             checkBoxEl.checked = true;
           }
-        }
-        else {
+        } else {
           row.classList.remove(ROW_SELECTED);
           if(checkBoxEl){
             checkBoxEl.indeterminate = false;
@@ -7831,6 +7962,8 @@ Fancy.copyText = (text) => {
       else {
         me.scrollToNotVisibleNewActiveCell(rowIndex, newColumnIndex);
       }
+
+      return cell;
     },
 
     setActiveCellRight(){
@@ -8322,15 +8455,14 @@ Fancy.copyText = (text) => {
             if(column.type === 'boolean' && column.editable){
               me.store.setById(itemId, column.index, !value);
               me.activeCellEl.querySelector('input').checked = !value;
-            }
-            else if(me.checkboxSelection){
+            } else if(me.checkboxSelection){
               me.selectRow(cell);
             }
           }
           break;
         case TAB:
           event.preventDefault();
-          me.onKeyTAB();
+          me.onKeyTAB(event.shiftKey);
           break;
         case DOWN:
           if(!me.isEditing){
@@ -8392,8 +8524,7 @@ Fancy.copyText = (text) => {
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellUp();
-        }
-        else {
+        } else {
           me.setActiveCellUp();
         }
       }
@@ -8404,8 +8535,7 @@ Fancy.copyText = (text) => {
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellDown();
-        }
-        else {
+        } else {
           me.setActiveCellDown();
         }
       }
@@ -8416,8 +8546,7 @@ Fancy.copyText = (text) => {
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellLeft();
-        }
-        else {
+        } else {
           me.setActiveCellLeft();
         }
       }
@@ -8428,8 +8557,7 @@ Fancy.copyText = (text) => {
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellRight();
-        }
-        else {
+        } else {
           me.setActiveCellRight();
         }
       }
@@ -8449,18 +8577,22 @@ Fancy.copyText = (text) => {
         me.openEditorForCell(me.activeCellEl);
       }
     },
-    onKeyTAB(){
+    onKeyTAB(shift){
       const me = this;
       if(me.active && me.hasActiveCell()) {
         if (me.isEditing) {
           me.hideActiveEditor();
 
-          const activeCell = me.setActiveCellRight();
+          const activeCell = shift? me.setActiveCellLeft() : me.setActiveCellRight();
           if (activeCell) {
             me.openEditorForCell(me.activeCellEl);
           }
         } else {
-          me.setActiveCellRight();
+          if(shift){
+            me.setActiveCellLeft();
+          } else {
+            me.setActiveCellRight();
+          }
         }
       }
     }
@@ -8485,6 +8617,8 @@ Fancy.copyText = (text) => {
   } = Fancy.cls;
 
   const OFFSET_DRAG_CELL = 10;
+  const span = Fancy.span;
+  const div = Fancy.div;
 
   /**
    * @mixin GridMixinColumnDrag
@@ -8519,8 +8653,7 @@ Fancy.copyText = (text) => {
             if((isColumnPresentedInRowGroupBar && !columnDragging.dragItemFromRowGroupBar) || columnDragging.column.$isRowGroupColumn){
               dragColumnCellEl.classList.add(FAKE_COLUMN_CELL_DRAGGING_DENY);
               dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_ALLOW);
-            }
-            else {
+            } else {
               dragColumnCellEl.classList.add(FAKE_COLUMN_CELL_DRAGGING_ALLOW);
               dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_DENY);
 
@@ -8529,16 +8662,16 @@ Fancy.copyText = (text) => {
                 me.hideColumn(me.columnDragging.column, true);
               }
             }
-          }
-          else {
+
+            columnDragging.rowGroupBarItemsRect = me.getRowGroupBarItemsRect();
+          } else {
             const cursorInRowGroupBarItem = me.isCursorInAnotherRowGroupBarItem(event, columnDragging.rowGroupBarItemsRect);
             const activeRowGroupIndex = Number(me.activeRowGroupBarItemEl.getAttribute('row-group-order-index'));
             if(cursorInRowGroupBarItem !== undefined && cursorInRowGroupBarItem !== activeRowGroupIndex){
               me.changeRowGroupBarItemOrder(activeRowGroupIndex, cursorInRowGroupBarItem);
             }
           }
-        }
-        else if(columnDragging.inBar) {
+        } else if(columnDragging.inBar) {
           delete columnDragging.inBar;
 
           if(columnDragging.dragItemFromRowGroupBar){
@@ -8551,15 +8684,13 @@ Fancy.copyText = (text) => {
             }
             dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_ALLOW, FAKE_COLUMN_CELL_DRAGGING_DENY);
           }
-        }
-        else {
+        } else {
           if(!me.debouceColumnDraggingFn){
             me.debouceColumnDraggingFn = Fancy.debounce(me.onColumnDragging, 50);
           }
           me.debouceColumnDraggingFn(event);
         }
-      }
-      else {
+      } else {
         if(me.isEditing){
           me.hideActiveEditor();
         }
@@ -8589,30 +8720,26 @@ Fancy.copyText = (text) => {
     },
 
     createDragColumnCellEl(column){
-      const cell = document.createElement('div');
+      const cell = div([FAKE_COLUMN_CELL_DRAGGING, 'fg-theme-' + this.theme]);
 
-      const textEl = document.createElement('span');
+      const textEl = span();
       const cellText = column.title;
       textEl.innerHTML = cellText;
 
       const svgGroup = Fancy.svg.group;
-      const groupLogoEl = document.createElement('span');
-      groupLogoEl.classList.add(SVG_ITEM, SVG_GROUP);
+      const groupLogoEl = span([SVG_ITEM, SVG_GROUP]);
       groupLogoEl.innerHTML = svgGroup;
 
-      const dragSvgEl = document.createElement('span');
-      dragSvgEl.classList.add(SVG_ITEM, SVG_DRAG);
+      const dragSvgEl = span([SVG_ITEM, SVG_DRAG]);
       dragSvgEl.innerHTML = Fancy.svg.groupCellDrag;
 
-      const blockSvgEl = document.createElement('span');
-      blockSvgEl.classList.add(SVG_ITEM, SVG_BLOCK);
+      const blockSvgEl = span([SVG_ITEM, SVG_BLOCK]);
       blockSvgEl.innerHTML = Fancy.svg.block;
 
       cell.appendChild(blockSvgEl);
       cell.appendChild(groupLogoEl);
       cell.appendChild(dragSvgEl);
       cell.appendChild(textEl);
-      cell.classList.add(FAKE_COLUMN_CELL_DRAGGING, 'fg-theme-' + this.theme);
       document.body.appendChild(cell);
 
       return cell;
@@ -8700,8 +8827,7 @@ Fancy.copyText = (text) => {
         oldOrders.push(removedIndex);
 
         me.reSetVisibleBodyColumnsIndex(columnIndex, toIndex, oldOrders);
-      }
-      else {
+      } else {
         for(let i=toIndex, iL=columnIndex;i<=iL;i++){
           oldOrders.push(i);
         }
@@ -8802,8 +8928,7 @@ Fancy.copyText = (text) => {
           };
 
           column.setter(params);
-        }
-        else {
+        } else {
           me.store.setById(itemId, column.index, value);
         }
         cell?.remove();
@@ -8814,9 +8939,19 @@ Fancy.copyText = (text) => {
 
         if(column.setter){
           me.rowCellsUpdateWithColumnIndex(row);
-        }
-        else {
+        } else {
           me.rowCellsUpdateWithColumnRender(row);
+        }
+
+        if(item.$rowGroupValue && column.agFn){
+          const splitted = item.$rowGroupValue.split('/');
+
+          for(let i = 0;i<splitted.length;i++){
+            const groupName = splitted.slice(0, splitted.length - i).join('/');
+
+            me.store.agGroupUpdateData(groupName, [item], 'update');
+            me.updateRowGroupAggregations();
+          }
         }
       };
 
@@ -8833,6 +8968,7 @@ Fancy.copyText = (text) => {
           case 'date':
             me.setStatusEditing(true);
 
+            column.editorField.valueBeforeEdit = valueBeforeEdit;
             column.editorField.setValue(value);
             column.editorField.show({
               width: `${column.width}px`,
@@ -8844,8 +8980,7 @@ Fancy.copyText = (text) => {
             me.activeEditor = column.editorField;
             break;
         }
-      }
-      else {
+      } else {
         switch(column.type){
           case 'string':
           case 'number':
@@ -8853,6 +8988,7 @@ Fancy.copyText = (text) => {
             me.setStatusEditing(true);
             column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${column.type}Field`)]({
               renderTo: me.editorsContainerEl,
+              valueBeforeEdit,
               value,
               style: {
                 position: 'absolute',
@@ -8888,7 +9024,7 @@ Fancy.copyText = (text) => {
                 }
               },
               onESC(){
-                memorizeChange(valueBeforeEdit);
+                memorizeChange(this.valueBeforeEdit);
                 me.hideActiveEditor();
               }
             });
@@ -8920,8 +9056,7 @@ Fancy.copyText = (text) => {
       if(value){
         me.gridEl.classList.add(EDITING);
         me.editingCell = me.activeCellEl;
-      }
-      else {
+      } else {
         me.gridEl.classList.remove(EDITING);
         delete me.editingCell;
       }
@@ -9016,10 +9151,142 @@ Fancy.copyText = (text) => {
           });
         });
       });
+    },
+
+    $processRowsToRemove(rows){
+      switch (Fancy.typeOf(rows)){
+        case 'string':
+          rows = [{
+            id: rows
+          }];
+          break;
+        case 'object':
+          rows = [rows];
+          break;
+        case 'array':
+          rows = rows.map((value)=>{
+            if(typeof value === 'string'){
+              return {
+                id: value
+              }
+            }
+
+            return value;
+          });
+          break;
+      }
+
+      return rows;
     }
   };
 
   Object.assign(Grid.prototype, GridMixinEdit);
+})();
+
+(()=>{
+	const {
+		FIELD,
+		FIELD_INPUT
+	} = Fancy.cls;
+
+	const {
+		ENTER,
+		ESC
+	} = Fancy.key;
+
+	const {
+		div,
+		input
+	} = Fancy;
+
+	class Field {
+		render() {
+			const me = this;
+			const el = div(FIELD, me.style);
+
+			delete me.style;
+
+			if(typeof me.renderTo === 'string'){
+				me.renderTo = document.getElementById(me.renderTo);
+			}
+
+			me.container = me.renderTo;
+
+			const elInput = input(FIELD_INPUT);
+			if(me.type === 'date'){
+				elInput.type = 'date';
+			}
+			elInput.value = me.value;
+			me.input = elInput;
+
+			el.appendChild(elInput);
+			me.el = el;
+
+			me.container.appendChild(el);
+		}
+
+		ons() {
+			const me = this;
+
+			//me.debounceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
+			//me.input.addEventListener('input', me.debounceInputFn);
+			me.input.addEventListener('input', me.onInput.bind(me));
+			me.input.addEventListener('keydown', me.onKeyDown.bind(me));
+		}
+
+		onInput(event) {
+			const me = this;
+			const value = event.target.value;
+
+			me.onChange?.(value, true);
+		}
+
+		onKeyDown(event){
+			const me = this;
+
+			switch (event.keyCode) {
+				case ENTER:
+					const value = event.target.value;
+					me.onEnter?.(value);
+					break;
+				case ESC:
+					me.onESC?.();
+					break;
+			}
+		}
+
+		setValue(value) {
+			const me = this;
+
+			me.input.value = value;
+			me.onChange?.(value, false);
+		}
+
+		focus(){
+			const me = this;
+
+			me.input.focus();
+		}
+
+		hide(){
+			const me = this;
+
+			me.el.style.display = 'none';
+		}
+
+		show(style){
+			const me = this;
+
+			me.el.style.display = '';
+
+			for(let p in style){
+				me.el.style[p] = style[p];
+			}
+		}
+	}
+
+	Fancy.Field = Field;
+
 })();
 
 (() => {
@@ -9082,6 +9349,11 @@ Fancy.copyText = (text) => {
     '-': 'Negative'
   };
 
+  const {
+    div,
+    input
+  } = Fancy;
+
   class FilterField {
     sign = '=';
     defaultSign = '=';
@@ -9099,14 +9371,11 @@ Fancy.copyText = (text) => {
 
     render() {
       const me = this;
-      const el = document.createElement('div');
+      const el = div(FILTER_FIELD);
 
       me.container = me.renderTo;
 
-      el.classList.add(FILTER_FIELD);
-
-      const elSign = document.createElement('div');
-      elSign.classList.add(FILTER_FIELD_SIGN);
+      const elSign = div(FILTER_FIELD_SIGN);
       elSign.innerHTML = [
         '<svg width="17" height="17" viewBox="0 0 24 24" style="vertical-align: middle; fill: currentcolor;">',
         '<path d=""></path>',
@@ -9114,13 +9383,11 @@ Fancy.copyText = (text) => {
       ].join('');
       me.elSign = elSign;
 
-      const elInput = document.createElement('input');
-      elInput.classList.add(FILTER_FIELD_INPUT);
+      const elInput = input(FILTER_FIELD_INPUT);
       elInput.value = me.value;
       me.input = elInput;
 
-      const elText = document.createElement('div');
-      elText.classList.add(FILTER_FIELD_TEXT);
+      const elText = div(FILTER_FIELD_TEXT);
       me.elText = elText;
 
       me.updateUI(FancySignText[me.sign || me.defaultSign]);
@@ -9176,14 +9443,13 @@ Fancy.copyText = (text) => {
 
     showComboList() {
       const me = this;
-      const el = document.createElement('div');
       const elSignRect = me.elSign.getBoundingClientRect();
       const top = elSignRect.top - 1 + elSignRect.height;
       const left = elSignRect.left;
-
-      el.classList.add(FILTER_FIELD_LIST);
-      el.style.top = `${top}px`;
-      el.style.left = `${left}px`;
+      const el = div(FILTER_FIELD_LIST, {
+        top: `${top}px`,
+        left: `${left}px`
+      });
 
       let signs = [];
 
@@ -9348,117 +9614,19 @@ Fancy.copyText = (text) => {
 })();
 
 (() => {
-  const {
-    FIELD,
-    FIELD_INPUT
-  } = Fancy.cls;
 
-  const {
-    ENTER,
-    ESC
-  } = Fancy.key;
-
-  class StringField {
+  class StringField extends Fancy.Field {
     value = '';
+    type = 'string';
 
     constructor(config) {
-      const me = this;
+      super(config);
 
+      const me = this;
       Object.assign(me, config);
 
       me.render();
       me.ons();
-    }
-
-    render() {
-      const me = this;
-      const el = document.createElement('div');
-
-      if(typeof me.renderTo === 'string'){
-        me.renderTo = document.getElementById(me.renderTo);
-      }
-
-      if(me.style){
-        for(let p in me.style){
-          el.style[p] = me.style[p];
-        }
-
-        delete me.style;
-      }
-
-      me.container = me.renderTo;
-
-      el.classList.add(FIELD);
-
-      const elInput = document.createElement('input');
-      elInput.classList.add(FIELD_INPUT);
-      elInput.value = me.value;
-      me.input = elInput;
-
-      el.appendChild(elInput);
-      me.el = el;
-
-      me.container.appendChild(el);
-    }
-
-    ons() {
-      const me = this;
-
-      //me.debounceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
-      //me.input.addEventListener('input', me.debounceInputFn);
-      me.input.addEventListener('input', me.onInput.bind(me));
-      me.input.addEventListener('keydown', me.onKeyDown.bind(me));
-    }
-
-    onInput(event) {
-      const me = this;
-      const value = event.target.value;
-
-      me.onChange?.(value, true);
-    }
-
-    onKeyDown(event){
-      const me = this;
-
-      switch (event.keyCode) {
-        case ENTER:
-          const value = event.target.value;
-          me.onEnter?.(value);
-          break;
-        case ESC:
-          me.onESC?.();
-          break;
-      }
-    }
-
-    setValue(value) {
-      const me = this;
-
-      me.input.value = value;
-
-      me.onChange?.(value, false);
-    }
-
-    show(style){
-      const me = this;
-
-      me.el.style.display = '';
-
-      for(let p in style){
-        me.el.style[p] = style[p];
-      }
-    }
-
-    focus(){
-      const me = this;
-
-      me.input.focus();
-    }
-
-    hide(){
-      const me = this;
-
-      me.el.style.display = 'none';
     }
   }
 
@@ -9467,117 +9635,19 @@ Fancy.copyText = (text) => {
 })();
 
 (() => {
-  const {
-    FIELD,
-    FIELD_INPUT
-  } = Fancy.cls;
 
-  const {
-    ENTER,
-    ESC
-  } = Fancy.key;
-
-  class NumberField {
+  class NumberField extends Fancy.Field {
     value = '';
+    type = 'number';
 
     constructor(config) {
-      const me = this;
+      super(config);
 
+      const me = this;
       Object.assign(me, config);
 
       me.render();
       me.ons();
-    }
-
-    render() {
-      const me = this;
-      const el = document.createElement('div');
-
-      if(typeof me.renderTo === 'string'){
-        me.renderTo = document.getElementById(me.renderTo);
-      }
-
-      if(me.style){
-        for(let p in me.style){
-          el.style[p] = me.style[p];
-        }
-
-        delete me.style;
-      }
-
-      me.container = me.renderTo;
-
-      el.classList.add(FIELD);
-
-      const elInput = document.createElement('input');
-      elInput.classList.add(FIELD_INPUT);
-      elInput.value = me.value;
-      me.input = elInput;
-
-      el.appendChild(elInput);
-      me.el = el;
-
-      me.container.appendChild(el);
-    }
-
-    ons() {
-      const me = this;
-
-      //me.debounceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
-      //me.input.addEventListener('input', me.debounceInputFn);
-      me.input.addEventListener('input', me.onInput.bind(me));
-      me.input.addEventListener('keydown', me.onKeyDown.bind(me));
-    }
-
-    onInput(event) {
-      const me = this;
-      const value = event.target.value;
-
-      me.onChange?.(value, true);
-    }
-
-    onKeyDown(event){
-      const me = this;
-
-      switch (event.keyCode) {
-        case ENTER:
-          const value = event.target.value;
-          me.onEnter?.(value);
-          break;
-        case ESC:
-          me.onESC?.();
-          break;
-      }
-    }
-
-    setValue(value) {
-      const me = this;
-
-      me.input.value = value;
-
-      me.onChange?.(value, false);
-    }
-
-    show(style){
-      const me = this;
-
-      me.el.style.display = '';
-
-      for(let p in style){
-        me.el.style[p] = style[p];
-      }
-    }
-
-    focus(){
-      const me = this;
-
-      me.input.focus();
-    }
-
-    hide(){
-      const me = this;
-
-      me.el.style.display = 'none';
     }
   }
 

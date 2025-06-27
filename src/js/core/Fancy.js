@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '0.7.13',
+  version: '0.7.14',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -80,6 +80,48 @@ const Fancy = {
     if(type === 'object'){
       return 'object';
     }
+  },
+  // shortcut to creat div
+  /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   */
+  div(cls = [], style = {}){
+    return Fancy.newElement('div', cls, style);
+  },
+  /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   */
+  span(cls = [], style = {}){
+    return Fancy.newElement('span', cls, style);
+  },
+  /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   */
+  input(cls = [], style = {}){
+    return Fancy.newElement('input', cls, style);
+  },
+  /**
+   * @param {String} tag
+   * @param {String|Array} cls
+   * @param {Object} style
+   */
+  newElement(tag, cls, style = {}){
+    const el = document.createElement(tag);
+
+    if(Array.isArray(cls)){
+      el.classList.add(...cls);
+    } else if(typeof cls === 'string'){
+      el.classList.add(cls);
+    }
+
+    for(let p in style){
+      el.style[p] = style[p];
+    }
+
+    return el;
   }
 };
 

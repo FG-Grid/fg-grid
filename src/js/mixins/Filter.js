@@ -6,6 +6,8 @@
     FILTER_BAR_INNER_CONTAINER
   } = Fancy.cls;
 
+  const div = Fancy.div;
+
   /**
    * @mixin GridMixinFilter
    */
@@ -33,18 +35,18 @@
     renderFilterBar() {
       const me = this;
 
-      const filterBarEl = document.createElement('div');
-      filterBarEl.classList.add(FILTER_BAR);
-      filterBarEl.style.height = (this.headerRowHeight + 1) + 'px';
+      const filterBarEl = div(FILTER_BAR,{
+        height: (this.headerRowHeight + 1) + 'px'
+      });
 
-      const filterBarInnerEl = document.createElement('div');
-      filterBarInnerEl.classList.add(FILTER_BAR_INNER);
-      filterBarInnerEl.style.width = (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px';
+      const filterBarInnerEl = div(FILTER_BAR_INNER, {
+        width: (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px'
+      });
 
-      const filterBarInnerContainerEl = document.createElement('div');
-      filterBarInnerContainerEl.classList.add(FILTER_BAR_INNER_CONTAINER);
-      filterBarInnerContainerEl.style.height = me.headerRowHeight + 'px';
-      filterBarInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
+      const filterBarInnerContainerEl = div(FILTER_BAR_INNER_CONTAINER, {
+        height: me.headerRowHeight + 'px',
+        width: me.getTotalColumnsWidth() + 'px'
+      });
 
       filterBarInnerEl.appendChild(filterBarInnerContainerEl);
       filterBarEl.appendChild(filterBarInnerEl);
@@ -57,14 +59,14 @@
 
     createFilterBarCell(columnIndex) {
       const me = this;
-      const cell = document.createElement('div');
       const column = me.columns[columnIndex];
+      const cell = div(FILTER_BAR_CELL, {
+        width: column.width + 'px',
+        left: column.left + 'px'
+      });
 
-      cell.classList.add(FILTER_BAR_CELL);
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
-      cell.style.width = column.width + 'px';
-      cell.style.left = column.left + 'px';
 
       if (column.filter) {
         const filters = Object.entries(column.filters || {});

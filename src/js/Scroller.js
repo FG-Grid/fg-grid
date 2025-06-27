@@ -9,6 +9,8 @@
     SCROLLBAR_INVISIBLE
   } = Fancy.cls;
 
+  const div = Fancy.div;
+
   class Scroller {
     startRow = 0;
     endRow = 0;
@@ -191,20 +193,19 @@
     renderVerticalScroll() {
       const me = this;
 
-      const verticalScrollEl = document.createElement('div');
-      verticalScrollEl.classList.add(BODY_VERTICAL_SCROLL);
+      const verticalScrollEl = div(BODY_VERTICAL_SCROLL);
 
       if (me.isDomInvisibleScrollbar) {
         verticalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
       }
 
-      const verticalScrollContainerEl = document.createElement('div');
-      verticalScrollContainerEl.classList.add(BODY_VERTICAL_SCROLL_CONTAINER);
-      verticalScrollContainerEl.style.width = me.scrollBarWidth + 'px';
+      const verticalScrollContainerEl = div(BODY_VERTICAL_SCROLL_CONTAINER,{
+        width: me.scrollBarWidth + 'px'
+      });
 
-      const verticalScrollSizeEl = document.createElement('div');
-      verticalScrollSizeEl.classList.add(BODY_VERTICAL_SCROLL_SIZE);
-      verticalScrollSizeEl.style.width = me.scrollBarWidth + 'px';
+      const verticalScrollSizeEl = div(BODY_VERTICAL_SCROLL_SIZE, {
+        width: me.scrollBarWidth + 'px'
+      });
 
       verticalScrollContainerEl.appendChild(verticalScrollSizeEl);
       verticalScrollEl.appendChild(verticalScrollContainerEl);
@@ -220,34 +221,29 @@
     renderHorizontalScroll() {
       const me = this;
 
-      const horizontalScrollEl = document.createElement('div');
-      horizontalScrollEl.classList.add(BODY_HORIZONTAL_SCROLL);
+      const horizontalScrollEl = div(BODY_HORIZONTAL_SCROLL,{
+        height: me.scrollBarWidth + 'px',
+        minHeight: me.scrollBarWidth + 'px',
+        maxHeight: me.scrollBarWidth + 'px',
+        width: (me.isDomInvisibleScrollbar || !me.isVerticalVisible())? `100%`:
+          `calc(100% - ${me.scrollBarWidth}px)`
+      });
 
       if (me.isDomInvisibleScrollbar) {
         horizontalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
       }
 
-      horizontalScrollEl.style.height = me.scrollBarWidth + 'px';
-      horizontalScrollEl.style.minHeight = me.scrollBarWidth + 'px';
-      horizontalScrollEl.style.maxHeight = me.scrollBarWidth + 'px';
+      const horizontalScrollContainerEl = div(BODY_HORIZONTAL_SCROLL_CONTAINER, {
+        height: me.scrollBarWidth + 'px',
+        minHeight: me.scrollBarWidth + 'px',
+        maxHeight: me.scrollBarWidth + 'px'
+      });
 
-      if (me.isDomInvisibleScrollbar || !me.isVerticalVisible()) {
-        horizontalScrollEl.style.width = `100%`;
-      } else {
-        horizontalScrollEl.style.width = `calc(100% - ${me.scrollBarWidth}px)`;
-      }
-
-      const horizontalScrollContainerEl = document.createElement('div');
-      horizontalScrollContainerEl.classList.add(BODY_HORIZONTAL_SCROLL_CONTAINER);
-      horizontalScrollContainerEl.style.height = me.scrollBarWidth + 'px';
-      horizontalScrollContainerEl.style.minHeight = me.scrollBarWidth + 'px';
-      horizontalScrollContainerEl.style.maxHeight = me.scrollBarWidth + 'px';
-
-      const horizontalScrollSizeEl = document.createElement('div');
-      horizontalScrollSizeEl.classList.add(BODY_HORIZONTAL_SCROLL_SIZE);
-      horizontalScrollSizeEl.style.height = me.scrollBarWidth + 'px';
-      horizontalScrollSizeEl.style.minHeight = me.scrollBarWidth + 'px';
-      horizontalScrollSizeEl.style.maxHeight = me.scrollBarWidth + 'px';
+      const horizontalScrollSizeEl = div(BODY_HORIZONTAL_SCROLL_SIZE, {
+        height: me.scrollBarWidth + 'px',
+        minHeight: me.scrollBarWidth + 'px',
+        maxHeight: me.scrollBarWidth + 'px'
+      });
 
       horizontalScrollContainerEl.appendChild(horizontalScrollSizeEl);
       horizontalScrollEl.appendChild(horizontalScrollContainerEl);
@@ -514,15 +510,17 @@
 
     getScrollbarWidth() {
       const body = document.body;
-      const div = document.createElement('div');
-      div.style.width = div.style.height = '100px';
-      div.style.opacity = '0';
-      div.style.overflow = 'scroll';
-      div.style.msOverflowStyle = 'scrollbar'; // needed for WinJS apps
-      div.style.position = 'absolute';
-      body.appendChild(div);
+      const el = div([],{
+        width: '100px',
+        height: '100px',
+        opacity: '0',
+        overflow: 'scroll',
+        msOverflowStyle: 'scrollbar', // needed for WinJS apps
+        position: 'absolute'
+      });
+      body.appendChild(el);
 
-      let width = div.offsetWidth - div.clientWidth;
+      let width = el.offsetWidth - el.clientWidth;
       // if width is 0 and client width is 0, means the DOM isn't ready
       /*
       if (width === 0 && div.clientWidth === 0) {
@@ -530,8 +528,8 @@
       }
        */
 
-      if (div.parentNode) {
-        div.parentNode.removeChild(div);
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
       }
 
       if (width === 0) {

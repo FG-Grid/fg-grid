@@ -61,15 +61,14 @@
             if(column.type === 'boolean' && column.editable){
               me.store.setById(itemId, column.index, !value);
               me.activeCellEl.querySelector('input').checked = !value;
-            }
-            else if(me.checkboxSelection){
+            } else if(me.checkboxSelection){
               me.selectRow(cell);
             }
           }
           break;
         case TAB:
           event.preventDefault();
-          me.onKeyTAB();
+          me.onKeyTAB(event.shiftKey);
           break;
         case DOWN:
           if(!me.isEditing){
@@ -131,8 +130,7 @@
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellUp();
-        }
-        else {
+        } else {
           me.setActiveCellUp();
         }
       }
@@ -143,8 +141,7 @@
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellDown();
-        }
-        else {
+        } else {
           me.setActiveCellDown();
         }
       }
@@ -155,8 +152,7 @@
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellLeft();
-        }
-        else {
+        } else {
           me.setActiveCellLeft();
         }
       }
@@ -167,8 +163,7 @@
       if(me.active && me.hasActiveCell()){
         if(shift){
           me.setShiftCellRight();
-        }
-        else {
+        } else {
           me.setActiveCellRight();
         }
       }
@@ -188,18 +183,22 @@
         me.openEditorForCell(me.activeCellEl);
       }
     },
-    onKeyTAB(){
+    onKeyTAB(shift){
       const me = this;
       if(me.active && me.hasActiveCell()) {
         if (me.isEditing) {
           me.hideActiveEditor();
 
-          const activeCell = me.setActiveCellRight();
+          const activeCell = shift? me.setActiveCellLeft() : me.setActiveCellRight();
           if (activeCell) {
             me.openEditorForCell(me.activeCellEl);
           }
         } else {
-          me.setActiveCellRight();
+          if(shift){
+            me.setActiveCellLeft();
+          } else {
+            me.setActiveCellRight();
+          }
         }
       }
     }

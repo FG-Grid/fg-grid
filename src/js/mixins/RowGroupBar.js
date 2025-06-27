@@ -14,6 +14,11 @@
     SVG_REMOVE
   } = Fancy.cls;
 
+  const {
+    div,
+    span
+  } = Fancy;
+
   /**
    * @mixin GridMixinRowGroupBar
    */
@@ -22,19 +27,17 @@
     renderRowGroupBar() {
       const me = this;
 
-      const rowGroupBarEl = document.createElement('div');
-      rowGroupBarEl.classList.add(ROW_GROUP_BAR);
-      rowGroupBarEl.style.height = (this.headerRowHeight + 1) + 'px';
+      const rowGroupBarEl = div(ROW_GROUP_BAR, {
+        height: (this.headerRowHeight + 1) + 'px'
+      });
 
       const svgGroup = Fancy.svg.group;
-      const groupLogoEl = document.createElement('span');
-      groupLogoEl.classList.add(SVG_ITEM, SVG_GROUP);
+      const groupLogoEl = span([SVG_ITEM, SVG_GROUP]);
       groupLogoEl.innerHTML = svgGroup;
 
       rowGroupBarEl.appendChild(groupLogoEl);
 
-      const emptyTextEl = document.createElement('span');
-      emptyTextEl.classList.add(ROW_GROUP_BAR_EMPTY_TEXT);
+      const emptyTextEl = span([ROW_GROUP_BAR_EMPTY_TEXT]);
       emptyTextEl.innerHTML = 'Drag columns here to generate row groups';
 
       rowGroupBarEl.appendChild(emptyTextEl);
@@ -92,36 +95,30 @@
     generateRowGroupBarItemEl(column){
       const me = this;
 
-      const containerEl = document.createElement('div');
-      containerEl.classList.add(ROW_GROUP_BAR_ITEM_CONTAINER);
+      const containerEl = div(ROW_GROUP_BAR_ITEM_CONTAINER);
       containerEl.setAttribute('row-group-order-index', String(me.rowGroupBarItems?.length || 0));
 
-      const groupItemEl = document.createElement('span');
-      groupItemEl.classList.add(ROW_GROUP_BAR_ITEM);
+      const groupItemEl = span(ROW_GROUP_BAR_ITEM);
 
-      const dragSvgEl = document.createElement('span');
-      dragSvgEl.classList.add(SVG_ITEM, SVG_DRAG);
+      const dragSvgEl = span([SVG_ITEM, SVG_DRAG]);
       dragSvgEl.innerHTML = Fancy.svg.groupCellDrag;
       groupItemEl.appendChild(dragSvgEl);
 
       dragSvgEl.addEventListener('mousedown', me.onRowGroupBarItemDragElMouseDown.bind(me));
 
-      const groupItemText = document.createElement('span');
-      groupItemText.classList.add(ROW_GROUP_BAR_ITEM_TEXT);
+      const groupItemText = span(ROW_GROUP_BAR_ITEM_TEXT);
       groupItemText.innerHTML = column.title;
       groupItemEl.appendChild(groupItemText);
 
-      const removeSvgEl = document.createElement('span');
-      removeSvgEl.classList.add(SVG_ITEM, SVG_REMOVE);
+      const removeSvgEl = span([SVG_ITEM, SVG_REMOVE]);
       removeSvgEl.innerHTML = Fancy.svg.remove;
       removeSvgEl.addEventListener('click', me.onRowGroupBarItemRemoveClick.bind(me));
       groupItemEl.appendChild(removeSvgEl);
 
       if(me.rowGroupBarItems?.length){
         const svgChevronRight = Fancy.svg.chevronRight;
-        const chevronEl = document.createElement('span');
+        const chevronEl = span([SVG_ITEM, SVG_CHEVRON_RIGHT]);
 
-        chevronEl.classList.add(SVG_ITEM, SVG_CHEVRON_RIGHT);
         chevronEl.innerHTML = svgChevronRight;
 
         if(me.rowGroupBarSeparator){
@@ -181,8 +178,7 @@
               me.removeColumn(me.$rowGroupColumn);
             }
           }, 1);
-        }
-        else{
+        } else {
           me.activeRowGroupBarItemEl.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
 
           if(changedRowGroupItemOrderIndex !== undefined && changedRowGroupItemOrderIndex !== originalRowGroupItemOrderIndex){
@@ -219,8 +215,7 @@
         me.rowGroupBarItemColumns.splice(columnIndex, 1);
         prevGroupItem.remove();
         me.reSetRowGroupOrderIndex();
-      }
-      else {
+      } else {
         const prevGroupItem = me.rowGroupBarItems.pop();
 
         me.rowGroupBarItemColumns.pop();
@@ -240,6 +235,10 @@
       const rowGroupOrderIndex = Number(groupItemEl.getAttribute('row-group-order-index'));
       const groupItemToRemove = me.rowGroupBarItems.splice(rowGroupOrderIndex, 1)[0];
       const column = me.rowGroupBarItemColumns.splice(rowGroupOrderIndex, 1)[0];
+
+      if(me.isEditing){
+        me.hideActiveEditor();
+      }
 
       groupItemToRemove.remove();
       me.showColumn(column, true);
@@ -262,7 +261,9 @@
       const me = this;
 
       me.rowGroupBarItems.forEach((item, index) => {
-        item.setAttribute('row-group-order-index', index);
+        if(item.getAttribute('row-group-order-index') !== String(index)){
+          item.setAttribute('row-group-order-index', index);
+        }
       });
     },
 

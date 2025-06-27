@@ -36,6 +36,7 @@ Fancy.cls = {
 
   // Cell
   CELL: 'fg-cell',
+  CELL_VALUE: 'fg-cell-value',
   ANIMATE_CELLS_POSITION: 'fg-animate-cells-position',
   GRID_CELLS_RIGHT_BORDER: 'fg-enabled-cell-right-border',
   CELL_BOOLEAN: 'fg-cell-boolean',

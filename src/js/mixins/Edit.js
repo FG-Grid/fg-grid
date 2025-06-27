@@ -73,8 +73,7 @@
           }
 
           column.setter(params);
-        }
-        else {
+        } else {
           me.store.setById(itemId, column.index, value);
         }
         cell?.remove();
@@ -85,9 +84,19 @@
 
         if(column.setter){
           me.rowCellsUpdateWithColumnIndex(row);
-        }
-        else {
+        } else {
           me.rowCellsUpdateWithColumnRender(row);
+        }
+
+        if(item.$rowGroupValue && column.agFn){
+          const splitted = item.$rowGroupValue.split('/');
+
+          for(let i = 0;i<splitted.length;i++){
+            const groupName = splitted.slice(0, splitted.length - i).join('/');
+
+            me.store.agGroupUpdateData(groupName, [item], 'update');
+            me.updateRowGroupAggregations();
+          }
         }
       }
 
@@ -104,6 +113,7 @@
           case 'date':
             me.setStatusEditing(true);
 
+            column.editorField.valueBeforeEdit = valueBeforeEdit;
             column.editorField.setValue(value);
             column.editorField.show({
               width: `${column.width}px`,
@@ -115,8 +125,7 @@
             me.activeEditor = column.editorField;
             break;
         }
-      }
-      else{
+      } else {
         switch(column.type){
           case 'string':
           case 'number':
@@ -124,6 +133,7 @@
             me.setStatusEditing(true);
             column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${column.type}Field`)]({
               renderTo: me.editorsContainerEl,
+              valueBeforeEdit,
               value,
               style: {
                 position: 'absolute',
@@ -159,7 +169,7 @@
                 }
               },
               onESC(){
-                memorizeChange(valueBeforeEdit);
+                memorizeChange(this.valueBeforeEdit);
                 me.hideActiveEditor();
               }
             });
@@ -191,8 +201,7 @@
       if(value){
         me.gridEl.classList.add(EDITING);
         me.editingCell = me.activeCellEl;
-      }
-      else{
+      } else {
         me.gridEl.classList.remove(EDITING);
         delete me.editingCell;
       }
@@ -287,6 +296,32 @@
           });
         });
       });
+    },
+
+    $processRowsToRemove(rows){
+      switch (Fancy.typeOf(rows)){
+        case 'string':
+          rows = [{
+            id: rows
+          }]
+          break;
+        case 'object':
+          rows = [rows];
+          break;
+        case 'array':
+          rows = rows.map((value)=>{
+            if(typeof value === 'string'){
+              return {
+                id: value
+              }
+            }
+
+            return value;
+          });
+          break;
+      }
+
+      return rows;
     }
   }
 

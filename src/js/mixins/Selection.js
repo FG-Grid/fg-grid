@@ -35,8 +35,7 @@
 
       if(selected){
         row.classList.add(ROW_SELECTED);
-      }
-      else{
+      } else {
         row.classList.remove(ROW_SELECTED);
       }
 
@@ -68,8 +67,7 @@
         rowCheckBoxes.forEach(checkBox => {
           checkBox.checked = true;
         });
-      }
-      else{
+      } else {
         row.classList.remove(ROW_SELECTED);
         rowCheckBoxes.forEach(checkBox => {
           checkBox.checked = false;
@@ -99,8 +97,7 @@
 
       if(selected){
         row.classList.add(ROW_SELECTED);
-      }
-      else{
+      } else {
         row.classList.remove(ROW_SELECTED);
       }
 
@@ -120,8 +117,7 @@
           if(childRowCheckBox){
             childRowCheckBox.checked = true;
           }
-        }
-        else{
+        } else {
           childRow.classList.remove(ROW_SELECTED);
           if(childRowCheckBox){
             childRowCheckBox.checked = false;
@@ -198,8 +194,7 @@
           if(checkBoxEl){
             checkBoxEl.checked = true;
           }
-        }
-        else{
+        } else {
           row.classList.remove(ROW_SELECTED);
           if(checkBoxEl){
             checkBoxEl.indeterminate = false;
@@ -563,6 +558,8 @@
       else{
         me.scrollToNotVisibleNewActiveCell(rowIndex, newColumnIndex);
       }
+
+      return cell;
     },
 
     setActiveCellRight(){

@@ -24,8 +24,7 @@
         // Vertical scroll
         changed = me.scroller.deltaChange(delta);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
-      }
-      else{
+      } else {
         // Horizontal scroll
         changed = me.scroller.horizontalDeltaChange(delta);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
@@ -60,8 +59,7 @@
         // Vertical scroll
         changed = me.scroller.deltaChange(event.deltaY);
         me.bodyInnerEl.scrollTop = me.scroller.scrollTop;
-      }
-      else if(event.deltaX){
+      } else if(event.deltaX) {
         // Horizontal scroll
         changed = me.scroller.horizontalDeltaChange(event.deltaX);
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;

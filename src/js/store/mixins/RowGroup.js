@@ -326,38 +326,41 @@
 
       me.expandedGroups = {};
 
-      if (typeof me.rowGroupExpanded === 'function') {
-        const groupNames = Object.keys(Object.groupBy(me.data, row => row.$rowGroupValue));
-        const parentGroups = {};
-        groupNames.forEach(group => {
-          const splitted = group.split('/');
-          const iL = splitted.length;
+      switch(typeof me.rowGroupExpanded){
+        case 'function':
+        case 'boolean':
+          const groupNames = Object.keys(Object.groupBy(me.data, row => row.$rowGroupValue));
+          const parentGroups = {};
+          groupNames.forEach(group => {
+            const splitted = group.split('/');
+            const iL = splitted.length;
 
-          for (let i = 0; i < iL; i++) {
-            splitted.pop();
-            parentGroups[splitted.join('/')] = true;
-          }
-        });
+            for (let i = 0; i < iL; i++) {
+              splitted.pop();
+              parentGroups[splitted.join('/')] = true;
+            }
+          });
 
-        const parentGroupNames = Object.keys(parentGroups);
+          const parentGroupNames = Object.keys(parentGroups);
 
-        const rowGroupExpanded = [].concat(groupNames).concat(parentGroupNames).sort();
+          const rowGroupExpanded = [].concat(groupNames).concat(parentGroupNames).sort();
 
-        rowGroupExpanded.forEach(group => {
-          const expanded = me.rowGroupExpanded(group);
+          rowGroupExpanded.forEach(group => {
+            const expanded = me.rowGroupExpanded === true? true: me.rowGroupExpanded(group);
 
-          me.expandedGroups[group] = expanded;
+            me.expandedGroups[group] = expanded;
 
-          if (expanded) {
-            rowGroupExpanded.push(group);
-          }
-        });
+            if (expanded && !rowGroupExpanded.includes(group)) {
+              rowGroupExpanded.push(group);
+            }
+          });
 
-        me.rowGroupExpanded = rowGroupExpanded;
-      } else {
-        me.rowGroupExpanded.forEach(group => {
-          me.expandedGroups[group] = true;
-        });
+          me.rowGroupExpanded = rowGroupExpanded;
+          break;
+        default:
+          me.rowGroupExpanded.forEach(group => {
+            me.expandedGroups[group] = true;
+          });
       }
     },
 
@@ -861,10 +864,14 @@
 
       addToGroupsChildren.forEach(group => {
         const splitted = group.split('/');
+
+        if(splitted.length === 1){
+          return;
+        }
+
         const parentGroup = splitted.slice(0, splitted.length - 1).join('/');
 
         me.groupsChildren[parentGroup] = me.groupsChildren[parentGroup] || [];
-
         me.groupsChildren[parentGroup].push(me.groupDetails[group]);
         if(me.groupDetails[parentGroup].$hasChildrenGroups){
           me.groupsChildren[parentGroup].sort((groupA, groupB) => {
@@ -877,6 +884,77 @@
           });
         }
       })
+    },
+
+    agGroupUpdateData(groupName, items, sign = '-'){
+      const me = this;
+      const groupDetails = me.groupDetails[groupName];
+
+      // group was removed
+      if(!groupDetails){
+        return;
+      }
+
+      const groupAgValues = groupDetails.$agValues || {};
+      const groupChildren = me.groupsChildren[groupName];
+
+      me.aggregations?.forEach(aggregation => {
+        const index = aggregation.index;
+        items.forEach(item => {
+          if (item.$rowGroupValue.includes(groupName) === false){
+            return;
+          }
+
+          // Fast update for parent aggregation value
+          if (aggregation.fn === 'sum' && sign !== 'update'){
+            if (groupAgValues[index] === undefined) {
+              groupAgValues[index] = 0;
+            }
+
+            switch (sign) {
+              case '-':
+                groupAgValues[index] -= item[index];
+                break;
+              case '+':
+                groupAgValues[index] += item[index];
+                break;
+            }
+          }
+          else{
+            const values = groupChildren.map(child => {
+              let value = child.$agValues ? child.$agValues[index] : child[index];
+              value = Number(value);
+              if(isNaN(value)){
+                value = 0;
+              }
+
+              return value;
+            });
+            groupAgValues[index] = me.getAggregationResult(aggregation, values);
+          }
+        });
+      });
+    },
+
+    isItemInCollapsedGroup(item){
+      const splitted = item.$rowGroupValue.split('/');
+
+      if(item.$isGroupRow){
+        splitted.pop();
+      }
+
+      for(let i = 0;i<splitted.length;i++) {
+        const name = splitted.join('/');
+        const expanded = this.expandedGroups[name];
+
+        if(!expanded){
+          return true;
+        }
+
+        splitted.pop();
+      }
+
+      return false;
     }
   }
 

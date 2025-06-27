@@ -26,6 +26,12 @@
     ROW_GROUP_BAR_ITEM_ACTIVE
   } = Fancy.cls;
 
+  const {
+    div,
+    span,
+    input
+  } = Fancy;
+
   /**
    * @mixin GridMixinHeader
    */
@@ -121,11 +127,12 @@
 
     createHeaderCell(columnIndex) {
       const me = this;
-      const cell = document.createElement('div');
       const column = me.columns[columnIndex];
+      const cell = div(HEADER_CELL, {
+        width: column.width + 'px',
+        left: column.left + 'px'
+      });
       const value = column.title;
-
-      cell.classList.add(HEADER_CELL);
 
       if(column.sortable && column.type){
         cell.classList.add(HEADER_CELL_SORTABLE);
@@ -137,21 +144,14 @@
 
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
-      cell.style.width = column.width + 'px';
-      cell.style.left = column.left + 'px';
 
-      const label = document.createElement('div');
-      label.classList.add(HEADER_CELL_LABEL);
-
-      const cellText = document.createElement('div');
-      cellText.classList.add(HEADER_CELL_TEXT);
+      const label = div(HEADER_CELL_LABEL);
+      const cellText = div(HEADER_CELL_TEXT);
       cellText.innerHTML = value;
 
-      const filterContainer = document.createElement('span');
-      filterContainer.classList.add(FILTER_INDICATOR_CONTAINER);
+      const filterContainer = span(FILTER_INDICATOR_CONTAINER);
 
-      const elFilter = document.createElement('span');
-      elFilter.classList.add(HEADER_FILTER_EL);
+      const elFilter = span(HEADER_FILTER_EL);
       if(!Object.entries(column.filters || {}).length){
         elFilter.classList.add(HIDDEN);
       }
@@ -159,22 +159,18 @@
       filterContainer.appendChild(elFilter);
       column.elFilter = elFilter;
 
-      const sortContainer = document.createElement('span');
-      sortContainer.classList.add(SORT_INDICATOR_CONTAINER);
+      const sortContainer = span(SORT_INDICATOR_CONTAINER);
 
-      const elSortOrder = document.createElement('span');
-      elSortOrder.classList.add(SORT_ORDER);
+      const elSortOrder = span(SORT_ORDER);
       if(!column.sortOrder){
         elSortOrder.classList.add(HIDDEN);
-      }
-      else{
+      } else {
         elSortOrder.innerHTML = column.sortOrder;
       }
       sortContainer.appendChild(elSortOrder);
       column.elSortOrder = elSortOrder;
 
-      const elSortAsc = document.createElement('span');
-      elSortAsc.classList.add(SORT_ASC);
+      const elSortAsc = span(SORT_ASC);
       if(column.sort !== 'ASC'){
         elSortAsc.classList.add(HIDDEN);
       }
@@ -182,7 +178,7 @@
       sortContainer.appendChild(elSortAsc);
       column.elSortAsc = elSortAsc;
 
-      const elSortDesc = document.createElement('span');
+      const elSortDesc = span();
       elSortDesc.classList.add(SORT_DESC);
       if(column.sort !== 'DESC'){
         elSortDesc.classList.add(HIDDEN);
@@ -191,26 +187,22 @@
       sortContainer.appendChild(elSortDesc);
       column.elSortDesc = elSortDesc;
 
-      const cellResize = document.createElement('div');
-      cellResize.classList.add(HEADER_CELL_RESIZE);
+      const cellResize = div(HEADER_CELL_RESIZE);
       cellResize.addEventListener('mousedown', me.onResizeMouseDown.bind(this));
 
       label.appendChild(cellText);
       label.appendChild(filterContainer);
       label.appendChild(sortContainer);
 
-      const elMenu = document.createElement('div');
-      elMenu.classList.add(HEADER_CELL_MENU);
+      const elMenu = div(HEADER_CELL_MENU);
       elMenu.innerHTML = Fancy.svg.menu;
 
       column.elMenu = elMenu;
 
       if(column.headerCheckboxSelection && column.checkboxSelection){
-        const elSelection = document.createElement('div');
-        elSelection.classList.add(HEADER_CELL_SELECTION);
+        const elSelection = div(HEADER_CELL_SELECTION);
 
-        const checkboxEl = document.createElement('input');
-        checkboxEl.classList.add(INPUT_CHECKBOX);
+        const checkboxEl = input(INPUT_CHECKBOX);
         checkboxEl.setAttribute('type', 'checkbox');
         checkboxEl.addEventListener('click', me.onHeaderCheckboxSelectionClick.bind(this));
 
@@ -288,8 +280,7 @@
                 if(me.columns[0].type === 'order'){
                   me.columns.splice(1, 0, me.$rowGroupColumn);
                   indexToAddColumn = 1;
-                }
-                else{
+                } else {
                   me.columns.unshift(me.$rowGroupColumn);
                 }
 
@@ -433,15 +424,13 @@
 
     showHeaderCellMenuList(event, column) {
       const me = this;
-      const el = document.createElement('div');
       const elMenuRect = column.elMenu.getBoundingClientRect();
       const top = elMenuRect.top - 1 + elMenuRect.height;
       const left = elMenuRect.left;
-
-      el.classList.add(COLUMNS_MENU);
-      el.classList.add('fg-theme-' + me.theme);
-      el.style.top = `${top}px`;
-      el.style.left = `${left}px`;
+      const el = div([COLUMNS_MENU, 'fg-theme-' + me.theme], {
+        top: `${top}px`,
+        left: `${left}px`
+      });
 
       el.innerHTML = me.columns.map((column, index) => {
         if(column.$isRowGroupColumn){

@@ -1,6 +1,7 @@
 (()=>{
   const {
     CELL,
+    CELL_VALUE,
     CELL_ORDER,
     CELL_WRAPPER,
     CELL_SELECTION,
@@ -24,6 +25,12 @@
     SVG_ITEM,
     SVG_CHEVRON_RIGHT
   } = Fancy.cls;
+
+  const {
+    div,
+    span,
+    input
+  } = Fancy;
 
   /**
    * @mixin GridMixinBody
@@ -76,7 +83,10 @@
         const column = me.columns[columnIndex];
         let value = item[column.index];
         let cellInner;
-        const cell = document.createElement('div');
+        const cell = div(CELL,{
+          width: column.width + 'px',
+          left: column.left + 'px'
+        });
         const params = {
           item,
           column,
@@ -94,9 +104,6 @@
 
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);
-        cell.classList.add(CELL);
-        cell.style.width = column.width + 'px';
-        cell.style.left = column.left + 'px';
 
         if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
           cell.classList.add(ACTIVE_CELL);
@@ -122,11 +129,9 @@
         if(column.cellCls){
           if(typeof column.cellCls === 'string'){
             cell.classList.add(column.cellCls);
-          }
-          else if(Array.isArray(column.cellCls)){
+          } else if(Array.isArray(column.cellCls)){
             cell.classList.add(...column.cellCls);
-          }
-          else if(typeof column.cellCls === 'function'){
+          } else if(typeof column.cellCls === 'function'){
             let cls = column.cellCls(params);
             if(typeof cls === 'string'){
               cls = [cls];
@@ -152,8 +157,7 @@
 
         if(column.render){
           cellInner = column.render(params);
-        }
-        else{
+        } else {
           cellInner = value;
         }
 
@@ -162,8 +166,7 @@
         }
 
         if(column.checkboxSelection){
-          const wrapperEl = document.createElement('div');
-          wrapperEl.classList.add(CELL_WRAPPER);
+          const wrapperEl = div(CELL_WRAPPER);
 
           if(column.rowGroupIndent){
             wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length + 1}`);
@@ -178,17 +181,14 @@
 
           cell.appendChild(wrapperEl);
           cell.classList.add(CELL_SELECTION);
-        }
-        else if(column.$isRowGroupColumn){
-          const wrapperEl = document.createElement('div');
-          wrapperEl.classList.add(CELL_WRAPPER);
+        } else if(column.$isRowGroupColumn){
+          const wrapperEl = div(CELL_WRAPPER);
 
           if(column.rowGroupIndent){
             wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length}`);
           }
 
-          const valueEl = document.createElement('span');
-          valueEl.classList.add('fg-cell-value');
+          const valueEl = span(CELL_VALUE);
 
           if(cellInner === ''){
             cellInner = '&nbsp;';
@@ -198,8 +198,7 @@
           wrapperEl.appendChild(valueEl);
 
           cell.appendChild(wrapperEl);
-        }
-        else if (cellInner !== undefined) {
+        } else if (cellInner !== undefined) {
           if(cellInner === ''){
             cellInner = '&nbsp;';
           }
@@ -248,7 +247,10 @@
       } else {
         const column = me.columns[columnIndex];
         let value = item.$agValues[column.index] || '';
-        const cell = document.createElement('div');
+        const cell = div(CELL,{
+          width: column.width + 'px',
+          left: column.left + 'px'
+        });
         let cellInner;
 
         if(column.format){
@@ -271,16 +273,12 @@
             value,
             cell
           })
-        }
-        else {
+        } else {
           cellInner = value;
         }
 
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);
-        cell.classList.add(CELL);
-        cell.style.width = column.width + 'px';
-        cell.style.left = column.left + 'px';
 
         if(cellInner !== undefined){
           cell.innerHTML = cellInner;
@@ -299,8 +297,7 @@
     },
 
     generateSimpleValueEl(cellInner){
-      const valueEl = document.createElement('span');
-      valueEl.classList.add('fg-cell-value');
+      const valueEl = span(CELL_VALUE);
 
       if(cellInner === ''){
         cellInner = '&nbsp;';
@@ -312,8 +309,7 @@
 
     generateGroupCell(rowIndex, item, column = {}){
       const me = this;
-      const cell = document.createElement('div');
-      cell.classList.add(ROW_GROUP_CELL);
+      const cell = div(ROW_GROUP_CELL);
 
       if(item.expanded){
         cell.classList.add(ROW_GROUP_EXPANDED_CELL);
@@ -338,8 +334,7 @@
     },
 
     generateAmountEl(item){
-      const amountEl = document.createElement('span');
-      amountEl.classList.add(ROW_GROUP_CELL_AMOUNT);
+      const amountEl = span(ROW_GROUP_CELL_AMOUNT);
       amountEl.innerHTML = ` (${item.amount})`;
 
       return amountEl;
@@ -347,8 +342,7 @@
 
     generateValueEl(item, rowIndex){
       const displayGroupValue = item.$rowDisplayGroupValue;
-      const valueEl = document.createElement('span');
-      valueEl.classList.add(ROW_GROUP_CELL_VALUE);
+      const valueEl = span(ROW_GROUP_CELL_VALUE);
 
       if(this.groupValueRender){
         const displayValue = this.groupValueRender({
@@ -361,8 +355,7 @@
         if(displayValue){
           valueEl.innerHTML = displayValue;
         }
-      }
-      else {
+      } else {
         valueEl.innerHTML = displayGroupValue;
       }
 
@@ -371,9 +364,8 @@
 
     generateRowGroupExpanderEl(item){
       const svgChevronRight = Fancy.svg.chevronRight;
-      const expanderEl = document.createElement('span');
+      const expanderEl = span([ROW_GROUP_CELL_EXPANDER, SVG_ITEM, SVG_CHEVRON_RIGHT]);
 
-      expanderEl.classList.add(ROW_GROUP_CELL_EXPANDER, SVG_ITEM, SVG_CHEVRON_RIGHT);
       expanderEl.style.setProperty('--grid-group-level', item.$groupLevel);
       expanderEl.innerHTML = svgChevronRight;
       expanderEl.addEventListener('click', this.onRowGroupExpanderClick.bind(this));
@@ -383,8 +375,7 @@
 
     generateRowGroupCheckBoxEl(item){
       const selected = item.$selected || false;
-      const checkboxEl = document.createElement('input');
-      checkboxEl.classList.add(INPUT_CHECKBOX);
+      const checkboxEl = input(INPUT_CHECKBOX);
       checkboxEl.setAttribute('type', 'checkbox');
       checkboxEl.checked = selected;
 
@@ -396,11 +387,10 @@
     },
 
     generateRowGroupSelectionEl(item){
-      const selectionEl = document.createElement('span');
+      const selectionEl = span(ROW_GROUP_CELL_SELECTION);
       const checkBoxEl = this.generateRowGroupCheckBoxEl(item);
       checkBoxEl.addEventListener('click', this.onRowGroupCellSelectionClick.bind(this));
 
-      selectionEl.classList.add(ROW_GROUP_CELL_SELECTION);
       selectionEl.appendChild(checkBoxEl);
 
       return selectionEl;
@@ -438,19 +428,22 @@
 
     renderRow(index, item, style = {}) {
       const me = this;
-      const rowEl = document.createElement('div');
 
       if (!item) {
         console.warn(`row ${index} does not exist`);
         return;
       }
 
+      const rowEl = div(ROW,{
+        transform: `translateY(${index * me.rowHeight}px)`,
+        ...style
+      });
       const params = {
         rowIndex: index,
         item
       }
 
-      rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+      rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){
         rowEl.classList.add(ACTIVE_CELL_ROW);
@@ -463,10 +456,6 @@
         rowEl.classList.add(ROW_SELECTED)
       }
 
-      rowEl.style.transform = `translateY(${index * me.rowHeight}px)`;
-      for(const p in style){
-        rowEl.style[p] = style[p];
-      }
       rowEl.setAttribute('row-id', item.id);
       rowEl.setAttribute('row-index', index);
 
@@ -530,7 +519,6 @@
 
     renderRowGroup(index, item, style = {}) {
       const me = this;
-      const rowEl = document.createElement('div');
       const rowGroupType = me.rowGroupType;
 
       if (!item) {
@@ -538,16 +526,15 @@
         return;
       }
 
-      rowEl.classList.add(ROW_GROUP, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+      const rowEl = div(ROW_GROUP, style);
+
+      rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(item.$selected){
         rowEl.classList.add(ROW_SELECTED)
       }
 
       rowEl.style.transform = `translateY(${index * me.rowHeight}px)`;
-      for(const p in style){
-        rowEl.style[p] = style[p];
-      }
       rowEl.setAttribute('row-id', item.id);
       rowEl.setAttribute('row-index', index);
       rowEl.setAttribute('row-group', item.$rowGroupValue.replaceAll('-', '$').split('/').join('-'));
@@ -579,14 +566,15 @@
 
     renderRowOnPrevPosition(item, smoothPositionAnimate) {
       const me = this;
-      const rowEl = document.createElement('div');
-      const prevIndex = me.store.prevIdRowIndexesMap.get(item.id);
-      const index = item.rowIndex;
 
       if (!item) {
         console.warn(`row ${item.index} does not exist`);
         return;
       }
+
+      const rowEl = div(ROW);
+      const prevIndex = me.store.prevIdRowIndexesMap.get(item.id);
+      const index = item.rowIndex;
 
       let positionY;
 
@@ -605,7 +593,7 @@
         item
       }
 
-      rowEl.classList.add(ROW, index % 2 === 1 ? ROW_ODD : ROW_EVEN);
+      rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
       me.applyExtraRowStyles(rowEl, params);
 
       rowEl.style.transform = `translateY(${positionY}px)`;

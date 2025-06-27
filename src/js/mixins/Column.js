@@ -146,8 +146,7 @@
 
       if(me.columnIdSeed === undefined){
         me.columnIdSeed = 0;
-      }
-      else{
+      } else {
         me.columnIdSeed++;
       }
 
@@ -168,15 +167,13 @@
           if(seed === undefined){
             column.id = index || me.getAutoColumnIdSeed();
             seed = 0;
-          }
-          else{
+          } else {
             column.id = `${index}-${seed}`;
           }
 
           seed++;
           columnIdsSeedMap.set(index, seed);
-        }
-        else{
+        } else {
           let seed = columnIdsSeedMap.get(index);
 
           if(seed === undefined){
@@ -297,8 +294,7 @@
           if(typeof newColumn.width === 'number' && newColumn.width !== column.width){
             column.width = newColumn.width;
           }
-        }
-        else{
+        } else {
           columnsToRemoveIds.add(column.id);
         }
       });
@@ -324,8 +320,7 @@
           seed--;
           if(seed === 0){
             me.columnIdsSeedMap.delete(index);
-          }
-          else {
+          } else {
             me.columnIdsSeedMap.set(index, seed);
           }
         }

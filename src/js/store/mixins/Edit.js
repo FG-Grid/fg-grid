@@ -18,8 +18,7 @@
         for(let p in key){
           item[p] = key[p];
         }
-      }
-      else{
+      } else {
         item[key] = value;
       }
 
@@ -91,20 +90,17 @@
         if(me.displayedData){
           me.displayedData.push(...items);
         }
-      }
-      else if(position === 0){
+      } else if(position === 0){
         me.data.unshift(...items);
         if(me.displayedData){
           me.displayedData.unshift(...items);
         }
-      }
-      else if(typeOf(position) === 'number'){
+      } else if(typeOf(position) === 'number'){
         me.data.splice(position, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position, 0, ...items);
         }
-      }
-      else if(typeOf(position) === 'object'){
+      } else if(typeOf(position) === 'object'){
         me.data.splice(position.originalRowIndex, 0, ...items);
         if(me.displayedData){
           me.displayedData.splice(position.rowIndex, 0, ...items);
@@ -112,6 +108,29 @@
       }
 
       me.updateIndexes();
+    },
+    clearGroup(groupName){
+      const me = this;
+
+      me.rowGroupExpanded = me.rowGroupExpanded.filter(value => value !== groupName);
+
+      const splitted = groupName.split('/');
+      const level = splitted.length - 1;
+      if(level === 0){
+        me.levelsWithGroups[0][0].root = me.levelsWithGroups[0][0].root.filter(value => value !== groupName);
+      }
+      else{
+        splitted.pop();
+        const parentGroupName = splitted.join('/');
+        me.levelsWithGroups[level][0][parentGroupName] = me.levelsWithGroups[level][0][parentGroupName].filter(value => value !== groupName);
+
+        // Go to group level to remove group that has subgroups
+        const groupDetail = me.groupDetails[groupName];
+        if(groupDetail?.$hasChildrenGroups && me.levelsWithGroups[level + 1]){
+          delete me.levelsWithGroups[level + 1][0][groupName];
+        }
+      }
+
     }
   }
 

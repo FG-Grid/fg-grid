@@ -13,6 +13,8 @@
     TOUCH
   } = Fancy.cls;
 
+  const div = Fancy.div;
+
   /**
    * @mixes GridMixinBody
    * @mixes GridMixinColumn
@@ -119,8 +121,7 @@
 
       if(renderTo.tagName){
         me.containerEl = renderTo;
-      }
-      else if(typeof renderTo === 'string'){
+      } else if(typeof renderTo === 'string'){
         me.containerEl = document.getElementById(renderTo);
 
         if(!me.containerEl){
@@ -150,10 +151,9 @@
 
     render() {
       const me = this;
-      const gridEl = document.createElement('div');
+      const gridEl = div(GRID);
 
       gridEl.setAttribute('id', me.id);
-      gridEl.classList.add(GRID);
       if(me.rowAnimation){
         gridEl.classList.add(ROW_ANIMATION);
       }
@@ -207,18 +207,19 @@
     renderHeader() {
       const me = this;
 
-      const headerEl = document.createElement('div');
-      headerEl.classList.add(HEADER);
-      headerEl.style.height = (this.headerRowHeight + 1) + 'px';
+      const headerEl = div(HEADER, {
+        height: (this.headerRowHeight + 1) + 'px'
+      });
 
-      const headerInnerEl = document.createElement('div');
-      headerInnerEl.classList.add(HEADER_INNER);
-      headerInnerEl.style.width = (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px';
+      const headerInnerEl = div(HEADER_INNER, {
+        width: (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px'
+      });
 
-      const headerInnerContainerEl = document.createElement('div');
-      headerInnerContainerEl.classList.add(HEADER_INNER_CONTAINER);
-      headerInnerContainerEl.style.height = me.headerRowHeight + 'px';
-      headerInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
+      const headerInnerContainerEl = div(HEADER_INNER_CONTAINER, {
+        height: me.headerRowHeight + 'px',
+        width: me.getTotalColumnsWidth() + 'px'
+      });
+
 
       headerInnerEl.appendChild(headerInnerContainerEl);
       headerEl.appendChild(headerInnerEl);
@@ -231,28 +232,14 @@
 
     renderBody() {
       const me = this;
-
-      const bodyEl = document.createElement('div');
-
-      bodyEl.classList.add(BODY);
-
-      const bodyInnerEl = document.createElement('div');
-      bodyInnerEl.classList.add(BODY_INNER);
-
-      const bodyInnerContainerEl = document.createElement('div');
-
-      bodyInnerContainerEl.classList.add(BODY_INNER_CONTAINER);
-      if(me.store.rowGroups.length){
-        bodyInnerContainerEl.style.height = (me.store.getDisplayedDataTotal() * me.rowHeight) + 'px';
-      }
-      else {
-        bodyInnerContainerEl.style.height = (me.store.getDataTotal() * me.rowHeight) + 'px';
-      }
-      bodyInnerContainerEl.style.width = me.getTotalColumnsWidth() + 'px';
-
-      const editorsContainerEl = document.createElement('div');
-
-      editorsContainerEl.classList.add(EDITORS_CONTAINER);
+      const bodyEl = div(BODY);
+      const bodyInnerEl = div(BODY_INNER);
+      const bodyInnerContainerEl = div(BODY_INNER_CONTAINER,{
+        width: me.getTotalColumnsWidth() + 'px',
+        height: me.store.rowGroups.length? (me.store.getDisplayedDataTotal() * me.rowHeight) + 'px':
+          (me.store.getDataTotal() * me.rowHeight) + 'px'
+      });
+      const editorsContainerEl = div(EDITORS_CONTAINER);
 
       bodyInnerContainerEl.appendChild(editorsContainerEl);
       bodyInnerEl.appendChild(bodyInnerContainerEl);
@@ -275,8 +262,7 @@
 
       if(filters.length || rowGroups.length){
         me.bodyInnerContainerEl.style.height = (store.getDisplayedDataTotal() * me.rowHeight) + 'px';
-      }
-      else{
+      } else {
         me.bodyInnerContainerEl.style.height = (store.getDataTotal() * me.rowHeight) + 'px';
       }
     }
@@ -290,8 +276,7 @@
         setTimeout(()=>{
           rowEl.remove();
         }, 200);
-      }
-      else {
+      } else {
         console.warn(`Row El with id = ${id} was not found`);
       }
 
@@ -305,8 +290,7 @@
 
       if(rowEl){
         rowEl.remove();
-      }
-      else {
+      } else {
         console.warn(`Row El with id = ${id} was not found`);
       }
 
@@ -369,8 +353,7 @@
           if(rowGroups.length && me.$rowGroupColumn){
             if(config.columns[0].type === 'order'){
               config.columns.splice(1, 0, rowGroupColumn);
-            }
-            else{
+            } else{
               config.columns.unshift(rowGroupColumn);
             }
           }
@@ -501,8 +484,7 @@
 
       if(me.store.rowGroups.length){
         me.reConfigRowGroups();
-      }
-      else{
+      } else{
         me.terminateVisibleRows();
         scroller.calcMaxScrollTop();
         scroller.updateScrollTop();
@@ -535,28 +517,7 @@
     remove(rows){
       const me = this;
       const store = me.store;
-
-      switch (Fancy.typeOf(rows)){
-        case 'string':
-          rows = [{
-            id: rows
-          }]
-          break;
-        case 'object':
-          rows = [rows];
-          break;
-        case 'array':
-          rows = rows.map((value)=>{
-            if(typeof value === 'string'){
-              return {
-                id: value
-              }
-            }
-
-            return value;
-          });
-          break;
-      }
+      rows = me.$processRowsToRemove(rows);
 
       if(rows.length === 0){
         return;
@@ -571,7 +532,7 @@
 
         me.animatedRemoveDomRowById(row.id);
 
-        let item = me.store.removeItemById(row.id);
+        let item = store.removeItemById(row.id);
         itemsToRemove.push(item);
         if(item.$rowGroupValue){
           let values = rowGroups.get(item.$rowGroupValue) || [];
@@ -594,24 +555,31 @@
           const groupDetails = store.groupDetails[name];
 
           groupDetails.amount -= items.length;
+          if(groupDetails.$hasChildrenGroups === false){
+            groupDetails.childrenAmount -= items.length;
+          }
           if(groupDetails.amount === 0){
             groupDetails.childrenAmount = 0;
             me.animatedRemoveDomRowById(groupDetails.id);
-            delete me.store.groupDetails[name];
-            delete me.store.expandedGroupsWithDataChildren[name];
-            delete me.store.groupsChildren[name];
+            delete store.groupDetails[name];
+            delete store.expandedGroupsWithDataChildren[name];
+            delete store.groupsChildren[name];
 
             let item = me.store.removeItemById(groupDetails.id);
             itemsToRemove.push(item);
 
             const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
+            const parentGroupDetails = store.groupDetails[parentGroup];
             store.groupsChildren[parentGroup] = store.groupsChildren[parentGroup].filter(item => {
               return item.id !== groupDetails.id;
             });
-          }
-          else {
+            if(parentGroupDetails) {
+              parentGroupDetails.childrenAmount--;
+            }
+            store.clearGroup(name);
+          } else {
             store.groupsChildren[name] = store.groupsChildren[name].filter(item => {
-                return items.includes(item.id) === false;
+              return items.includes(item.id) === false;
             });
           }
 
@@ -629,13 +597,14 @@
               store.groupsChildrenForFiltering[parentGroup] = store.groupsChildrenForFiltering[parentGroup].filter(item => {
                 return item.id !== groupDetails.id;
               });
-            }
-            else{
+            } else {
               store.groupsChildrenForFiltering[name] = store.groupsChildrenForFiltering[name].filter(item => {
                 return items.includes(item.id) === false;
               });
             }
           }
+
+          store.agGroupUpdateData(name, dataItemsToRemove);
         }
       });
 
@@ -660,8 +629,18 @@
       });
       */
 
+      // TODO: Here there is problem and bug.
+      // For cases when remove item in hidden group
       if(me.store.displayedData?.length){
-        const rowIndexes = itemsToRemove.sort((a, b) => a.rowIndex - b.rowIndex);
+        // Filter items that are in collapsed groups
+        const displayedItemsToRemove = itemsToRemove.filter(item => {
+          if(!item.$rowGroupValue){
+            return true;
+          }
+
+          return !store.isItemInCollapsedGroup(item);
+        });
+        const rowIndexes = displayedItemsToRemove.sort((a, b) => a.rowIndex - b.rowIndex);
 
         rowIndexes.forEach((item, index) => {
           me.store.displayedData.splice(item.rowIndex - index, 1);
@@ -670,6 +649,7 @@
 
       if(rowGroups.size){
         me.updateRowGroupAmount();
+        me.updateRowGroupAggregations();
         me.updateRowGroupRowsAndCheckBoxes();
       }
 
@@ -691,7 +671,24 @@
       store.add(items, position);
 
       if(store.rowGroups.length){
+        let rowGroups = {};
+        items.forEach(item => {
+          rowGroups[item.$rowGroupValue] = rowGroups[item.$rowGroupValue] || [];
+          rowGroups[item.$rowGroupValue].push(item);
+        });
+
+        for(let group in rowGroups){
+          const splitted = group.split('/');
+
+          for(let i = 0;i<splitted.length;i++) {
+            const name = splitted.slice(0, splitted.length - i).join('/');
+
+            store.agGroupUpdateData(name, rowGroups[group], '+');
+          }
+        }
+
         me.updateRowGroupAmount();
+        me.updateRowGroupAggregations();
         me.updateRowGroupRowsAndCheckBoxes();
       }
 
@@ -750,8 +747,7 @@
           let cell = row?.querySelector(`div[col-id="${p}"]`);
           rerenderCell(cell);
         }
-      }
-      else {
+      } else {
         store.setById(id, index, value);
 
         let cell = row?.querySelector(`div[col-id="${index}"]`);

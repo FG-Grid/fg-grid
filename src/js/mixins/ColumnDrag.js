@@ -13,6 +13,8 @@
   } = Fancy.cls;
 
   const OFFSET_DRAG_CELL = 10;
+  const span = Fancy.span;
+  const div = Fancy.div;
 
   /**
    * @mixin GridMixinColumnDrag
@@ -47,8 +49,7 @@
             if((isColumnPresentedInRowGroupBar && !columnDragging.dragItemFromRowGroupBar) || columnDragging.column.$isRowGroupColumn){
               dragColumnCellEl.classList.add(FAKE_COLUMN_CELL_DRAGGING_DENY);
               dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_ALLOW);
-            }
-            else {
+            } else {
               dragColumnCellEl.classList.add(FAKE_COLUMN_CELL_DRAGGING_ALLOW);
               dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_DENY);
 
@@ -57,16 +58,16 @@
                 me.hideColumn(me.columnDragging.column, true);
               }
             }
-          }
-          else{
+
+            columnDragging.rowGroupBarItemsRect = me.getRowGroupBarItemsRect();
+          } else {
             const cursorInRowGroupBarItem = me.isCursorInAnotherRowGroupBarItem(event, columnDragging.rowGroupBarItemsRect);
             const activeRowGroupIndex = Number(me.activeRowGroupBarItemEl.getAttribute('row-group-order-index'));
             if(cursorInRowGroupBarItem !== undefined && cursorInRowGroupBarItem !== activeRowGroupIndex){
               me.changeRowGroupBarItemOrder(activeRowGroupIndex, cursorInRowGroupBarItem);
             }
           }
-        }
-        else if(columnDragging.inBar) {
+        } else if(columnDragging.inBar) {
           delete columnDragging.inBar;
 
           if(columnDragging.dragItemFromRowGroupBar){
@@ -79,15 +80,13 @@
             }
             dragColumnCellEl.classList.remove(FAKE_COLUMN_CELL_DRAGGING_ALLOW, FAKE_COLUMN_CELL_DRAGGING_DENY);
           }
-        }
-        else{
+        } else {
           if(!me.debouceColumnDraggingFn){
             me.debouceColumnDraggingFn = Fancy.debounce(me.onColumnDragging, 50);
           }
           me.debouceColumnDraggingFn(event);
         }
-      }
-      else{
+      } else {
         if(me.isEditing){
           me.hideActiveEditor();
         }
@@ -117,30 +116,26 @@
     },
 
     createDragColumnCellEl(column){
-      const cell = document.createElement('div');
+      const cell = div([FAKE_COLUMN_CELL_DRAGGING, 'fg-theme-' + this.theme]);
 
-      const textEl = document.createElement('span');
+      const textEl = span();
       const cellText = column.title;
       textEl.innerHTML = cellText
 
       const svgGroup = Fancy.svg.group;
-      const groupLogoEl = document.createElement('span');
-      groupLogoEl.classList.add(SVG_ITEM, SVG_GROUP);
+      const groupLogoEl = span([SVG_ITEM, SVG_GROUP]);
       groupLogoEl.innerHTML = svgGroup;
 
-      const dragSvgEl = document.createElement('span');
-      dragSvgEl.classList.add(SVG_ITEM, SVG_DRAG);
+      const dragSvgEl = span([SVG_ITEM, SVG_DRAG]);
       dragSvgEl.innerHTML = Fancy.svg.groupCellDrag;
 
-      const blockSvgEl = document.createElement('span');
-      blockSvgEl.classList.add(SVG_ITEM, SVG_BLOCK);
+      const blockSvgEl = span([SVG_ITEM, SVG_BLOCK]);
       blockSvgEl.innerHTML = Fancy.svg.block;
 
       cell.appendChild(blockSvgEl);
       cell.appendChild(groupLogoEl);
       cell.appendChild(dragSvgEl);
       cell.appendChild(textEl);
-      cell.classList.add(FAKE_COLUMN_CELL_DRAGGING, 'fg-theme-' + this.theme);
       document.body.appendChild(cell);
 
       return cell;
@@ -228,8 +223,7 @@
         oldOrders.push(removedIndex);
 
         me.reSetVisibleBodyColumnsIndex(columnIndex, toIndex, oldOrders);
-      }
-      else{
+      } else {
         for(let i=toIndex, iL=columnIndex;i<=iL;i++){
           oldOrders.push(i);
         }

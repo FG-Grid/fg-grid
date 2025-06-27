@@ -58,6 +58,11 @@
     '-': 'Negative'
   }
 
+  const {
+    div,
+    input
+  } = Fancy;
+
   class FilterField {
     sign = '=';
     defaultSign = '=';
@@ -75,14 +80,11 @@
 
     render() {
       const me = this;
-      const el = document.createElement('div');
+      const el = div(FILTER_FIELD);
 
       me.container = me.renderTo;
 
-      el.classList.add(FILTER_FIELD);
-
-      const elSign = document.createElement('div');
-      elSign.classList.add(FILTER_FIELD_SIGN);
+      const elSign = div(FILTER_FIELD_SIGN);
       elSign.innerHTML = [
         '<svg width="17" height="17" viewBox="0 0 24 24" style="vertical-align: middle; fill: currentcolor;">',
         '<path d=""></path>',
@@ -90,13 +92,11 @@
       ].join('');
       me.elSign = elSign;
 
-      const elInput = document.createElement('input');
-      elInput.classList.add(FILTER_FIELD_INPUT);
+      const elInput = input(FILTER_FIELD_INPUT);
       elInput.value = me.value;
       me.input = elInput;
 
-      const elText = document.createElement('div');
-      elText.classList.add(FILTER_FIELD_TEXT);
+      const elText = div(FILTER_FIELD_TEXT);
       me.elText = elText;
 
       me.updateUI(FancySignText[me.sign || me.defaultSign]);
@@ -152,14 +152,13 @@
 
     showComboList() {
       const me = this;
-      const el = document.createElement('div');
       const elSignRect = me.elSign.getBoundingClientRect();
       const top = elSignRect.top - 1 + elSignRect.height;
       const left = elSignRect.left;
-
-      el.classList.add(FILTER_FIELD_LIST);
-      el.style.top = `${top}px`;
-      el.style.left = `${left}px`;
+      const el = div(FILTER_FIELD_LIST, {
+        top: `${top}px`,
+        left: `${left}px`
+      });
 
       let signs = [];
 

@@ -31,6 +31,7 @@ import './mixins/KeyNavigation.js';
 import './mixins/ColumnDrag.js';
 import './mixins/Edit.js';
 
+import './components/Field.js';
 import './components/FilterField.js';
 import './components/StringField.js';
 import './components/NumberField.js';

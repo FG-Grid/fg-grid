@@ -69,8 +69,7 @@
       if(!me.direction){
         if(Math.abs(deltaY) > Math.abs(deltaX)){
           me.direction = 'vertical';
-        }
-        else {
+        } else {
           me.direction = 'horizontal';
         }
       }
@@ -80,8 +79,7 @@
           deltaX: 0,
           deltaY
         });
-      }
-      else {
+      } else {
         Object.assign(e, {
           deltaX,
           deltaY: 0
@@ -123,8 +121,7 @@
         if(Math.abs(me.velocityX) <= threshold && Math.abs(me.velocityY) <= threshold){
           //clearInterval(me.intervalId);
           //delete me.intervalId;
-        }
-        else{
+        } else {
           requestAnimationFrame(()=> {
             requestAnimationFrame(step);
           });

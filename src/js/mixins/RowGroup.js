@@ -36,8 +36,7 @@
 
       if(me.store.filters.length){
         me.store.expandForFiltering(group);
-      }
-      else {
+      } else {
         me.store.expand(group);
       }
 
@@ -79,8 +78,7 @@
 
       if(me.store.filters.length){
         me.store.collapseForFiltering(group);
-      }
-      else {
+      } else {
         me.store.collapse(group);
       }
 
@@ -229,6 +227,42 @@
       })
     },
 
+    updateRowGroupAggregations(){
+      const me = this;
+      const store = me.store;
+      const filters = store.filters;
+
+      // Aggregations work only for rowGroupType equals to 'column'
+      if(me.rowGroupType === 'row'){
+        return;
+      }
+
+      store.aggregations.forEach(ag => {
+        const rowGroups = me.bodyEl.querySelectorAll(`.${ROW_GROUP}`);
+        rowGroups.forEach(row => {
+          const $rowGroupValue = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
+          const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
+
+          // Group was removed because all children were removed
+          if(!groupDetail){
+            return;
+          }
+
+          const item = me.getItemById(groupDetail.id);
+
+          const oldCell = row.querySelector(`div[col-id="${ag.index}"]`);
+          const columnIndex = Number(oldCell.getAttribute('col-index'));
+          const rowIndex = row?.getAttribute('row-index');
+
+          const newCell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
+          if(oldCell.innerHTML != newCell.innerHTML){
+            oldCell.remove();
+            row.appendChild(newCell);
+          }
+        });
+      });
+    },
+
     reConfigRowGroups(){
       const me = this;
       const store = me.store;
@@ -242,8 +276,7 @@
         me.rowGroupBarItemColumns.forEach(column => {
           rowGroups.push(column.index);
         });
-      }
-      else{
+      } else {
         rowGroups = store.rowGroups
       }
 
