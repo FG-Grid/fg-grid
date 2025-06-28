@@ -1,6 +1,6 @@
 {
   "name": "fg-grid",
-  "version": "0.7.14",
+  "version": "0.7.15",
   "description": "JavaScript Grid Library",
   "type": "module",
   "main": "./dist/fg-grid.cjs.js",
@@ -9,7 +9,8 @@
   "exports": {
     ".": {
       "import": "./dist/fg-grid.esm.js",
-      "require": "./dist/fg-grid.cjs.js"
+      "require": "./dist/fg-grid.cjs.js",
+      "types": "./types/fg-grid.d.ts"
     },
     "./styles/fg-grid.css": "./styles/fg-grid.css"
   },

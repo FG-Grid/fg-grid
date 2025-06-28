@@ -128,5 +128,6 @@ export {
   Grid,
   Column,
   GridConfig,
-  DataItem
+  DataItem,
+  RenderParams
 }
