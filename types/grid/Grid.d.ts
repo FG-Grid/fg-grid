@@ -8,6 +8,7 @@ interface GridConfig<TData = any> {
   data: DataItem<TData>[];
   width?: number;
   height?: number;
+  id?: string;
   theme?: 'default' | 'string';
   defaultColumnWidth?: number;
   headerRowHeight?: number;
@@ -16,6 +17,8 @@ interface GridConfig<TData = any> {
   minColumnWidth?: number;
   rowGroupType?: 'row' | 'column';
   defaultRowGroupSort?: 'asc-string' | 'desc-string' | 'asc-amount' | 'desc-amount';
+  rowGroupBar?: boolean;
+  rowGroupExpanded?: boolean | string[] | ((groupName: string) => boolean);
   rowGroupBarSeparator?: boolean;
   rowStyle?: (params: RenderParams<TData>) => RowStyle | undefined;
   rowCls?: (params: RenderParams<TData>) => string | string[] | undefined;
@@ -26,6 +29,7 @@ interface GridConfig<TData = any> {
   editorEnterAction?: 'stay' | 'down' | 'right';
   flashChanges?: boolean;
   flashChangesColors?: [string, string];
+  columnLines?: boolean;
 }
 
 declare class Grid<TData = any> implements GridConfig<TData> {

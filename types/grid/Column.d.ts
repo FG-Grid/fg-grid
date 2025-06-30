@@ -55,12 +55,18 @@ export interface Column<TData = any> {
   draggable?: boolean;
   hidden?: boolean;
   index?: keyof TData;
+  id?: string;
   filter?: boolean;
   menu?: boolean;
   type?: 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'order';
   title?: string;
   editable?: boolean;
+  rowGroup?: boolean;
 
+  checkboxSelection?: boolean;
+  headerCheckboxSelection?: boolean;
+
+  maxWidth?: number;
   minWidth?: number;
   width?: number;
 

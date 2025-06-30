@@ -617,6 +617,7 @@
   opacity: 0;
   transition: opacity .2s;
   cursor: pointer;
+  display: block;
 
   svg {
     width: 18px;
@@ -631,7 +632,6 @@
 .fg-header-cell {
   &:hover {
     .fg-header-cell-menu {
-      display: inherit;
       opacity: 1;
     }
   }

@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.7.15',
+  version: '0.7.16',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -3988,6 +3988,7 @@ Fancy.copyText = (text) => {
         storeConfig.aggregations = aggregations;
 
         storeConfig.rowGroupExpanded = config.rowGroupExpanded || [];
+        delete config.rowGroupExpanded;
       }
 
       me.initStore(storeConfig);

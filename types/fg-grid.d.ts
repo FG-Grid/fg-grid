@@ -9,7 +9,7 @@ interface CurrencyParams {
 }
 
 declare const Fancy : {
-  Grid: Grid;
+  Grid: typeof Grid;
   version: string;
   cls: {
     HIDDEN: string;

@@ -399,6 +399,7 @@
         storeConfig.aggregations = aggregations;
 
         storeConfig.rowGroupExpanded = config.rowGroupExpanded || [];
+        delete config.rowGroupExpanded;
       }
 
       me.initStore(storeConfig);
