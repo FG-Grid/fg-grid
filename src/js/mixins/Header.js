@@ -439,8 +439,8 @@
 
         return [
           `<div col-index="${index}" class="${COLUMNS_MENU_ITEM}">`,
-          `<input type="checkbox" ${column.hidden ? '' : 'checked'}>`,
-          `<div class="${COLUMNS_MENU_ITEM_TEXT}">${column.title}</div>`,
+            `<input type="checkbox" ${column.hidden ? '' : 'checked'}>`,
+            `<div class="${COLUMNS_MENU_ITEM_TEXT}">${column.title}</div>`,
           '</div>'
         ].join('');
       }).join('');

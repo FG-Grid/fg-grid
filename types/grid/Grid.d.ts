@@ -1,11 +1,11 @@
-import { Column, DataItem, RenderParams, RowStyle, RowClsRules } from './Column';
+import { Column, RenderParams, RowStyle, RowClsRules } from './Column';
 
 interface GridConfig<TData = any> {
   renderTo?: string | HTMLElement | null;
   filterBar?: boolean;
   defaults?: Column<TData>;
   columns: Column<TData>[];
-  data: DataItem<TData>[];
+  data: TData[];
   width?: number;
   height?: number;
   id?: string;
@@ -34,25 +34,39 @@ interface GridConfig<TData = any> {
 
 declare class Grid<TData = any> implements GridConfig<TData> {
   constructor(config: GridConfig<TData>);
+
+  // Columns
   showColumn(column: Column<TData>, animate: boolean): void;
   hideColumn(column: Column<TData>, animate: boolean): void;
   removeColumn(column: Column<TData>): void;
   getColumn(index: string): Column<TData>;
-  setData(data: DataItem<TData>[]): void;
+  getColumnById(id: string): Column<TData>;
   setColumns(columns: Column<TData>[]): void;
-  destroy(): void;
+
+  // Data
+  setData(data: TData[]): void;
   setById(id: string, index: string|object, value?: string|number|boolean|undefined|null): void;
-  getItemById(id: string): DataItem<TData>;
-  remove(rows: string|DataItem<TData>): void;
-  add(items: DataItem<TData>|DataItem<TData>[], position?: number|DataItem<TData>): void;
+  getItemById(id: string): TData;
+  remove(rows: string|TData): void;
+  add(items: TData|TData[], position?: number|TData): void;
+
+  // Sorting
+  sort(column: Column<TData>, dir: 'ASC' | 'DESC', multi?: boolean): void;
+  clearSort(column: Column<TData>, multi?: boolean): void;
+  multiSort(column: Column<TData>, multi?: boolean): void;
+
+  // Row Grouping
+  expandAll(): void;
+  collapseAll(): void;
+
+  destroy(): void;
 
   columns: Column<TData>[];
-  data: DataItem<TData>[];
+  data: TData[];
 }
 
 export {
   Grid,
   GridConfig,
-  Column,
-  DataItem
+  Column
 }

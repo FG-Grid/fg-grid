@@ -119,6 +119,10 @@
       return me.columns.find(column => column.index === index);
     },
 
+    getColumnById(id){
+      return this.columnIdsMap.get(id);
+    },
+
     getNextVisibleColumnIndex(index){
       const me = this;
 
@@ -253,7 +257,7 @@
 
       cells.forEach(cell => {
         const columnId = cell.getAttribute('col-id');
-        const column = me.columnIdsMap.get(columnId);
+        const column = me.getColumnById(columnId);
         const isColumnVisible = me.scroller.isColumnVisible(column);
 
         if(!column || !isColumnVisible){
@@ -311,7 +315,7 @@
       });
 
       columnsToRemoveIds.forEach(id => {
-        const column = me.columnIdsMap.get(id);
+        const column = me.getColumnById(id);
         const index = (column.index || column.title || '').toLocaleLowerCase();
         me.columnIdsMap.delete(id);
         let seed = me.columnIdsSeedMap.get(index);
@@ -333,7 +337,7 @@
 
       const orderedColumns = [];
       newColumnsOrderMap.forEach((columnId, index) => {
-        const column = me.columnIdsMap.get(columnId);
+        const column = me.getColumnById(columnId);
 
         orderedColumns[index] = column;
       });
@@ -358,17 +362,21 @@
           }
           break;
         case 'currency':
-          column.format = Fancy.format.currency;
-          column.type = 'number';
-          column.$type = 'currency';
+          Object.assign(column, {
+            format: Fancy.format.currency,
+            type: 'number',
+            $type: 'currency'
+          });
           break;
         case 'order':
-          column.sortable = false;
-          column.render = Fancy.render.order;
-          column.width = column.width || 45;
-          column.resizable = false;
-          column.menu = false;
-          column.draggable = false;
+          Object.assign(column, {
+            sortable: false,
+            render: Fancy.render.order,
+            width: column.width || 45,
+            resizable: false,
+            menu: false,
+            draggable: false
+          });
           me.columnOrder = column;
 
           if(store?.rowGroups.length || me?.rowGroupBar){

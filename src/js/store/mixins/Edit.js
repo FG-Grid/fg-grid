@@ -76,8 +76,6 @@
           me.data.push(item);
         });
 
-        me.rowGroupExpanded.sort();
-
         me.generateDisplayedGroupedData();
         me.setIndexAndItemsMaps();
 
@@ -111,8 +109,6 @@
     },
     clearGroup(groupName){
       const me = this;
-
-      me.rowGroupExpanded = me.rowGroupExpanded.filter(value => value !== groupName);
 
       const splitted = groupName.split('/');
       const level = splitted.length - 1;

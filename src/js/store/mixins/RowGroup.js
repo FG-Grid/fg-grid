@@ -321,6 +321,9 @@
       return data;
     },
 
+    // Runs only on start and on setData
+    // rowGroupExpanded will be deleted
+    // On resetting data, rowGroupData won't be used.
     setExpandedGroups() {
       const me = this;
 
@@ -343,25 +346,21 @@
 
           const parentGroupNames = Object.keys(parentGroups);
 
-          const rowGroupExpanded = [].concat(groupNames).concat(parentGroupNames).sort();
+          const expandedGroupsArr = [].concat(groupNames).concat(parentGroupNames).sort();
 
-          rowGroupExpanded.forEach(group => {
+          expandedGroupsArr.forEach(group => {
             const expanded = me.rowGroupExpanded === true? true: me.rowGroupExpanded(group);
 
             me.expandedGroups[group] = expanded;
-
-            if (expanded && !rowGroupExpanded.includes(group)) {
-              rowGroupExpanded.push(group);
-            }
           });
-
-          me.rowGroupExpanded = rowGroupExpanded;
           break;
         default:
-          me.rowGroupExpanded.forEach(group => {
+          me.rowGroupExpanded?.forEach(group => {
             me.expandedGroups[group] = true;
           });
       }
+
+      delete me.rowGroupExpanded;
     },
 
     generateDisplayedGroupsForFiltering(zeroLevelGroups) {
@@ -373,7 +372,7 @@
         me.displayedGroupsForFiltering[group] = true;
       });
 
-      me.rowGroupExpanded.forEach(group => {
+      for(let group in me.expandedGroups){
         const subGroups = me.groupsChildrenForFiltering[group];
 
         subGroups?.forEach(({$rowGroupValue}) => {
@@ -381,7 +380,7 @@
             me.displayedGroupsForFiltering[$rowGroupValue] = true;
           }
         });
-      });
+      }
     },
 
     sortGroups() {
@@ -535,7 +534,6 @@
       const groupData = me.getGroupExpandedChildren(group);
 
       me.displayedData.splice(rowIndex + 1, 0, ...groupData);
-      me.rowGroupExpanded.push(group);
 
       me.updateIndexes();
     },
@@ -555,7 +553,6 @@
       const groupData = me.getGroupExpandedChildrenForFiltering(group);
 
       me.displayedData.splice(rowIndex + 1, 0, ...groupData);
-      me.rowGroupExpanded.push(group);
       me.updateIndexes();
     },
 
@@ -564,17 +561,10 @@
 
       me.prevAction = '';
 
-      me.rowGroupExpanded = () => {
-        return true;
-      }
-
-      me.rowGroupExpanded = [];
-
       for (const group in me.groupDetails) {
         const groupDetails = me.groupDetails[group];
 
         me.expandedGroups[group] = true;
-        me.rowGroupExpanded.push(group);
         groupDetails.expanded = true;
 
         if (!groupDetails.$hasChildrenGroups) {
@@ -610,7 +600,6 @@
       }
 
       me.displayedData.splice(rowIndex + 1, groupData.length);
-      me.rowGroupExpanded = me.rowGroupExpanded.filter(value => value !== group);
 
       me.updateIndexes();
     },
@@ -629,7 +618,6 @@
       }
 
       me.displayedData.splice(rowIndex + 1, groupData.length);
-      me.rowGroupExpanded = me.rowGroupExpanded.filter(value => value !== group);
 
       me.updateIndexes();
     },
@@ -638,12 +626,6 @@
       const me = this;
 
       me.prevAction = '';
-
-      me.rowGroupExpanded = () => {
-        return false;
-      }
-
-      me.rowGroupExpanded = [];
 
       for (const group in me.groupDetails) {
         me.expandedGroups[group] = false;
@@ -718,7 +700,6 @@
       me.prevAction = '';
 
       if(!me.$dontDropExpandedGroups){
-        me.rowGroupExpanded = [];
         me.expandedGroups = {};
       }
 
@@ -796,9 +777,6 @@
       me.groupsChildren = me.groupsChildren || {};
       me.expandedGroupsWithDataChildren = me.expandedGroupsWithDataChildren || {};
       me.expandedGroups = me.expandedGroups || {};
-      if(typeof me.rowGroupExpanded === 'function'){
-        me.rowGroupExpanded = [];
-      }
 
       me.expandedGroupsWithDataChildren[group] = true;
 
@@ -837,10 +815,6 @@
           }
 
           me.levelsWithGroups[groupLevel][0][parentGroup].push(name);
-        }
-
-        if(!me.expandedGroups[name]){
-          me.rowGroupExpanded.push(name);
         }
 
         me.expandedGroups[name] = true;

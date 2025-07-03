@@ -88,7 +88,7 @@
       me.idSeed = 0;
 
       me.data.forEach(item => {
-        if (!item.id) {
+        if (item.id === undefined) {
           item.id = me.generateId();
         }
         else if(typeof item.id === 'number'){
@@ -159,13 +159,13 @@
       me.idSeed = 0;
 
       me.data.forEach((item, index) => {
-        if (!item.id) {
+        if (item.id === undefined) {
           item.id = me.generateId();
           item.originalRowIndex = index;
         }
 
-        me.idRowIndexesMap.set(item.id, index);
-        me.idItemMap.set(item.id, item);
+        me.idRowIndexesMap.set(String(item.id), index);
+        me.idItemMap.set(String(item.id), item);
       });
     }
 

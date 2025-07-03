@@ -1,4 +1,4 @@
-import {Column, DataItem, RenderParams} from './grid/Column';
+import {Column, RenderParams} from './grid/Column';
 import { Grid, GridConfig } from './grid/Grid';
 
 interface CurrencyParams {
@@ -128,6 +128,5 @@ export {
   Grid,
   Column,
   GridConfig,
-  DataItem,
   RenderParams
 }

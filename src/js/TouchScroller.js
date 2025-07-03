@@ -67,11 +67,7 @@
       me.lastMoveTime = now;
 
       if(!me.direction){
-        if(Math.abs(deltaY) > Math.abs(deltaX)){
-          me.direction = 'vertical';
-        } else {
-          me.direction = 'horizontal';
-        }
+        me.direction = Math.abs(deltaY) > Math.abs(deltaX)? 'vertical': 'horizontal';
       }
 
       if(me.direction === 'vertical'){

@@ -97,6 +97,7 @@
 
       Object.assign(me, config);
 
+      me.checkInitialSize();
       me.checkSize();
       me.initScroller();
       me.render();
@@ -151,22 +152,14 @@
 
     render() {
       const me = this;
-      const gridEl = div(GRID);
+      const gridCls = [GRID, 'fg-theme-' + me.theme];
+
+      me.rowAnimation && gridCls.push(ROW_ANIMATION);
+      (me.cellsRightBorder || me.columnLines) && gridCls.push(GRID_CELLS_RIGHT_BORDER);
+      Fancy.isTouchDevice && gridCls.push(TOUCH);
+      const gridEl = div(gridCls);
 
       gridEl.setAttribute('id', me.id);
-      if(me.rowAnimation){
-        gridEl.classList.add(ROW_ANIMATION);
-      }
-
-      if(me.cellsRightBorder || me.columnLines){
-        gridEl.classList.add(GRID_CELLS_RIGHT_BORDER);
-      }
-
-      if(Fancy.isTouchDevice){
-        gridEl.classList.add(TOUCH);
-      }
-
-      gridEl.classList.add('fg-theme-' + me.theme);
 
       me.containerEl.appendChild(gridEl);
       me.gridEl = gridEl;
@@ -291,7 +284,7 @@
       if(rowEl){
         rowEl.remove();
       } else {
-        console.warn(`Row El with id = ${id} was not found`);
+        // console.warn(`Row El with id = ${id} was not found`);
       }
 
       me.actualRowsIdSet.delete(id);
@@ -395,10 +388,11 @@
       }
 
       if(rowGroups.length){
-        storeConfig.rowGroups = rowGroups;
-        storeConfig.aggregations = aggregations;
-
-        storeConfig.rowGroupExpanded = config.rowGroupExpanded || [];
+        Object.assign(storeConfig, {
+          rowGroups,
+          aggregations,
+          rowGroupExpanded: config.rowGroupExpanded || []
+        });
         delete config.rowGroupExpanded;
       }
 
@@ -410,9 +404,7 @@
     }
 
     initStore(config) {
-      const me = this;
-
-      me.store = new Fancy.Store(config);
+      this.store = new Fancy.Store(config);
     }
 
     ons() {
@@ -444,38 +436,49 @@
       }, 0);
     }
 
+    checkInitialSize(){
+      const me = this;
+
+      if(me.width){
+        me.initialWidth = me.width;
+        delete me.width;
+        me.containerEl.style.width = me.initialWidth + 'px';
+      }
+
+      if(me.height){
+        me.initialHeight = me.height;
+        delete me.height;
+        me.containerEl.style.height = me.initialHeight + 'px';
+      }
+    }
+
     checkSize(){
       const me = this;
+      const rect = me.containerEl.getBoundingClientRect();
       let changed = false;
 
-      if(me.width && me.height){
-        //return;
-      }
-
-      const rect = me.containerEl.getBoundingClientRect();
-
-      if(me.width !== rect.width){
+      if(!me.initialWidth && me.width !== rect.width){
+        me.width = rect.width;
         changed = true;
       }
 
-      if(me.height !== rect.height){
+      if(me.initialHeight && me.height !== rect.height){
+        me.height = rect.height;
         changed = true;
       }
-
-      me.width = rect.width;
-      me.height = rect.height;
 
       return changed;
     }
 
     setData(data){
       const me = this;
+      const store = me.store;
 
-      me.store.$dontDropExpandedGroups = true;
+      store.$dontDropExpandedGroups = true;
 
-      me.store.setData(structuredClone(data));
+      store.setData(structuredClone(data));
       me.reRender();
-      delete me.store.$dontDropExpandedGroups;
+      delete store.$dontDropExpandedGroups;
     }
 
     reRender(){

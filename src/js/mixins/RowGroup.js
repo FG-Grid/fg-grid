@@ -12,17 +12,15 @@
     toggleExpand(group) {
       const me = this;
 
+      me.beforeGrouping();
+
       if (me.grouping) {
         return;
       }
 
       me.store.toggleExpand(group);
 
-      me.updateAfterGrouping();
-
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.afterGrouping();
     },
 
     expand(group) {
@@ -31,6 +29,8 @@
       if (me.grouping) {
         return;
       }
+
+      me.beforeGrouping();
 
       me.grouping = true;
 
@@ -41,15 +41,13 @@
       }
 
       me.updateRowGroupCellExpandedCls(group);
-      me.updateAfterGrouping();
-
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.afterGrouping();
     },
 
     expandAll() {
       const me = this;
+
+      me.beforeGrouping()
 
       if (me.grouping) {
         return;
@@ -60,15 +58,13 @@
       me.store.expandAll();
 
       me.updateAllRowGroupCellsExtendedCls();
-      me.updateAfterGrouping();
-
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.afterGrouping();
     },
 
     collapse(group) {
       const me = this;
+
+      me.beforeGrouping();
 
       if (me.grouping) {
         return;
@@ -83,15 +79,13 @@
       }
 
       me.updateRowGroupCellExpandedCls(group);
-      me.updateAfterGrouping();
-
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.afterGrouping();
     },
 
     collapseAll() {
       const me = this;
+
+      me.beforeGrouping();
 
       if (me.grouping) {
         return;
@@ -102,14 +96,22 @@
       me.store.collapseAll();
 
       me.updateAllRowGroupCellsExtendedCls();
-      me.updateAfterGrouping();
+      me.afterGrouping();
+    },
+
+    beforeGrouping(){
+      const me = this;
+
+      if(me.isEditing){
+        me.hideActiveEditor();
+      }
 
       if(me.activeCell){
         me.clearActiveCell();
       }
     },
 
-    updateAfterGrouping() {
+    afterGrouping() {
       const me = this;
 
       me.scroller.calcMaxScrollTop();

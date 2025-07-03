@@ -119,8 +119,9 @@
       const store = me.store;
 
       if(store.rowGroups.length){
+        me.beforeGrouping();
         store.clearFilterForGrouping(index, sign);
-        me.updateAfterGrouping();
+        me.afterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
         return;
@@ -146,8 +147,9 @@
       const store = me.store;
 
       if(store.rowGroups.length){
+        me.beforeGrouping();
         me.filterForRowGrouping(column, value, sign);
-        me.updateAfterGrouping();
+        me.afterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
         return;

@@ -1,7 +1,5 @@
-export type DataItem<TData = any> = TData & { id?: string };
-
 export interface RenderParams<TData = any> {
-  item: DataItem<TData>;
+  item: TData;
   column: Column<TData>;
   rowIndex: number;
   columnIndex: number;
@@ -18,11 +16,11 @@ export interface FormatParams<TData = any> extends RenderParams<TData> {
 }
 
 export interface GetterParams<TData = any> {
-  item: DataItem<TData>;
+  item: TData;
 }
 
 export interface SetterParams<TData = any> {
-  item: DataItem<TData>;
+  item: TData;
 }
 
 export interface CellStyle {

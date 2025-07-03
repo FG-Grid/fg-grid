@@ -220,13 +220,14 @@
 
     renderHorizontalScroll() {
       const me = this;
+      const scrollBarWidth = `${me.scrollBarWidth}px`;
 
       const horizontalScrollEl = div(BODY_HORIZONTAL_SCROLL,{
-        height: me.scrollBarWidth + 'px',
-        minHeight: me.scrollBarWidth + 'px',
-        maxHeight: me.scrollBarWidth + 'px',
+        height: scrollBarWidth,
+        minHeight: scrollBarWidth,
+        maxHeight: scrollBarWidth,
         width: (me.isDomInvisibleScrollbar || !me.isVerticalVisible())? `100%`:
-          `calc(100% - ${me.scrollBarWidth}px)`
+          `calc(100% - ${scrollBarWidth})`
       });
 
       if (me.isDomInvisibleScrollbar) {
@@ -234,15 +235,15 @@
       }
 
       const horizontalScrollContainerEl = div(BODY_HORIZONTAL_SCROLL_CONTAINER, {
-        height: me.scrollBarWidth + 'px',
-        minHeight: me.scrollBarWidth + 'px',
-        maxHeight: me.scrollBarWidth + 'px'
+        height: scrollBarWidth,
+        minHeight: scrollBarWidth,
+        maxHeight: scrollBarWidth
       });
 
       const horizontalScrollSizeEl = div(BODY_HORIZONTAL_SCROLL_SIZE, {
-        height: me.scrollBarWidth + 'px',
-        minHeight: me.scrollBarWidth + 'px',
-        maxHeight: me.scrollBarWidth + 'px'
+        height: scrollBarWidth,
+        minHeight: scrollBarWidth,
+        maxHeight: scrollBarWidth
       });
 
       horizontalScrollContainerEl.appendChild(horizontalScrollSizeEl);
@@ -301,16 +302,17 @@
 
     onHorizontalScroll = () => {
       const me = this;
+      const grid = me.grid;
 
       me.scrollLeft = me.horizontalScrollContainerEl.scrollLeft;
-      me.grid.headerEl.scrollLeft = me.scrollLeft;
-      me.grid.bodyInnerEl.scrollLeft = me.scrollLeft;
+      grid.headerEl.scrollLeft = me.scrollLeft;
+      grid.bodyInnerEl.scrollLeft = me.scrollLeft;
 
-      if (me.grid.filterBar) {
-        me.grid.filterBarEl.scrollLeft = me.scrollLeft;
+      if (grid.filterBar) {
+        grid.filterBarEl.scrollLeft = me.scrollLeft;
       }
 
-      cancelAnimationFrame(me.grid.horizontalScrollId);
+      cancelAnimationFrame(grid.horizontalScrollId);
 
       me.grid.horizontalScrollId = requestAnimationFrame(() => {
         me.generateNewRange();
@@ -319,6 +321,7 @@
 
     generateNewRange(doRender = true) {
       const me = this;
+      const grid = me.grid;
       const {
         columnStart: newColumnStart,
         columnEnd: newColumnEnd,
@@ -333,7 +336,7 @@
 
       if(doRender){
         newRange.forEach(newColumnIndex => {
-          const column = me.grid.columns[newColumnIndex];
+          const column = grid.columns[newColumnIndex];
 
           if (!column.hidden && !rangeSet.has(newColumnIndex)) {
             columnsToAdd.push(newColumnIndex);
@@ -351,8 +354,8 @@
       me.columnViewStart = newColumnStart;
       me.columnViewEnd = newColumnEnd;
 
-      me.grid.addColumnCells(columnsToAdd);
-      me.grid.removeColumnCells(columnsToRemove);
+      grid.addColumnCells(columnsToAdd);
+      grid.removeColumnCells(columnsToRemove);
 
       return {
         columnsViewRange: me.columnsViewRange,
@@ -542,7 +545,6 @@
 
     initResizeObserver(){
       const me = this;
-      const grid = me.grid;
 
       me.resizeObserver = new ResizeObserver((entries) => {
         if (!Array.isArray(entries) || !entries.length) {
@@ -550,19 +552,26 @@
         }
 
         if(me.grid.checkSize()) {
-          const changedBufferedRows = me.calcVisibleRows();
-          me.generateNewRange();
-          grid.reCalcColumnsPositions();
-          grid.updateWidth();
-          grid.updateCellPositions();
-
-          if(changedBufferedRows){
-            grid.renderVisibleRows();
-          }
+          me.updateSize();
         }
       });
 
       me.resizeObserver.observe(me.grid.containerEl);
+    }
+
+    updateSize(){
+      const me = this;
+      const grid = me.grid;
+
+      const changedBufferedRows = me.calcVisibleRows();
+      me.generateNewRange();
+      grid.reCalcColumnsPositions();
+      grid.updateWidth();
+      grid.updateCellPositions();
+
+      if(changedBufferedRows){
+        grid.renderVisibleRows();
+      }
     }
 
     isColumnVisible(checkColumn){
