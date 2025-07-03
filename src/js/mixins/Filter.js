@@ -207,10 +207,7 @@
         if (!item) {
           console.warn(`Item with index equals to ${i} does not exist`);
         } else {
-          if (!me.renderedRowsIdMap.has(item.id)) {
-            me.renderRowOnPrevPosition(item, true);
-          }
-
+          !me.renderedRowsIdMap.has(item.id) && me.renderRowOnPrevPosition(item, true);
           me.actualRowsIdSet.add(item.id);
         }
       }

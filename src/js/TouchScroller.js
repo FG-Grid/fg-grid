@@ -142,9 +142,7 @@
       me.element.removeEventListener('touchmove', me.touchMoveHandler);
       me.element.removeEventListener('touchend', me.touchEndHandler);
 
-      if (me.intervalId) {
-        clearInterval(me.intervalId);
-      }
+      me.intervalId && clearInterval(me.intervalId);
     }
   }
 

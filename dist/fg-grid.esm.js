@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.7.17',
+  version: '0.7.18',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -490,9 +490,7 @@ Fancy.render = {
     inputEl.checked = value;
 
     inputEl.addEventListener('click', (e) => {
-      if(!column.editable){
-        e.preventDefault();
-      }
+      !column.editable && e.preventDefault();
     });
 
     inputEl.addEventListener('change', (e)=>{
@@ -3348,9 +3346,7 @@ Fancy.copyText = (text) => {
           return;
         }
 
-        if(me.grid.checkSize()) {
-          me.updateSize();
-        }
+        me.grid.checkSize() && me.updateSize();
       });
 
       me.resizeObserver.observe(me.grid.containerEl);
@@ -3366,9 +3362,7 @@ Fancy.copyText = (text) => {
       grid.updateWidth();
       grid.updateCellPositions();
 
-      if(changedBufferedRows){
-        grid.renderVisibleRows();
-      }
+      changedBufferedRows && grid.renderVisibleRows();
     }
 
     isColumnVisible(checkColumn){
@@ -3536,9 +3530,7 @@ Fancy.copyText = (text) => {
       me.element.removeEventListener('touchmove', me.touchMoveHandler);
       me.element.removeEventListener('touchend', me.touchEndHandler);
 
-      if (me.intervalId) {
-        clearInterval(me.intervalId);
-      }
+      me.intervalId && clearInterval(me.intervalId);
     }
   }
 
@@ -3654,13 +3646,8 @@ Fancy.copyText = (text) => {
       scroller.calcVisibleRows();
       me.renderVisibleRows();
       me.renderVisibleHeaderCells();
-      if(me.filterBar){
-        me.renderVisibleFilterBarCells();
-      }
-
-      if(me.activeCell){
-        me.initKeyNavigation();
-      }
+      me.filterBar && me.renderVisibleFilterBarCells();
+      me.activeCell && me.initKeyNavigation();
 
       me.ons();
     }
@@ -4003,12 +3990,12 @@ Fancy.copyText = (text) => {
       const rect = me.containerEl.getBoundingClientRect();
       let changed = false;
 
-      if(!me.initialWidth && me.width !== rect.width){
+      if(!me.initialWidth || me.width !== rect.width){
         me.width = rect.width;
         changed = true;
       }
 
-      if(me.initialHeight && me.height !== rect.height){
+      if(me.initialHeight || me.height !== rect.height){
         me.height = rect.height;
         changed = true;
       }
@@ -4384,9 +4371,7 @@ Fancy.copyText = (text) => {
         }, 300);
       }
 
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.activeCell && me.clearActiveCell();
 
       return {
         columnIndex: columnsToRemove[0]
@@ -5342,9 +5327,7 @@ Fancy.copyText = (text) => {
 
         me.appendHeaderCell(columnIndex);
 
-        if (me.filterBar) {
-          me.appendFilterBarCell(columnIndex);
-        }
+        me.filterBar && me.appendFilterBarCell(columnIndex);
 
         for (; i < endRow; i++) {
           me.appendCell(i, columnIndex);
@@ -5508,17 +5491,13 @@ Fancy.copyText = (text) => {
 
             if(me.selectionCellsRange && cell){
               requestAnimationFrame(()=> {
-                if (me.isCellInSelectedRange(cell)) {
-                  cell.classList.add(CELL_SELECTED);
-                }
+                me.isCellInSelectedRange(cell) && cell.classList.add(CELL_SELECTED);
               });
             }
           }
         }
 
-        if(column.editable){
-          cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
-        }
+        column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
 
         cell.addEventListener('click', me.onBodyCellClick.bind(this));
         //cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
@@ -5606,9 +5585,7 @@ Fancy.copyText = (text) => {
       const me = this;
       const cell = div(ROW_GROUP_CELL);
 
-      if(item.expanded){
-        cell.classList.add(ROW_GROUP_EXPANDED_CELL);
-      }
+      item.expanded && cell.classList.add(ROW_GROUP_EXPANDED_CELL);
 
       const expanderEl = me.generateRowGroupExpanderEl(item);
       cell.appendChild(expanderEl);
@@ -5763,9 +5740,7 @@ Fancy.copyText = (text) => {
         const cell = me.createCell(index, i);
         const column = me.columns[i];
 
-        if (!column.hidden) {
-          rowEl.appendChild(cell);
-        }
+        !column.hidden && rowEl.appendChild(cell);
       }
 
       me.bodyInnerContainerEl.appendChild(rowEl);
@@ -6706,10 +6681,7 @@ Fancy.copyText = (text) => {
         if (!item) {
           console.warn(`Item with index equals to ${i} does not exist`);
         } else {
-          if (!me.renderedRowsIdMap.has(item.id)) {
-            me.renderRowOnPrevPosition(item, true);
-          }
-
+          !me.renderedRowsIdMap.has(item.id) && me.renderRowOnPrevPosition(item, true);
           me.actualRowsIdSet.add(item.id);
         }
       }
@@ -7861,9 +7833,7 @@ Fancy.copyText = (text) => {
       me.scroller.deltaChange(delta);
       setTimeout(()=>{
         const cell = me.getCell(newRowIndex, columnIndex);
-        if (cell) {
-          me.setActiveCell(cell);
-        }
+        cell && me.setActiveCell(cell);
       },0);
     },
 
@@ -8559,9 +8529,7 @@ Fancy.copyText = (text) => {
           me.hideActiveEditor();
 
           const activeCell = shift? me.setActiveCellLeft() : me.setActiveCellRight();
-          if (activeCell) {
-            me.openEditorForCell(me.activeCellEl);
-          }
+          activeCell && me.openEditorForCell(me.activeCellEl);
         } else {
           if(shift){
             me.setActiveCellLeft();
@@ -8666,9 +8634,7 @@ Fancy.copyText = (text) => {
           me.debouceColumnDraggingFn(event);
         }
       } else {
-        if(me.isEditing){
-          me.hideActiveEditor();
-        }
+        me.isEditing && me.hideActiveEditor();
 
         const deltaX = Math.abs(event.pageX - me.columnDragDownX);
         const deltaY = Math.abs(event.pageY - me.columnDragDownY);
@@ -9120,9 +9086,7 @@ Fancy.copyText = (text) => {
           me.renderedRowsIdMap.forEach((rowEl, id) => {
             const item = me.store.idItemMap.get(id);
 
-            if (me.actualRowsIdSet.has(item.id)) {
-              me.updateRowPosition(item);
-            }
+            me.actualRowsIdSet.has(item.id) && me.updateRowPosition(item);
           });
         });
       });

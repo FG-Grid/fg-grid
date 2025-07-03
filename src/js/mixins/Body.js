@@ -47,9 +47,7 @@
 
         me.appendHeaderCell(columnIndex);
 
-        if (me.filterBar) {
-          me.appendFilterBarCell(columnIndex);
-        }
+        me.filterBar && me.appendFilterBarCell(columnIndex);
 
         for (; i < endRow; i++) {
           me.appendCell(i, columnIndex);
@@ -213,17 +211,13 @@
 
             if(me.selectionCellsRange && cell){
               requestAnimationFrame(()=> {
-                if (me.isCellInSelectedRange(cell)) {
-                  cell.classList.add(CELL_SELECTED);
-                }
+                me.isCellInSelectedRange(cell) && cell.classList.add(CELL_SELECTED);
               });
             }
           }
         }
 
-        if(column.editable){
-          cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
-        }
+        column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
 
         cell.addEventListener('click', me.onBodyCellClick.bind(this));
         //cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
@@ -311,9 +305,7 @@
       const me = this;
       const cell = div(ROW_GROUP_CELL);
 
-      if(item.expanded){
-        cell.classList.add(ROW_GROUP_EXPANDED_CELL);
-      }
+      item.expanded && cell.classList.add(ROW_GROUP_EXPANDED_CELL);
 
       const expanderEl = me.generateRowGroupExpanderEl(item);
       cell.appendChild(expanderEl);
@@ -468,9 +460,7 @@
         const cell = me.createCell(index, i);
         const column = me.columns[i];
 
-        if (!column.hidden) {
-          rowEl.appendChild(cell);
-        }
+        !column.hidden && rowEl.appendChild(cell);
       }
 
       me.bodyInnerContainerEl.appendChild(rowEl);

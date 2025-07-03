@@ -190,9 +190,7 @@
           me.hideActiveEditor();
 
           const activeCell = shift? me.setActiveCellLeft() : me.setActiveCellRight();
-          if (activeCell) {
-            me.openEditorForCell(me.activeCellEl);
-          }
+          activeCell && me.openEditorForCell(me.activeCellEl);
         } else {
           if(shift){
             me.setActiveCellLeft();

@@ -15,9 +15,7 @@ Fancy.render = {
     inputEl.checked = value;
 
     inputEl.addEventListener('click', (e) => {
-      if(!column.editable){
-        e.preventDefault();
-      }
+      !column.editable && e.preventDefault();
     });
 
     inputEl.addEventListener('change', (e)=>{

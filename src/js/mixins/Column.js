@@ -65,9 +65,7 @@
         }, 300);
       }
 
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.activeCell && me.clearActiveCell();
 
       return {
         columnIndex: columnsToRemove[0]

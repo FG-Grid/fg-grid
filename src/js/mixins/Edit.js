@@ -290,9 +290,7 @@
           me.renderedRowsIdMap.forEach((rowEl, id) => {
             const item = me.store.idItemMap.get(id);
 
-            if (me.actualRowsIdSet.has(item.id)) {
-              me.updateRowPosition(item);
-            }
+            me.actualRowsIdSet.has(item.id) && me.updateRowPosition(item);
           });
         });
       });

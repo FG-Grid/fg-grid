@@ -551,9 +551,7 @@
           return;
         }
 
-        if(me.grid.checkSize()) {
-          me.updateSize();
-        }
+        me.grid.checkSize() && me.updateSize();
       });
 
       me.resizeObserver.observe(me.grid.containerEl);
@@ -569,9 +567,7 @@
       grid.updateWidth();
       grid.updateCellPositions();
 
-      if(changedBufferedRows){
-        grid.renderVisibleRows();
-      }
+      changedBufferedRows && grid.renderVisibleRows();
     }
 
     isColumnVisible(checkColumn){

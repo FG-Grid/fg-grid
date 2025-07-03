@@ -106,13 +106,8 @@
       scroller.calcVisibleRows();
       me.renderVisibleRows();
       me.renderVisibleHeaderCells();
-      if(me.filterBar){
-        me.renderVisibleFilterBarCells();
-      }
-
-      if(me.activeCell){
-        me.initKeyNavigation();
-      }
+      me.filterBar && me.renderVisibleFilterBarCells();
+      me.activeCell && me.initKeyNavigation();
 
       me.ons();
     }
@@ -457,12 +452,12 @@
       const rect = me.containerEl.getBoundingClientRect();
       let changed = false;
 
-      if(!me.initialWidth && me.width !== rect.width){
+      if(!me.initialWidth || me.width !== rect.width){
         me.width = rect.width;
         changed = true;
       }
 
-      if(me.initialHeight && me.height !== rect.height){
+      if(me.initialHeight || me.height !== rect.height){
         me.height = rect.height;
         changed = true;
       }

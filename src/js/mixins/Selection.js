@@ -482,9 +482,7 @@
       me.scroller.deltaChange(delta);
       setTimeout(()=>{
         const cell = me.getCell(newRowIndex, columnIndex);
-        if (cell) {
-          me.setActiveCell(cell);
-        }
+        cell && me.setActiveCell(cell);
       },0);
     },
 
