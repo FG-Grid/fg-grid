@@ -11,16 +11,10 @@ Fancy.format = {
     const minDecimal = params.minDecimal || 0;
     const maxDecimal = params.maxDecimal || minDecimal || 0;
     const currency = params.currency || 'USD';
-    let region = 'en-US';
+    const region = params.region || Fancy.format.CURRENCY_REGIONS[params.currency] || 'en-US';
 
     if (isNaN(value) || value === '' || value === null) {
       return '';
-    }
-
-    if (params.region) {
-      region = params.region;
-    } else if (Fancy.format.CURRENCY_REGIONS[params.currency]) {
-      region = Fancy.format.CURRENCY_REGIONS[params.currency];
     }
 
     return new Intl.NumberFormat(region, {

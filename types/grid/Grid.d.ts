@@ -32,6 +32,9 @@ interface GridConfig<TData = any> {
   columnLines?: boolean;
 }
 
+type Sign = '<'|'>'|'<='|'>='|'='|'!=';
+type Value = string|number|boolean|undefined|null;
+
 declare class Grid<TData = any> implements GridConfig<TData> {
   constructor(config: GridConfig<TData>);
 
@@ -45,7 +48,7 @@ declare class Grid<TData = any> implements GridConfig<TData> {
 
   // Data
   setData(data: TData[]): void;
-  setById(id: string, index: string|object, value?: string|number|boolean|undefined|null): void;
+  setById(id: string, index: string|object, value?: Value): void;
   getItemById(id: string): TData;
   remove(rows: string|TData): void;
   add(items: TData|TData[], position?: number|TData): void;
@@ -53,7 +56,11 @@ declare class Grid<TData = any> implements GridConfig<TData> {
   // Sorting
   sort(column: Column<TData>, dir: 'ASC' | 'DESC', multi?: boolean): void;
   clearSort(column: Column<TData>, multi?: boolean): void;
-  multiSort(column: Column<TData>, multi?: boolean): void;
+  multiSort(column: Column<TData>, dir: 'ASC' | 'DESC'): void;
+
+  // Filtering
+  filter(column: Column<TData>, value: Value, operator: Sign): void;
+  clearFilter(index?: Column<TData>, sign?: Sign): void;
 
   // Row Grouping
   expandAll(): void;

@@ -264,8 +264,6 @@
         setTimeout(()=>{
           rowEl.remove();
         }, 200);
-      } else {
-        console.warn(`Row El with id = ${id} was not found`);
       }
 
       me.actualRowsIdSet.delete(id);
@@ -472,6 +470,7 @@
       store.$dontDropExpandedGroups = true;
 
       store.setData(structuredClone(data));
+      me.updateHeaderCheckboxSelection();
       me.reRender();
       delete store.$dontDropExpandedGroups;
     }
@@ -552,11 +551,13 @@
         for(let i = 0;i<splitted.length;i++){
           const name = splitted.slice(0, splitted.length - i).join('/');
           const groupDetails = store.groupDetails[name];
+          let groupRemove = false;
 
           groupDetails.amount -= items.length;
           if(groupDetails.$hasChildrenGroups === false){
             groupDetails.childrenAmount -= items.length;
           }
+
           if(groupDetails.amount === 0){
             groupDetails.childrenAmount = 0;
             me.animatedRemoveDomRowById(groupDetails.id);
@@ -564,6 +565,7 @@
             delete store.expandedGroupsWithDataChildren[name];
             delete store.groupsChildren[name];
 
+            groupRemove = true;
             let item = me.store.removeItemById(groupDetails.id);
             itemsToRemove.push(item);
 
@@ -584,13 +586,18 @@
 
           if(store.groupDetailsForFiltering){
             const groupDetailsForFiltering = store.groupDetailsForFiltering[name];
-
             groupDetailsForFiltering.amount -= items.length;
             if(groupDetailsForFiltering.amount <= 0){
               groupDetailsForFiltering.childrenAmount = 0;
-              delete me.store.groupDetailsForFiltering[name];
-              delete me.store.expandedGroupsWithDataChildrenForFiltering[name];
-              delete me.store.groupsChildrenForFiltering[name];
+              me.animatedRemoveDomRowById(groupDetailsForFiltering.id);
+              delete store.groupDetailsForFiltering[name];
+              delete store.expandedGroupsWithDataChildrenForFiltering[name];
+              delete store.groupsChildrenForFiltering[name];
+
+              if(!groupRemove){
+                let item = me.store.removeItemById(groupDetails.id);
+                itemsToRemove.push(item);
+              }
 
               const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
               store.groupsChildrenForFiltering[parentGroup] = store.groupsChildrenForFiltering[parentGroup].filter(item => {
@@ -617,9 +624,9 @@
 
       const rowIndexes = dataItemsToRemove.sort((a, b) => a.originalDataRowIndex - b.originalDataRowIndex);
       rowIndexes.forEach((item, index) => {
-        me.store.data.splice(item.originalDataRowIndex - index, 1);
+        store.data.splice(item.originalDataRowIndex - index, 1);
       });
-      delete me.store.$isOriginalDataIndexesSet;
+      delete store.$isOriginalDataIndexesSet;
 
       /*
       const rowIndexes = dataItemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
@@ -630,7 +637,7 @@
 
       // TODO: Here there is problem and bug.
       // For cases when remove item in hidden group
-      if(me.store.displayedData?.length){
+      if(store.displayedData?.length){
         // Filter items that are in collapsed groups
         const displayedItemsToRemove = itemsToRemove.filter(item => {
           if(!item.$rowGroupValue){
@@ -642,7 +649,7 @@
         const rowIndexes = displayedItemsToRemove.sort((a, b) => a.rowIndex - b.rowIndex);
 
         rowIndexes.forEach((item, index) => {
-          me.store.displayedData.splice(item.rowIndex - index, 1);
+          store.displayedData.splice(item.rowIndex - index, 1);
         });
       }
 
@@ -668,6 +675,7 @@
       const store = me.store;
 
       store.add(items, position);
+      delete store.$isOriginalDataIndexesSet;
 
       if(store.rowGroups.length){
         let rowGroups = {};

@@ -5,22 +5,43 @@
    */
 
   const StoreMixinFilter = {
+    removeFilter(column, sign, update){
+      const me = this;
+
+      if(sign){
+        me.filters = me.filters.filter(filter => {
+          if(filter.column.id == column.id && filter.sign == sign){
+            return false;
+          }
+          return true;
+        });
+      } else if(column) {
+        me.filters = me.filters.filter(filter => filter.column.id!== column.id);
+      } else {
+        me.filters = [];
+      }
+      delete me.prevFilterColumn;
+    },
+
     clearFilter(column, sign) {
       const me = this;
 
-      me.filters = me.filters.filter(filter => filter.column.id!== column.id);
-      delete me.prevFilterColumn;
+      me.removeFilter(column, sign);
 
       me.reFilter(false);
       me.reSort();
+
+      if(!column || me.filters.length == 0){
+        delete me.prevAction;
+        delete me.prevFilterColumn;
+      }
     },
 
     clearFilterForGrouping(column, sign) {
       const me = this;
       const data = me.data.slice();
 
-      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
-      delete me.prevFilterColumn;
+      me.removeFilter(column, sign);
 
       me.filteredData = me.filters.reduce((filteredData, filter) => {
         return me.filterData(filteredData, filter.column, filter.value, filter.sign);
@@ -77,7 +98,7 @@
         data = me.data.slice();
       }
 
-      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
+      me.removeFilter(column, sign);
 
       if (value !== null) {
         me.filters.push({
@@ -90,6 +111,8 @@
       if (totalReFilterRequired) {
         me.reFilter();
         me.reSort();
+        me.prevAction = 'filter';
+        me.prevFilterColumn = column;
         return;
       }
 
@@ -106,7 +129,7 @@
       const me = this;
       const data = me.data.slice();
 
-      me.filters = me.filters.filter(filter => filter.column.id !== column.id);
+      me.removeFilter(column, sign);
 
       if (value !== null) {
         me.filters.push({

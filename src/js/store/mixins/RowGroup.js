@@ -36,7 +36,7 @@
 
       me.set$rowGroupValue();
       me.setExpandedGroups();
-      me.generateGroupsInfo();
+      me.generateGroupDetails();
       me.sortGroups();
       me.generateDisplayedGroupedData();
     },
@@ -44,11 +44,13 @@
     rowGroupDataForFiltering() {
       const me = this;
 
-      me.generateGroupsInfoForFiltering();
+      me.generateGroupDetailsForFiltering();
     },
 
     generateDisplayedGroupedData() {
       const me = this;
+      // Possible bug
+      // Every time resort groups by amount
       const displayedGroupsSorted = me.getSortedDisplayedGroups();
       let groupedData = [];
 
@@ -121,7 +123,7 @@
     /*
      Generates groupsChildren, groupDetails, levelsWithGroups
      */
-    generateGroupsInfo(groupNames, groupLevel) {
+    generateGroupDetails(groupNames, groupLevel) {
       const me = this;
       const parentGroups = {};
       let hasChildrenGroups = true;
@@ -158,7 +160,7 @@
         me.levelsWithGroups[groupLevel][0][parentGroupName] = me.levelsWithGroups[groupLevel][0][parentGroupName] || [];
         me.levelsWithGroups[groupLevel][0][parentGroupName].push(groupName);
 
-        const groupInfo = {
+        const groupDetails = {
           $rowGroupValue: groupName,
           $rowDisplayGroupValue: rowDisplayGroupValue,
           $groupLevel: groupLevel,
@@ -173,36 +175,54 @@
         if (!hasChildrenGroups) {
           me.aggregations.forEach(aggregation => {
             const values = me.groupsChildren[groupName].map(rowData => rowData[aggregation.index]);
-            groupInfo.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+            groupDetails.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
           });
 
-          groupInfo.amount = groupInfo.childrenAmount;
+          groupDetails.amount = groupDetails.childrenAmount;
 
-          if (groupInfo.expanded) {
+          if (groupDetails.expanded) {
             me.expandedGroupsWithDataChildren[groupName] = true;
           }
         } else {
           me.aggregations.forEach(aggregation => {
             const values = me.groupsChildren[groupName].map(groupData => groupData.$agValues[aggregation.index]);
-            groupInfo.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+            groupDetails.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
           });
 
-          groupInfo.amount = me.groupsChildren[groupName].reduce((sum, child) => sum + child.amount, 0);
+          groupDetails.amount = me.groupsChildren[groupName].reduce((sum, child) => sum + child.amount, 0);
         }
 
-        me.groupDetails[groupName] = groupInfo;
+        me.groupDetails[groupName] = groupDetails;
         if (groupLevel !== 0) {
-          me.groupsChildren[parentGroup].push(groupInfo);
+          me.groupsChildren[parentGroup].push(groupDetails);
         }
       });
 
       if (groupLevel !== 0) {
         const parentGroupNames = Object.keys(parentGroups);
-        me.generateGroupsInfo(parentGroupNames, groupLevel - 1);
+        me.generateGroupDetails(parentGroupNames, groupLevel - 1);
+      }
+
+      for(let i = 0;i<groupNames.length;i++) {
+        const groupName = groupNames[i];
+        const groupDetails = me.groupDetails[groupName];
+        if(!groupDetails.$hasChildrenGroups) {
+          break;
+        }
+        const children = me.groupsChildren[groupName];
+        const childrenSorted = children.sort((groupA, groupB) => {
+          switch (me.defaultRowGroupSort) {
+            case 'asc-amount':
+              return groupA.amount - groupB.amount;
+            case 'desc-amount':
+              return groupB.amount - groupA.amount;
+          }
+        });
+        me.groupsChildren[groupName] = childrenSorted;
       }
     },
 
-    generateGroupsInfoForFiltering(groupNames, groupLevel) {
+    generateGroupDetailsForFiltering(groupNames, groupLevel) {
       const me = this;
       const parentGroups = {};
       let hasChildrenGroups = true;
@@ -218,7 +238,7 @@
       }
 
       groupNames.forEach(groupName => {
-        const groupInfo = me.groupDetails[groupName];
+        const groupDetails = me.groupDetails[groupName];
         const splitted = groupName.split('/');
         const rowDisplayGroupValue = splitted.pop();
         let parentGroupName = 'root';
@@ -241,17 +261,17 @@
         me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName] = me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName] || [];
         me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName].push(groupName);
 
-        if(!groupInfo){
+        if(!groupDetails){
           console.error(`groupDetails does not contain ${groupName}`);
         }
 
-        const groupInfoForFiltering = {
+        const groupDetailsForFiltering = {
           $rowGroupValue: groupName,
           $rowDisplayGroupValue: rowDisplayGroupValue,
           $groupLevel: groupLevel,
           $isGroupRow: true,
           $hasChildrenGroups: hasChildrenGroups,
-          id: groupInfo.id,
+          id: groupDetails.id,
           childrenAmount: me.groupsChildrenForFiltering[groupName].length,
           expanded,
           $agValues: {}
@@ -260,26 +280,26 @@
         if (!hasChildrenGroups) {
           me.aggregations.forEach(aggregation => {
             const values = me.groupsChildrenForFiltering[groupName].map(rowData => rowData[aggregation.index]);
-            groupInfoForFiltering.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+            groupDetailsForFiltering.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
           });
 
-          groupInfoForFiltering.amount = groupInfoForFiltering.childrenAmount;
+          groupDetailsForFiltering.amount = groupDetailsForFiltering.childrenAmount;
 
-          if (groupInfoForFiltering.expanded) {
+          if (groupDetailsForFiltering.expanded) {
             me.expandedGroupsWithDataChildrenForFiltering[groupName] = true;
           }
         } else {
           me.aggregations.forEach(aggregation => {
             const values = me.groupsChildrenForFiltering[groupName].map(groupData => groupData.$agValues[aggregation.index]);
-            groupInfoForFiltering.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
+            groupDetailsForFiltering.$agValues[aggregation.index] = me.getAggregationResult(aggregation, values);
           });
 
-          groupInfoForFiltering.amount = me.groupsChildrenForFiltering[groupName].reduce((sum, child) => sum + child.amount, 0);
+          groupDetailsForFiltering.amount = me.groupsChildrenForFiltering[groupName].reduce((sum, child) => sum + child.amount, 0);
         }
 
-        me.groupDetailsForFiltering[groupName] = groupInfoForFiltering;
+        me.groupDetailsForFiltering[groupName] = groupDetailsForFiltering;
         if (groupLevel !== 0) {
-          me.groupsChildrenForFiltering[parentGroup].push(groupInfoForFiltering);
+          me.groupsChildrenForFiltering[parentGroup].push(groupDetailsForFiltering);
         }
       });
 
@@ -287,7 +307,7 @@
         me.generateDisplayedGroupsForFiltering(groupNames);
       } else {
         const parentGroupNames = Object.keys(parentGroups);
-        me.generateGroupsInfoForFiltering(parentGroupNames, groupLevel - 1);
+        me.generateGroupDetailsForFiltering(parentGroupNames, groupLevel - 1);
       }
     },
 
@@ -444,9 +464,9 @@
         });
       }
 
-
       switch (me.defaultRowGroupSort) {
         case 'desc-string':
+          // Possible bug
           displayedGroupsSorted = Array.from(Object.keys(me.displayedGroups)).sort();
           break;
         case 'desc-amount':
@@ -643,16 +663,6 @@
 
       if (!groupDetails.$hasChildrenGroups && me.sorters.length) {
         groupChildren = me.sortPieceOfData(groupChildren);
-      } else {
-        // TODO:Requires to take data from levelsWithGroups
-        groupChildren.sort((groupA, groupB) => {
-          switch (me.defaultRowGroupSort) {
-            case 'asc-amount':
-              return groupA.amount - groupB.amount;
-            case 'desc-amount':
-              return groupB.amount - groupA.amount;
-          }
-        });
       }
 
       groupChildren.forEach(item => {
@@ -721,7 +731,7 @@
       } else {
         if (filters.length) {
           me.set$rowGroupValue();
-          me.generateGroupsInfo();
+          me.generateGroupDetails();
           me.sortGroups();
 
           me.rowGroupDataForFiltering();
@@ -730,7 +740,7 @@
           me.updateIndexes();
         } else {
           me.set$rowGroupValue();
-          me.generateGroupsInfo();
+          me.generateGroupDetails();
           me.sortGroups();
           me.generateDisplayedGroupedData();
         }
@@ -847,16 +857,6 @@
 
         me.groupsChildren[parentGroup] = me.groupsChildren[parentGroup] || [];
         me.groupsChildren[parentGroup].push(me.groupDetails[group]);
-        if(me.groupDetails[parentGroup].$hasChildrenGroups){
-          me.groupsChildren[parentGroup].sort((groupA, groupB) => {
-            switch (me.defaultRowGroupSort) {
-              case 'asc-amount':
-                return groupA.amount - groupB.amount;
-              case 'desc-amount':
-                return groupB.amount - groupA.amount;
-            }
-          });
-        }
       })
     },
 

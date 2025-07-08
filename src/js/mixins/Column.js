@@ -260,9 +260,7 @@
 
         if(!column || !isColumnVisible){
           cell.remove();
-          if(column && column.filterCellEl){
-            column.filterCellEl.remove();
-          }
+          column && column.filterCellEl?.remove();
 
           const filterCellEl = me.filterBarEl?.querySelector?.(`.${FILTER_BAR_CELL}[col-id="${columnId}"]`);
           filterCellEl?.remove();
@@ -273,9 +271,7 @@
           })
         }
 
-        if(column && !isColumnVisible){
-          me.clearColumFromLinks(column);
-        }
+        column && !isColumnVisible && me.clearColumFromLinks(column);
       });
     },
 

@@ -309,12 +309,15 @@
 
     onResizeMouseDown(event) {
       const me = this;
+      const gridEl = me.gridEl;
       const cell = event.target.closest(`.${HEADER_CELL}`);
       const columnIndex = Number(cell.getAttribute('col-index'));
       const column = me.columns[columnIndex];
 
       event.preventDefault();
       event.stopPropagation();
+
+      me.isEditing && me.hideActiveEditor();
 
       if(column.resizable === false){
         return;
@@ -333,13 +336,13 @@
       });
       document.body.addEventListener('mousemove', me.onResizeMouseMoveFn);
 
-      me.gridEl.classList.add(COLUMN_RESIZING);
-      me.gridEl.style.cursor = 'ew-resize';
-      me.gridEl.style.userSelect = 'none';
-      me.gridEl.querySelectorAll(`.${HEADER_CELL}`).forEach(cell => {
+      gridEl.classList.add(COLUMN_RESIZING);
+      gridEl.style.cursor = 'ew-resize';
+      gridEl.style.userSelect = 'none';
+      gridEl.querySelectorAll(`.${HEADER_CELL}`).forEach(cell => {
         cell.style.cursor = 'ew-resize';
       });
-      me.gridEl.querySelectorAll(`.${BODY}`).forEach(bodyEl => {
+      gridEl.querySelectorAll(`.${BODY}`).forEach(bodyEl => {
         bodyEl.style.cursor = 'ew-resize';
       });
     },
@@ -535,7 +538,6 @@
 
       for(let i = 0, iL = columnsViewRange.length;i<iL;i++){
         const columnIndex = columnsViewRange[i];
-        //const columnIndex = i;
         const column = me.columns[columnIndex];
         const headerCellEl = column.headerCellEl;
         const filterCellEl = column.filterCellEl;
@@ -544,16 +546,12 @@
           continue;
         }
 
-        if(headerCellEl){
-          if(Number(headerCellEl.getAttribute('col-index')) !== columnIndex){
-            headerCellEl.setAttribute('col-index', columnIndex);
-          }
+        if(headerCellEl && Number(headerCellEl.getAttribute('col-index')) !== columnIndex){
+          headerCellEl.setAttribute('col-index', columnIndex);
         }
 
-        if(filterCellEl){
-          if(Number(filterCellEl.getAttribute('col-index')) !== columnIndex){
-            filterCellEl.setAttribute('col-index', columnIndex);
-          }
+        if(filterCellEl && Number(filterCellEl.getAttribute('col-index')) !== columnIndex){
+          filterCellEl.setAttribute('col-index', columnIndex);
         }
       }
     }

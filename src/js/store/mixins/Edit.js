@@ -57,9 +57,7 @@
           const group = item.$rowGroupValue;
           let groupDetail = me.groupDetails[group];
 
-          if (!groupDetail) {
-            me.addGroup(group);
-          }
+          !groupDetail && me.addGroup(group);
 
           me.groupsChildren[group].push(item);
 

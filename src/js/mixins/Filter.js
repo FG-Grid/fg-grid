@@ -69,21 +69,21 @@
       cell.setAttribute('col-id', column.id);
 
       if (column.filter) {
-        const filters = Object.entries(column.filters || {});
+        const filter = column.filters || {};
         let sign = '',
           value = '';
 
-        if (filters.length) {
-          sign = filters[0][0];
-          value = filters[0][1].value;
+        if (filter.sign) {
+          sign = filter.sign;
+          value = filter.value;
         }
 
         const field = new Fancy.FilterField({
           renderTo: cell,
           onChange: me.onFilterFieldChange.bind(this),
           column,
-          sign: sign,
-          value: value
+          sign,
+          value
         });
 
         column.filterField = field;
@@ -94,10 +94,22 @@
       return cell;
     },
 
-    onFilterFieldChange(value, sign, column) {
+    onFilterFieldChange(value, sign, column, signWasChanged) {
       const me = this;
 
-      column.filters = {};
+      if(signWasChanged){
+        me.store.removeFilter(column);
+      }
+
+      if(sign === '=' && value === ''){
+        delete column.filters;
+      }
+      else {
+        column.filters = {
+          sign,
+          value
+        }
+      }
 
       if (value === '') {
         me.clearFilter(column, sign);
@@ -114,30 +126,36 @@
       rowEl.appendChild(cell);
     },
 
-    clearFilter(index, sign) {
+    clearFilter(column, sign) {
       const me = this;
       const store = me.store;
 
-      if(store.rowGroups.length){
-        me.beforeGrouping();
-        store.clearFilterForGrouping(index, sign);
-        me.afterGrouping();
-        me.updateRowGroupAmount();
-        me.updateHeaderCells();
-        return;
-      }
+      me.columns.forEach($column => {
+        if(!column){
+          delete $column.filters;
+          $column.filterField?.clearValue();
+          return;
+        }
 
-      store.clearFilter(index, sign);
-
-      me.columns.forEach(column => {
-        if (column.index === index) {
+        if ($column.id === column.id) {
           if (sign && column.filters) {
             delete column.filters[sign];
           } else {
             delete column.filters;
           }
         }
-      })
+      });
+
+      if(store.rowGroups.length){
+        me.beforeGrouping();
+        store.clearFilterForGrouping(column, sign);
+        me.afterGrouping();
+        me.updateRowGroupAmount();
+        me.updateHeaderCells();
+        return;
+      }
+
+      store.clearFilter(column, sign);
 
       me.updateAfterFilter();
     },
@@ -167,12 +185,13 @@
       me.updateFiltersInColumns(column, value, sign);
     },
 
-    updateFiltersInColumns(index, value, sign){
+    updateFiltersInColumns(filterColumn, value, sign){
       this.columns.forEach(column => {
-        if (column.index === index) {
-          column.filters = column.filters || {};
-          column.filters[sign] = column.filters[sign] || {};
-          column.filters[sign].value = value;
+        if (column.id === filterColumn.id) {
+          column.filters = {
+            sign,
+            value
+          }
         }
       });
     },

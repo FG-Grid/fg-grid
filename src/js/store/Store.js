@@ -117,7 +117,9 @@
       if(!me.$isOriginalDataIndexesSet){
         me.data.forEach((item, index) => {
           item.originalDataRowIndex = index;
+          me.idItemMap.set(item.id, item);
         });
+        me.$isOriginalDataIndexesSet = true;
       }
 
       me.idRowIndexesMap = new Map();
@@ -163,9 +165,12 @@
           item.id = me.generateId();
           item.originalRowIndex = index;
         }
+        else{
+          item.id = String(item.id);
+        }
 
-        me.idRowIndexesMap.set(String(item.id), index);
-        me.idItemMap.set(String(item.id), item);
+        me.idRowIndexesMap.set(item.id, index);
+        me.idItemMap.set(item.id, item);
       });
     }
 

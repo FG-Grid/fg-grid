@@ -87,12 +87,8 @@
 
     smoothScroll() {
       const me = this;
-      //let deceleration = 0.95; // Deceleration factor
-      //let threshold = 0.5;     // Minimum speed to stop
-
-      let deceleration = 0.98; // Deceleration factor
-      //let threshold = 0.01;     // Minimum speed to stop
-      let threshold = 0.2;     // Minimum speed to stop
+      const deceleration = 0.98; // Deceleration factor
+      const threshold = 0.2;     // Minimum speed to stop
 
       //let intervalDuration = 16;
 

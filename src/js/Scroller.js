@@ -195,9 +195,7 @@
 
       const verticalScrollEl = div(BODY_VERTICAL_SCROLL);
 
-      if (me.isDomInvisibleScrollbar) {
-        verticalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
-      }
+      me.isDomInvisibleScrollbar && verticalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
 
       const verticalScrollContainerEl = div(BODY_VERTICAL_SCROLL_CONTAINER,{
         width: me.scrollBarWidth + 'px'
@@ -230,9 +228,7 @@
           `calc(100% - ${scrollBarWidth})`
       });
 
-      if (me.isDomInvisibleScrollbar) {
-        horizontalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
-      }
+      me.isDomInvisibleScrollbar && horizontalScrollEl.classList.add(SCROLLBAR_INVISIBLE);
 
       const horizontalScrollContainerEl = div(BODY_HORIZONTAL_SCROLL_CONTAINER, {
         height: scrollBarWidth,

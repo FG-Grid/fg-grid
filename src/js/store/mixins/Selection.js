@@ -36,8 +36,9 @@
 
     updateGroupsChildrenSelection(group, value) {
       const me = this;
+      const children = me.filters.length ? me.groupsChildrenForFiltering[group] : me.groupsChildren[group] ;
 
-      me.groupsChildren[group].forEach(childItem => {
+      children.forEach(childItem => {
         childItem.$selected = value;
 
         if (!childItem.$isGroupRow) {
@@ -80,7 +81,7 @@
 
       for (let i = 0; i < iL - 1; i++) {
         const _group = splitted.join('/');
-        const groupDetail = me.groupDetails[_group];
+        const groupDetail = me.filters.length? me.groupDetailsForFiltering[_group] : me.groupDetails[_group];
         const groupItem = me.idItemMap.get(groupDetail.id);
         splitted.pop();
         const parentGroup = splitted.join('/');
@@ -123,7 +124,9 @@
 
     updateSelectedStatus(group) {
       const me = this;
-      const groupDetail = me.groupDetails[group];
+      const groupDetails = me.filters.length ? me.groupDetailsForFiltering : me.groupDetails;
+      const groupsChildren = me.filters.length ? me.groupsChildrenForFiltering : me.groupsChildren;
+      const groupDetail = groupDetails[group];
       const groupItem = me.idItemMap.get(groupDetail.id);
 
       let groupSelectedStatus;
@@ -132,10 +135,10 @@
         groupSelectedStatus = false;
         groupItem.$selected = false;
         me.selectedItemsMap.delete(groupDetail.id);
-      } else if (me.groupsChildren[group].length === me.selectedRowGroupsChildren[group].size) {
+      } else if (groupsChildren[group].length === me.selectedRowGroupsChildren[group].size) {
         let childIsPartlySelected = false;
         if(groupItem.$hasChildrenGroups){
-          const groupChildren = me.groupsChildren[group];
+          const groupChildren = groupsChildren[group];
           for(let i = 0;i<groupChildren.length;i++){
             const subGroupItem = groupChildren[i];
             if(subGroupItem.selectedStatus === 'partly'){
@@ -159,16 +162,18 @@
         delete groupItem.$selected;
       }
 
-      me.groupDetails[group].selectedStatus = groupSelectedStatus;
+      groupDetails[group].selectedStatus = groupSelectedStatus;
     },
 
     selectAll(value = true) {
       const me = this;
+      const groupsChildren = me.filters.length ? me.groupsChildrenForFiltering : me.groupsChildren;
+      const groupDetails = me.filters.length ? me.groupDetailsForFiltering : me.groupDetails;
 
       if (value) {
-        for (const group in me.groupsChildren) {
-          const children = me.groupsChildren[group];
-          const groupDetail = me.groupDetails[group];
+        for (const group in groupsChildren) {
+          const children = groupsChildren[group];
+          const groupDetail = groupDetails[group];
 
           if (!groupDetail) {
             // TODO: fix case with '' group
@@ -189,9 +194,9 @@
           me.selectedItemsMap.set(item.id, item);
         });
       } else {
-        for (const group in me.groupsChildren) {
-          const children = me.groupsChildren[group];
-          const groupDetail = me.groupDetails[group];
+        for (const group in groupsChildren) {
+          const children = groupsChildren[group];
+          const groupDetail = groupDetails[group];
 
           if (!groupDetail) {
             // TODO: fix case with '' group

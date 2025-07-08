@@ -617,7 +617,9 @@
   opacity: 0;
   transition: opacity .2s;
   cursor: pointer;
-  display: block;
+  display: flex;
+  height: 100%;
+  align-items: center;
 
   svg {
     width: 18px;
@@ -625,7 +627,6 @@
     line-height: 18px;
     color: rgba(0, 0, 0, 0.54);
     margin-left: 4px;
-    margin-top: 2px;
   }
 }
 

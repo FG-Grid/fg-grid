@@ -25,19 +25,24 @@
 
     expand(group) {
       const me = this;
+      const store = me.store;
 
       if (me.grouping) {
         return;
+      }
+
+      if(store.expandedGroups[group]){
+        return false;
       }
 
       me.beforeGrouping();
 
       me.grouping = true;
 
-      if(me.store.filters.length){
-        me.store.expandForFiltering(group);
+      if(store.filters.length){
+        store.expandForFiltering(group);
       } else {
-        me.store.expand(group);
+        store.expand(group);
       }
 
       me.updateRowGroupCellExpandedCls(group);
@@ -63,19 +68,24 @@
 
     collapse(group) {
       const me = this;
-
-      me.beforeGrouping();
+      const store = me.store;
 
       if (me.grouping) {
         return;
       }
 
+      if(!store.expandedGroups[group]){
+        return false;
+      }
+
+      me.beforeGrouping();
+
       me.grouping = true;
 
-      if(me.store.filters.length){
-        me.store.collapseForFiltering(group);
+      if(store.filters.length){
+        store.collapseForFiltering(group);
       } else {
-        me.store.collapse(group);
+        store.collapse(group);
       }
 
       me.updateRowGroupCellExpandedCls(group);
@@ -102,23 +112,19 @@
     beforeGrouping(){
       const me = this;
 
-      if(me.isEditing){
-        me.hideActiveEditor();
-      }
-
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.isEditing && me.hideActiveEditor();
+      me.activeCell && me.clearActiveCell();
     },
 
     afterGrouping() {
       const me = this;
+      const scroller = me.scroller;
 
-      me.scroller.calcMaxScrollTop();
-      me.scroller.updateScrollTop();
-      me.scroller.calcViewRange();
-      me.scroller.setVerticalSize();
-      me.scroller.updateHorizontalScrollSize();
+      scroller.calcMaxScrollTop();
+      scroller.updateScrollTop();
+      scroller.calcViewRange();
+      scroller.setVerticalSize();
+      scroller.updateHorizontalScrollSize();
       me.updateVisibleHeight();
 
       me.renderVisibleRowsAfterGrouping();

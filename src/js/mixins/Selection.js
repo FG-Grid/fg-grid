@@ -149,7 +149,7 @@
       me.bodyEl.querySelectorAll(`.${ROW_GROUP}`).forEach(row => {
         const group = row.getAttribute('row-group').replaceAll('-', '/').replaceAll('$', '-');
         const checkBoxEl = row.querySelector(`.${ROW_GROUP_CELL_SELECTION} .${INPUT_CHECKBOX}`);
-        const groupDetail = store.groupDetails[group];
+        const groupDetail = store.filters.length? store.groupDetailsForFiltering[group] : store.groupDetails[group];
 
         if(!groupDetail){
           return;
@@ -584,6 +584,16 @@
 
     updateHeaderCheckboxSelection(column){
       const me = this;
+      if(!column){
+        me.scroller.columnsViewRange.forEach(columnIndex => {
+          const column = me.columns[columnIndex];
+
+          column.headerCheckboxSelection && me.updateHeaderCheckboxSelection(column);
+        });
+
+        return;
+      }
+
       const store = me.store;
       const checkBoxEl = column.headerCheckboxSelectionEl;
       const selectedAmount = store.selectedItemsMap.size;

@@ -134,7 +134,8 @@
       const sign = me.sign || me.defaultSign;
       const value = event.target.value;
 
-      me.onChange?.(value, sign, me.column);
+      !me.preventFire && me.onChange?.(value, sign, me.column, me.signWasChanged);
+      delete me.signWasChanged;
     }
 
     hideAllOpenedComboList(){
@@ -254,13 +255,29 @@
           me.input.value = value;
       }
 
-      me.onChange?.(value, sign, me.column);
+      me.onChange?.(value, sign, me.column, me.signWasChanged);
+      delete me.signWasChanged;
+    }
+
+    clearValue(preventFire = false) {
+      const me = this;
+
+      if(preventFire){
+        me.preventFire = true;
+      }
+      me.input.value = '';
+      me.setSign('Clear');
+      delete me.preventFire;
     }
 
     setSign(sign) {
       const me = this;
+      const prevSign = me.sign;
 
       me.sign = FancyTextSign[sign];
+      if(prevSign !== me.sign){
+        me.signWasChanged = true;
+      }
       me.updateUI(sign);
     }
 
