@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     ANIMATE_CELLS_POSITION,
     HIDDEN,
@@ -41,7 +41,6 @@
     onHeaderMouseDown(event) {
       event.preventDefault();
     },
-
     onHeaderCellClick(event) {
       const me = this;
       const cellLabel = event.target.closest(`.${HEADER_CELL_LABEL}`);
@@ -97,7 +96,6 @@
         }
       }
     },
-
     renderVisibleHeaderCells() {
       const me = this;
 
@@ -116,7 +114,6 @@
         me.headerInnerContainerEl.appendChild(cell);
       }
     },
-
     appendHeaderCell(columnIndex) {
       const me = this;
       const rowEl = me.headerInnerContainerEl;
@@ -124,7 +121,6 @@
 
       rowEl.appendChild(cell);
     },
-
     createHeaderCell(columnIndex) {
       const me = this;
       const column = me.columns[columnIndex];
@@ -134,9 +130,7 @@
       });
       const value = column.title;
 
-      if(column.sortable && column.type){
-        cell.classList.add(HEADER_CELL_SORTABLE);
-      }
+      column.sortable && column.type && cell.classList.add(HEADER_CELL_SORTABLE);
 
       if(column.resizable === false){
         cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
@@ -217,13 +211,8 @@
 
       cell.appendChild(label);
 
-      if(column.menu !== false){
-        cell.appendChild(elMenu);
-      }
-
-      if(column.resizable !== false){
-        cell.appendChild(cellResize);
-      }
+      column.menu !== false && cell.appendChild(elMenu);
+      column.resizable !== false && cell.appendChild(cellResize);
 
       cell.addEventListener('mousedown', me.onCellMouseDown.bind(this));
 
@@ -231,7 +220,6 @@
 
       return cell;
     },
-
     onCellMouseDown(event){
       const me = this;
       const isTargetHeaderCellMenu = event.target.closest(`.${HEADER_CELL_MENU}`);
@@ -262,7 +250,7 @@
         delete me.columnDragMouseDownColumn;
         delete me.debouceColumnDraggingFn;
 
-        setTimeout(()=>{
+        setTimeout(() => {
           if(me.activeRowGroupBarItemEl){
             me.activeRowGroupBarItemEl.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
           }
@@ -274,7 +262,7 @@
           if(me.$requiresReSetGroupColumn && me.rowGroupType === 'column'){
             delete me.$requiresReSetGroupColumn;
             if(me.rowGroupBarItemColumns.length === 1){
-              setTimeout(()=>{
+              setTimeout(() => {
                 let indexToAddColumn = 0;
                 me.$rowGroupColumn.hidden = true;
                 if(me.columns[0].type === 'order'){
@@ -304,9 +292,8 @@
         document.removeEventListener('mousemove', me.onColumnDragMouseMoveFn);
       }, {
         once: true
-      })
+      });
     },
-
     onResizeMouseDown(event) {
       const me = this;
       const gridEl = me.gridEl;
@@ -346,7 +333,6 @@
         bodyEl.style.cursor = 'ew-resize';
       });
     },
-
     onResizeMouseUp() {
       const me = this;
 
@@ -363,7 +349,6 @@
       });
       document.body.removeEventListener('mousemove', me.onResizeMouseMoveFn);
     },
-
     onResizeMouseMove(event) {
       const me = this;
       const deltaX = event.pageX - me.resizeDownX;
@@ -384,7 +369,6 @@
         me.updateWidth();
       });
     },
-
     updateHeaderCells() {
       const me = this;
 
@@ -424,7 +408,6 @@
         }
       }
     },
-
     showHeaderCellMenuList(event, column) {
       const me = this;
       const elMenuRect = column.elMenu.getBoundingClientRect();
@@ -450,8 +433,8 @@
 
       column.elMenuList = el;
       document.body.appendChild(el);
-      setTimeout(()=>{
-        el.style.opacity = `1`;
+      setTimeout(() => {
+        el.style.opacity = '1';
         me.activeElMenuList = el;
       }, 0);
 
@@ -460,7 +443,6 @@
       me.onDocClickForHeaderCellMenuFn = me.onDocClickForHeaderCellMenu.bind(this, column);
       document.addEventListener('mousedown', me.onDocClickForHeaderCellMenuFn);
     },
-
     onClickHeaderMenuItem(e) {
       const me = this;
       const menuItem = e.target.closest(`.${COLUMNS_MENU_ITEM}`);
@@ -502,15 +484,11 @@
         }, 300);
       }
     },
-
     onDocClickForHeaderCellMenu(column, e) {
-      const me = this;
-
       if (!e.target.closest(`.${COLUMNS_MENU}`) && !e.target.closest(`.${HEADER_CELL_MENU}`)) {
-        me.destroyHeaderCellMenuList(column);
+        this.destroyHeaderCellMenuList(column);
       }
     },
-
     destroyHeaderCellMenuList(column) {
       const me = this;
 
@@ -527,11 +505,10 @@
             column.elMenuList.remove();
             delete column.elMenuList;
           }
-        })
+        });
       }
       delete me.activeElMenuList;
     },
-
     reSetVisibleHeaderColumnsIndex(){
       const me = this;
       const columnsViewRange = me.scroller.columnsViewRange;
@@ -555,8 +532,7 @@
         }
       }
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinHeader);
-
 })();

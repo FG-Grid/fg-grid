@@ -10,4 +10,4 @@ Fancy.copyText = (text) => {
     document.execCommand('copy');
     document.body.removeChild(textarea);
   }
-}
+};

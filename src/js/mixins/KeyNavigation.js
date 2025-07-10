@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     DOWN,
     UP,
@@ -43,9 +43,7 @@
           }
           break;
         case ESC:
-          if(!me.isEditing) {
-            me.destroyHeaderCellMenuList();
-          }
+          !me.isEditing && me.destroyHeaderCellMenuList();
           break;
         case SPACE:
           event.preventDefault();
@@ -55,7 +53,7 @@
             const column = me.columns[columnIndex];
             const row = cell.closest(`.${ROW}`);
             const itemId = row.getAttribute('row-id');
-            const item = me.store.idItemMap.get(itemId)
+            const item = me.store.idItemMap.get(itemId);
             const value = item[column.index];
 
             if(column.type === 'boolean' && column.editable){
@@ -83,25 +81,17 @@
           }
           break;
         case LEFT:
-          if(!me.isEditing) {
-            me.onKeyLEFT(event.shiftKey);
-          }
+          !me.isEditing && me.onKeyLEFT(event.shiftKey);
           break;
         case RIGHT:
-          if(!me.isEditing) {
-            me.onKeyRIGHT(event.shiftKey);
-          }
+          !me.isEditing && me.onKeyRIGHT(event.shiftKey);
           break;
         case ENTER:
-          if(!me.isEditing){
-            me.onKeyENTER();
-          }
+          !me.isEditing && me.onKeyENTER();
           break;
         case BACKSPACE:
         case DELETE:
-          if(!me.isEditing){
-            me.setBlankForSelectedCells();
-          }
+          !me.isEditing && me.setBlankForSelectedCells();
           break;
         default:
           const code = event.code;
@@ -200,8 +190,7 @@
         }
       }
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinKeyNavigation);
-
 })();

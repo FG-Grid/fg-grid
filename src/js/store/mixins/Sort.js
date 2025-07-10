@@ -1,9 +1,7 @@
-(()=> {
-
+(() => {
   /**
    * @mixin StoreMixinSort
    */
-
   const StoreMixinSort = {
     reSort() {
       const me = this;
@@ -20,7 +18,6 @@
       });
 
       me.sortedData = data;
-
       me.idRowIndexesMap = new Map();
 
       me.sortedData.forEach((item, index) => {
@@ -30,7 +27,6 @@
 
       me.displayedData = me.sortedData;
     },
-
     sort(column, dir = 'ASC', multi) {
       const me = this;
       let data;
@@ -79,7 +75,6 @@
       me.displayedData = me.sortedData;
       me.prevAction = 'sort';
     },
-
     sortGroupData(column, dir) {
       const me = this;
       const sortedData = me.displayedData.slice();
@@ -107,7 +102,6 @@
 
       return sortedData;
     },
-
     sortGroupDataForFiltering(column, dir) {
       const me = this;
       const sortedData = me.displayedData.slice();
@@ -135,7 +129,6 @@
 
       return sortedData;
     },
-
     sortPieceOfData(data) {
       const me = this;
 
@@ -145,7 +138,6 @@
 
       return data;
     },
-
     sortData(data, column, dir) {
       let sortedData = [];
 
@@ -294,7 +286,6 @@
 
       return sortedData;
     },
-
     clearSort(column, multi) {
       const me = this;
 
@@ -338,9 +329,7 @@
 
           me.prevAction = 'filter';
         } else {
-          if(!me.filteredData){
-            me.reFilter(false);
-          }
+          !me.filteredData && me.reFilter(false);
 
           me.filteredData.forEach((item, index) => {
             me.idRowIndexesMap.set(item.id, index);
@@ -374,11 +363,10 @@
         delete me.sortedData;
       }
     },
-
     isParentCollapsed(group) {
       const me = this;
       const splitted = group.split('/');
-      let iL = splitted.length - 1;
+      const iL = splitted.length - 1;
 
       for (let i = 0; i < iL; i++) {
         splitted.pop();
@@ -389,8 +377,7 @@
 
       return false;
     }
-  }
+  };
 
   Object.assign(Fancy.Store.prototype, StoreMixinSort);
-
 })();

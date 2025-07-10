@@ -1,5 +1,4 @@
-(()=>{
-
+(() => {
   const  {
     ANIMATE_CELLS_POSITION,
     CELL,
@@ -11,7 +10,6 @@
   /**
    * @mixin GridMixinColumn
    */
-
   const GridMixinColumn = {
     showColumn(column, animate){
       const me = this;
@@ -35,7 +33,6 @@
         }, 300);
       }
     },
-
     hideColumn(column, animate){
       const me = this;
 
@@ -71,14 +68,12 @@
         columnIndex: columnsToRemove[0]
       };
     },
-
     isPossibleToHideColumn(){
       const me = this;
       const numOfHiddenColumns = me.columns.reduce((sum, column) => sum + (column.hidden? 1: 0), 0);
 
       return me.columns.length - numOfHiddenColumns !== 1;
     },
-
     removeColumn(column){
       const me = this;
 
@@ -99,7 +94,6 @@
       me.reSetVisibleBodyColumnsIndex();
       me.reCalcColumnsPositions();
     },
-
     clearColumFromLinks(column){
       delete column.elFilter;
       delete column.elMenu;
@@ -110,17 +104,12 @@
       delete column.filterField;
       delete column.headerCellEl;
     },
-
     getColumn(index){
-      const me = this;
-
-      return me.columns.find(column => column.index === index);
+      return this.columns.find(column => column.index === index);
     },
-
     getColumnById(id){
       return this.columnIdsMap.get(id);
     },
-
     getNextVisibleColumnIndex(index){
       const me = this;
 
@@ -131,7 +120,6 @@
         }
       }
     },
-
     getPrevVisibleColumnIndex(index){
       const me = this;
 
@@ -142,7 +130,6 @@
         }
       }
     },
-
     getAutoColumnIdSeed(){
       const me = this;
 
@@ -154,10 +141,8 @@
 
       return me.columnIdSeed;
     },
-
     generateColumnIds(columns, updateMaps = true){
       const me = this;
-
       const columnIdsMap = new Map();
       const columnIdsSeedMap = new Map();
 
@@ -197,9 +182,8 @@
       return {
         columnIdsMap,
         columnIdsSeedMap
-      }
+      };
     },
-
     setColumns(columns){
       const me = this;
 
@@ -226,7 +210,6 @@
         delete me.animatingColumnsPosition;
       }, 300);
     },
-
     renderMissedCells(){
       const me = this;
       let columnStart = me.scroller.columnViewStart;
@@ -238,7 +221,7 @@
         const column = me.columns[i];
 
         if(column.hidden){
-          continue
+          continue;
         }
 
         if(!column.headerCellEl){
@@ -248,7 +231,6 @@
 
       me.addColumnCells(columnIndexes);
     },
-
     terminateNotExistedCells(){
       const me = this;
       const cells = me.headerEl.querySelectorAll(`.${HEADER_CELL}`);
@@ -268,13 +250,12 @@
           const bodyCells = me.bodyEl.querySelectorAll(`.${CELL}[col-id="${columnId}"]`);
           bodyCells.forEach(bodyCell => {
             bodyCell.remove();
-          })
+          });
         }
 
         column && !isColumnVisible && me.clearColumFromLinks(column);
       });
     },
-
     $setColumns(newColumns){
       const me = this;
       const columnsToAdd = new Map();
@@ -298,7 +279,7 @@
       });
 
       const newColumnsOrderMap = new Map();
-      newColumns.forEach((newColumn, index)=>{
+      newColumns.forEach((newColumn, index) => {
         if(!me.columnIdsMap.has(newColumn.id)){
           me.prepareColumn(newColumn, me.defaults);
 
@@ -338,7 +319,6 @@
 
       me.columns = orderedColumns;
     },
-
     prepareColumn(column, defaults = {}){
       const me = this;
       const store = me.store;
@@ -353,7 +333,7 @@
             const itemId = row.getAttribute('row-id');
 
             me.store.setById(itemId, column.index, value);
-          }
+          };
           break;
         case 'currency':
           Object.assign(column, {
@@ -397,8 +377,7 @@
         }
       });
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinColumn);
-
 })();

@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     GRID,
     GRID_CELLS_RIGHT_BORDER,
@@ -14,7 +14,6 @@
   } = Fancy.cls;
 
   const div = Fancy.div;
-
   /**
    * @mixes GridMixinBody
    * @mixes GridMixinColumn
@@ -29,7 +28,6 @@
    * @mixes GridMixinSelection
    * @mixes GridMixinSort
    */
-
   class Grid {
     theme = 'default';
     defaultColumnWidth = 120;
@@ -78,7 +76,6 @@
         return value || '';
       }
     };
-
     constructor(config, extraConfig) {
       const me = this;
 
@@ -111,7 +108,6 @@
 
       me.ons();
     }
-
     initContainer(renderTo){
       const me = this;
 
@@ -126,10 +122,9 @@
       }
 
       if(!me.containerEl){
-        console.error(`Could not find renderTo element`);
+        console.error('Could not find renderTo element');
       }
     }
-
     initId(id){
       const me = this;
 
@@ -144,7 +139,6 @@
 
       Fancy.gridsMap.set(me.id, me);
     }
-
     render() {
       const me = this;
       const gridCls = [GRID, 'fg-theme-' + me.theme];
@@ -159,21 +153,12 @@
       me.containerEl.appendChild(gridEl);
       me.gridEl = gridEl;
 
-      if(me.rowGroupBar){
-        me.renderRowGroupBar();
-      }
-
+      me.rowGroupBar && me.renderRowGroupBar();
       me.renderHeader();
-
-      if(me.filterBar){
-        me.renderFilterBar();
-      }
-
+      me.filterBar && me.renderFilterBar();
       me.renderBody();
-
       me.scroller.render();
     }
-
     updateWidth(){
       const me = this;
       const width = me.getTotalColumnsWidth();
@@ -191,7 +176,6 @@
 
       me.scroller.setHorizontalSize();
     }
-
     renderHeader() {
       const me = this;
 
@@ -208,7 +192,6 @@
         width: me.getTotalColumnsWidth() + 'px'
       });
 
-
       headerInnerEl.appendChild(headerInnerContainerEl);
       headerEl.appendChild(headerInnerEl);
       me.gridEl.appendChild(headerEl);
@@ -217,7 +200,6 @@
       me.headerInnerEl = headerInnerEl;
       me.headerEl = headerEl;
     }
-
     renderBody() {
       const me = this;
       const bodyEl = div(BODY);
@@ -239,7 +221,6 @@
       me.bodyInnerEl = bodyInnerEl;
       me.bodyEl = bodyEl;
     }
-
     updateVisibleHeight(){
       const me = this;
       const store = me.store;
@@ -254,14 +235,13 @@
         me.bodyInnerContainerEl.style.height = (store.getDataTotal() * me.rowHeight) + 'px';
       }
     }
-
     animatedRemoveDomRowById(id){
       const me = this;
       const rowEl = me.renderedRowsIdMap.get(id);
 
       if(rowEl){
         rowEl.style.opacity = 0;
-        setTimeout(()=>{
+        setTimeout(() => {
           rowEl.remove();
         }, 200);
       }
@@ -269,21 +249,15 @@
       me.actualRowsIdSet.delete(id);
       me.renderedRowsIdMap.delete(id);
     }
-
     removeDomRowById(id){
       const me = this;
       const rowEl = me.renderedRowsIdMap.get(id);
 
-      if(rowEl){
-        rowEl.remove();
-      } else {
-        // console.warn(`Row El with id = ${id} was not found`);
-      }
+      rowEl?.remove();
 
       me.actualRowsIdSet.delete(id);
       me.renderedRowsIdMap.delete(id);
     }
-
     prepareConfig(config) {
       const me = this;
       let rowGroups = [];
@@ -339,20 +313,18 @@
           if(rowGroups.length && me.$rowGroupColumn){
             if(config.columns[0].type === 'order'){
               config.columns.splice(1, 0, rowGroupColumn);
-            } else{
+            } else {
               config.columns.unshift(rowGroupColumn);
             }
           }
         }
 
         config.columns.forEach(column => {
-          switch(column.type){
-            case 'order':
-              if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
-                console.error('Order column is not supported for row grouping with rowGroupType equals to "row"');
-                console.error('For order column use rowGroupType equals to "column"');
-              }
-              break;
+          if(column.type === 'order'){
+            if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
+              console.error('Order column is not supported for row grouping with rowGroupType equals to "row"');
+              console.error('For order column use rowGroupType equals to "column"');
+            }
           }
 
           me.prepareColumn(column, config.defaults);
@@ -365,7 +337,7 @@
             aggregations.push({
               index: column.index,
               fn: column.agFn
-            })
+            });
           }
 
           column.left = left;
@@ -378,7 +350,7 @@
       const storeConfig = {
         data: structuredClone(config.data),
         defaultRowGroupSort: config.defaultRowGroupSort || me.defaultRowGroupSort
-      }
+      };
 
       if(rowGroups.length){
         Object.assign(storeConfig, {
@@ -395,11 +367,9 @@
 
       return config;
     }
-
     initStore(config) {
       this.store = new Fancy.Store(config);
     }
-
     ons() {
       const me = this;
 
@@ -412,13 +382,11 @@
       me.headerInnerContainerEl.addEventListener('click', me.onHeaderCellClick.bind(this));
       me.headerInnerContainerEl.addEventListener('mousedown', me.onHeaderMouseDown.bind(this));
     }
-
     getTotalColumnsWidth() {
-      return this.columns.reduce((sum, column)=>{
-        return sum + (column.hidden? 0: column.width)
+      return this.columns.reduce((sum, column) => {
+        return sum + (column.hidden? 0: column.width);
       }, 0);
     }
-
     reCalcColumnsPositions(){
       const me = this;
 
@@ -428,7 +396,6 @@
         return left + (column.hidden? 0: column.width);
       }, 0);
     }
-
     checkInitialSize(){
       const me = this;
 
@@ -444,7 +411,6 @@
         me.containerEl.style.height = me.initialHeight + 'px';
       }
     }
-
     checkSize(){
       const me = this;
       const rect = me.containerEl.getBoundingClientRect();
@@ -462,7 +428,6 @@
 
       return changed;
     }
-
     setData(data){
       const me = this;
       const store = me.store;
@@ -474,7 +439,6 @@
       me.reRender();
       delete store.$dontDropExpandedGroups;
     }
-
     reRender(){
       const me = this;
       const store = me.store;
@@ -482,7 +446,7 @@
 
       if(me.store.rowGroups.length){
         me.reConfigRowGroups();
-      } else{
+      } else {
         me.terminateVisibleRows();
         scroller.calcMaxScrollTop();
         scroller.updateScrollTop();
@@ -497,21 +461,13 @@
         store.memorizePrevRowIndexesMap();
       }
     }
-
     destroy(){
-      const me = this;
-
-      me.touchScroller.destroy();
-
-      me.gridEl.remove();
+      this.touchScroller.destroy();
+      this.gridEl.remove();
     }
-
     onBodyCellClick(){
-      const me = this;
-
-      me.hideActiveEditor();
+      this.hideActiveEditor();
     }
-
     remove(rows){
       const me = this;
       const store = me.store;
@@ -545,6 +501,7 @@
         }
       }
 
+      const passedGroupForAgUpdate = {};
       rowGroups.forEach((items, groupValue) => {
         const splitted = groupValue.split('/');
 
@@ -610,17 +567,12 @@
             }
           }
 
-          store.agGroupUpdateData(name, dataItemsToRemove);
+          if(!passedGroupForAgUpdate[name]){
+            store.agGroupUpdateData(name, dataItemsToRemove);
+            passedGroupForAgUpdate[name] = true;
+          }
         }
       });
-
-      /*
-      if(!me.$isOriginalDataIndexesSet){
-        me.data.forEach((item, index) => {
-          item.originalDataRowIndex = index;
-        });
-      }
-       */
 
       const rowIndexes = dataItemsToRemove.sort((a, b) => a.originalDataRowIndex - b.originalDataRowIndex);
       rowIndexes.forEach((item, index) => {
@@ -628,15 +580,6 @@
       });
       delete store.$isOriginalDataIndexesSet;
 
-      /*
-      const rowIndexes = dataItemsToRemove.sort((a,b) => a.originalRowIndex - b.originalRowIndex);
-      rowIndexes.forEach((item,index) => {
-        me.store.data.splice(item.originalRowIndex - index, 1)
-      });
-      */
-
-      // TODO: Here there is problem and bug.
-      // For cases when remove item in hidden group
       if(store.displayedData?.length){
         // Filter items that are in collapsed groups
         const displayedItemsToRemove = itemsToRemove.filter(item => {
@@ -669,7 +612,6 @@
 
       me.updateOrderColumn();
     }
-
     add(items, position){
       const me = this;
       const store = me.store;
@@ -707,7 +649,6 @@
 
       me.updateOrderColumn();
     }
-
     setById(id, index, value){
       const me = this;
       const store = me.store;
@@ -735,17 +676,17 @@
           cellStyle.transition = 'background-color 2000ms';
           cellStyle.backgroundColor = flashChangesColors[store.selectedItemsMap.has(id)?1:0];
 
-          setTimeout(()=>{
+          setTimeout(() => {
             cellStyle.backgroundColor = '';
           });
 
-          setTimeout(()=>{
+          setTimeout(() => {
             cellStyle.transition = '';
             cellStyle.backgroundColor = '';
           }, 2000);
         }
         row.appendChild(cell);
-      }
+      };
 
       if(typeof index === 'object'){
         for(let p in index){
@@ -763,7 +704,6 @@
 
       row && me.rowCellsUpdateWithColumnRender(row, me.flashChanges);
     }
-
     getItemById(id) {
       return this.store.idItemMap.get(id);
     }
@@ -771,5 +711,4 @@
 
   window.Grid = Grid;
   Fancy.Grid = Grid;
-
 })();

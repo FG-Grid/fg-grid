@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     CELL,
     CELL_SELECTION,
@@ -16,7 +16,6 @@
   /**
    * @mixin GridMixinSelection
    */
-
   const GridMixinSelection = {
     onRowCellSelectionClick(event) {
       const me = this;
@@ -32,22 +31,11 @@
       const group = item.$rowGroupValue;
 
       store.selectRowItem(item, selected);
+      row.classList[selected? 'add' : 'remove' ](ROW_SELECTED);
 
-      if(selected){
-        row.classList.add(ROW_SELECTED);
-      } else {
-        row.classList.remove(ROW_SELECTED);
-      }
-
-      if(column.headerCheckboxSelection){
-       me.updateHeaderCheckboxSelection(column);
-      }
-
-      if(group){
-        me.updateRowGroupRowsAndCheckBoxes();
-      }
+      column.headerCheckboxSelection && me.updateHeaderCheckboxSelection(column);
+      group && me.updateRowGroupRowsAndCheckBoxes();
     },
-
     selectRow(cell){
       const me = this;
       const columnIndex = Number(cell.getAttribute('col-index'));
@@ -61,26 +49,11 @@
       const rowCheckBoxes = row.querySelectorAll(`div.${CELL_SELECTION} input.${INPUT_CHECKBOX}`);
 
       store.selectRowItem(item, selected);
+      row.classList[selected?'add':'remove'](ROW_SELECTED);
+      rowCheckBoxes.forEach(checkBox => checkBox.checked = selected);
 
-      if(selected){
-        row.classList.add(ROW_SELECTED);
-        rowCheckBoxes.forEach(checkBox => {
-          checkBox.checked = true;
-        });
-      } else {
-        row.classList.remove(ROW_SELECTED);
-        rowCheckBoxes.forEach(checkBox => {
-          checkBox.checked = false;
-        });
-      }
-
-      if(column.headerCheckboxSelection){
-        me.updateHeaderCheckboxSelection(column);
-      }
-
-      if(group){
-        me.updateRowGroupRowsAndCheckBoxes();
-      }
+      column.headerCheckboxSelection && me.updateHeaderCheckboxSelection(column);
+      group && me.updateRowGroupRowsAndCheckBoxes();
     },
 
     onRowGroupCellSelectionClick(event){
@@ -94,12 +67,7 @@
       const group = item.$rowGroupValue;
 
       store.selectGroupRowItems(item, selected);
-
-      if(selected){
-        row.classList.add(ROW_SELECTED);
-      } else {
-        row.classList.remove(ROW_SELECTED);
-      }
+      row.classList[selected?'add':'remove'](ROW_SELECTED);
 
       me.updateHeaderCheckboxesSelection();
 
@@ -111,17 +79,9 @@
         }
 
         const childRowCheckBox = childRow.querySelector(`.${INPUT_CHECKBOX}`);
-
-        if(selected){
-          childRow.classList.add(ROW_SELECTED);
-          if(childRowCheckBox){
-            childRowCheckBox.checked = true;
-          }
-        } else {
-          childRow.classList.remove(ROW_SELECTED);
-          if(childRowCheckBox){
-            childRowCheckBox.checked = false;
-          }
+        childRow.classList[selected?'add':'remove'](ROW_SELECTED);
+        if(childRowCheckBox){
+          childRowCheckBox.checked = selected;
         }
       });
 
@@ -130,7 +90,6 @@
         me.updateRowsAndCheckBoxes();
       }
     },
-
     updateHeaderCheckboxesSelection(){
       const me = this;
 
@@ -141,7 +100,6 @@
         }
       });
     },
-
     updateRowGroupRowsAndCheckBoxes(){
       const me = this;
       const store = me.store;
@@ -175,7 +133,6 @@
         }
       });
     },
-
     updateRowsAndCheckBoxes(){
       const me = this;
       const store = me.store;
@@ -188,14 +145,13 @@
         }
         const selected = item.$selected;
         const checkBoxEl = row.querySelector(`.${CELL_SELECTION} .${INPUT_CHECKBOX}`);
+        row.classList[selected?'add':'remove'](ROW_SELECTED);
 
         if(selected){
-          row.classList.add(ROW_SELECTED);
           if(checkBoxEl){
             checkBoxEl.checked = true;
           }
         } else {
-          row.classList.remove(ROW_SELECTED);
           if(checkBoxEl){
             checkBoxEl.indeterminate = false;
             checkBoxEl.checked = false;
@@ -203,7 +159,6 @@
         }
       });
     },
-
     onBodyCellMouseDown(event) {
       const me = this;
       const target = event.target;
@@ -217,9 +172,9 @@
       me.active = true;
 
       if(me.activeCell){
-        const setActivateCell = ()=>{
+        const setActivateCell = () => {
           me.setActiveCell(cell);
-          requestAnimationFrame(()=> {
+          requestAnimationFrame(() => {
             document.addEventListener('mousedown', (event) => {
               if (!event.target.closest(`div.${BODY}`)) {
                 me.clearActiveCell();
@@ -230,10 +185,10 @@
               once: true
             });
           });
-        }
+        };
 
         if(target.getAttribute('type') === 'checkbox'){
-          target.addEventListener('click', ()=>{
+          target.addEventListener('click', () => {
             setActivateCell();
           }, {
             once: true
@@ -246,14 +201,13 @@
 
       if(me.selectingCells){
         me.isSelectingCells = true;
-        document.addEventListener('mouseup', ()=>{
+        document.addEventListener('mouseup', () => {
           delete me.isSelectingCells;
         }, {
           once: true
         });
       }
     },
-
     onBodyCellMouseEnter(event){
       const me = this;
       const target = event.target;
@@ -274,22 +228,22 @@
       me.generateCellsSelectionRange();
       me.selectCellsFromRange();
     },
-
     setShiftCellUp(){
       const me = this;
+      const store = me.store;
 
       if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
         return;
       }
 
-      const secondActiveCellRowIndex = me.store.idRowIndexesMap.get(me.secondActiveCellRowId);
-      const prevRowIndex = grid.store.getPrevVisibleRowIndex(secondActiveCellRowIndex);
+      const secondActiveCellRowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const prevRowIndex = store.getPrevVisibleRowIndex(secondActiveCellRowIndex);
 
       if(prevRowIndex === undefined){
         return;
       }
 
-      const itemId = grid.store.getItemByRowIndex(prevRowIndex).id;
+      const itemId = store.getItemByRowIndex(prevRowIndex).id;
 
       me.secondActiveCell = me.getCell(prevRowIndex, me.secondActiveCellColumnIndex);
       me.secondActiveCellRowId = itemId;
@@ -299,22 +253,22 @@
       me.generateCellsSelectionRange();
       me.selectCellsFromRange();
     },
-
     setShiftCellDown(){
       const me = this;
+      const store = me.store;
 
       if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
         return;
       }
 
-      const secondActiveCellRowIndex = me.store.idRowIndexesMap.get(me.secondActiveCellRowId);
-      const nextRowIndex = grid.store.getNextVisibleRowIndex(secondActiveCellRowIndex);
+      const secondActiveCellRowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const nextRowIndex = store.getNextVisibleRowIndex(secondActiveCellRowIndex);
 
       if(nextRowIndex === undefined){
         return;
       }
 
-      const itemId = grid.store.getItemByRowIndex(nextRowIndex).id;
+      const itemId = store.getItemByRowIndex(nextRowIndex).id;
 
       me.secondActiveCell = me.getCell(nextRowIndex, me.secondActiveCellColumnIndex);
       me.secondActiveCellRowId = itemId;
@@ -324,16 +278,16 @@
       me.generateCellsSelectionRange();
       me.selectCellsFromRange();
     },
-
     setShiftCellLeft(){
       const me = this;
+      const store = me.store;
 
       if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
         return;
       }
 
       const columnIndex = me.getPrevVisibleColumnIndex(me.secondActiveCellColumnIndex);
-      const rowIndex = grid.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const rowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
 
       if(columnIndex === undefined){
         return;
@@ -347,16 +301,16 @@
       me.generateCellsSelectionRange();
       me.selectCellsFromRange();
     },
-
     setShiftCellRight(){
       const me = this;
+      const store = me.store;
 
       if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
         return;
       }
 
       const columnIndex = me.getNextVisibleColumnIndex(me.secondActiveCellColumnIndex);
-      const rowIndex = grid.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const rowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
 
       if(columnIndex === undefined){
         return;
@@ -370,7 +324,6 @@
       me.generateCellsSelectionRange();
       me.selectCellsFromRange();
     },
-
     clearActiveCell(){
       const me = this;
 
@@ -382,14 +335,10 @@
       delete me.activeCellColumnIndex;
       delete me.activeCellColumn;
       delete me.activeCellRowId;
-
-      // if(me.$signalActiveCell){
-      //   me.$signalControllerActiveCell.abort();
-      // }
     },
-
     setActiveCell(cell){
       const me = this;
+      const scroller = me.scroller;
       const row = cell.closest(`.${ROW}`);
 
       const prevRowIndex = Number(me.activeCellRowEl?.getAttribute('row-index'));
@@ -399,9 +348,7 @@
       const itemId = row.getAttribute('row-id');
       const column = me.columns[columnIndex];
 
-      if(me.selectionCellsRange){
-        me.clearSelectionRange();
-      }
+      me.selectionCellsRange && me.clearSelectionRange();
 
       me.activeCellEl?.classList.remove(ACTIVE_CELL);
       me.activeCellEl = cell;
@@ -423,26 +370,26 @@
       const rowTop = Fancy.getTranslateY(row);
       const rowRect = row.getBoundingClientRect();
 
-      if(rect.height + me.scroller.scrollTop < rowTop + rowRect.height){
+      if(rect.height + scroller.scrollTop < rowTop + rowRect.height){
         const delta = newRowIndex - prevRowIndex;
-        me.scroller.deltaChange(-rowRect.height * delta);
+        scroller.deltaChange(-rowRect.height * delta);
       }
-      else if(me.scroller.scrollTop > rowTop){
+      else if(scroller.scrollTop > rowTop){
         const delta = prevRowIndex - newRowIndex;
-        me.scroller.deltaChange(delta * rowRect.height);
+        scroller.deltaChange(delta * rowRect.height);
       }
-      else if(rect.width + me.scroller.scrollLeft < column.left + column.width){
-        const delta = (column.left + column.width) - (rect.width + me.scroller.scrollLeft);
-        me.scroller.horizontalDeltaChange(-delta - me.scroller.scrollBarWidth - 2);
+      else if(rect.width + scroller.scrollLeft < column.left + column.width){
+        const delta = (column.left + column.width) - (rect.width + scroller.scrollLeft);
+        scroller.horizontalDeltaChange(-delta - scroller.scrollBarWidth - 2);
       }
-      else if(me.scroller.scrollLeft > column.left){
-        const delta = me.scroller.scrollLeft - column.left;
-        me.scroller.horizontalDeltaChange(delta + 2);
+      else if(scroller.scrollLeft > column.left){
+        const delta = scroller.scrollLeft - column.left;
+        scroller.horizontalDeltaChange(delta + 2);
       }
     },
-
     scrollToCell(cell){
       const me = this;
+      const scroller = me.scroller;
       const row = cell.closest(`.${ROW}`);
       const rect = me.bodyEl.getBoundingClientRect();
       const rowTop = Fancy.getTranslateY(row);
@@ -450,42 +397,39 @@
       const columnIndex = Number(cell.getAttribute('col-index'));
       const column = me.columns[columnIndex];
 
-      if(rect.height + me.scroller.scrollTop < rowTop + rowRect.height){
+      if(rect.height + scroller.scrollTop < rowTop + rowRect.height){
         const delta = me.rowHeight;
-        me.scroller.deltaChange(-delta);
+        scroller.deltaChange(-delta);
       }
-      else if(me.scroller.scrollTop > rowTop){
+      else if(scroller.scrollTop > rowTop){
         const delta = me.rowHeight;
-        me.scroller.deltaChange(delta);
+        scroller.deltaChange(delta);
       }
-      else if(rect.width + me.scroller.scrollLeft < column.left + column.width){
-        const delta = (column.left + column.width) - (rect.width + me.scroller.scrollLeft);
-        me.scroller.horizontalDeltaChange(-delta - me.scroller.scrollBarWidth - 2);
+      else if(rect.width + scroller.scrollLeft < column.left + column.width){
+        const delta = (column.left + column.width) - (rect.width + scroller.scrollLeft);
+        scroller.horizontalDeltaChange(-delta - scroller.scrollBarWidth - 2);
       }
-      else if(me.scroller.scrollLeft > column.left){
-        const delta = me.scroller.scrollLeft - column.left;
-        me.scroller.horizontalDeltaChange(delta + 2);
+      else if(scroller.scrollLeft > column.left){
+        const delta = scroller.scrollLeft - column.left;
+        scroller.horizontalDeltaChange(delta + 2);
       }
     },
-
     hasActiveCell(){
       const me = this;
 
       return me.activeCellColumn !== undefined && me.activeCellRowId !== undefined && me.activeCellColumnIndex !== undefined;
     },
-
     scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex){
       const me = this;
 
       const delta = me.scroller.scrollTop - (newRowIndex - 1) * me.rowHeight;
       me.$preventActiveCellRender = true;
       me.scroller.deltaChange(delta);
-      setTimeout(()=>{
+      setTimeout(() => {
         const cell = me.getCell(newRowIndex, columnIndex);
         cell && me.setActiveCell(cell);
       },0);
     },
-
     setActiveCellUp(){
       const me = this;
       const columnIndex = me.activeCellColumnIndex;
@@ -509,7 +453,6 @@
         me.scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex);
       }
     },
-
     setActiveCellDown(){
       const me = this;
       const columnIndex = me.activeCellColumnIndex;
@@ -528,16 +471,14 @@
       }
 
       const cell = me.getCell(newRowIndex, columnIndex);
-      if(cell) {
+      if (cell) {
         me.setActiveCell(cell);
-      }
-      else {
+      } else {
         me.scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex);
       }
 
       return cell;
     },
-
     setActiveCellLeft(){
       const me = this;
       const columnIndex = me.activeCellColumnIndex;
@@ -552,14 +493,12 @@
       const cell = me.getCell(rowIndex, newColumnIndex);
       if(cell){
         me.setActiveCell(cell);
-      }
-      else{
+      } else{
         me.scrollToNotVisibleNewActiveCell(rowIndex, newColumnIndex);
       }
 
       return cell;
     },
-
     setActiveCellRight(){
       const me = this;
       const row = me.activeCellRowEl;
@@ -574,14 +513,12 @@
       const cell = me.getCell(rowIndex, newColumnIndex);
       if(cell){
         me.setActiveCell(cell);
-      }
-      else{
+      } else {
         me.scrollToNotVisibleNewActiveCell(rowIndex, newColumnIndex);
       }
 
       return cell;
     },
-
     updateHeaderCheckboxSelection(column){
       const me = this;
       if(!column){
@@ -612,7 +549,6 @@
         checkBoxEl.checked = false;
       }
     },
-
     onHeaderCheckboxSelectionClick(event){
       const me = this;
       const store = me.store;
@@ -620,16 +556,11 @@
       const selected = inputEl.checked;
 
       store.selectAll(selected);
-
-      if(store.rowGroups.length){
-        me.updateRowGroupRowsAndCheckBoxes();
-      }
+      store.rowGroups.length && me.updateRowGroupRowsAndCheckBoxes();
       me.updateRowsAndCheckBoxes();
     },
-
     getSelection(){
-      const me = this;
-      const store = me.store;
+      const store = this.store;
       const items = [];
 
       store.selectedItemsMap.forEach(item => {
@@ -640,19 +571,18 @@
 
       return items;
     },
-
     generateCellsSelectionRange(){
       const me = this;
-      const activeCellRowIndex = me.store.idRowIndexesMap.get(me.activeCellRowId);
-      const secondActiveCellRowIndex = me.store.idRowIndexesMap.get(me.secondActiveCellRowId);
+      const store = me.store;
+      const activeCellRowIndex = store.idRowIndexesMap.get(me.activeCellRowId);
+      const secondActiveCellRowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
       const rows = [];
       const columns = [];
 
       if(activeCellRowIndex <= secondActiveCellRowIndex){
         rows[0] = activeCellRowIndex;
         rows[1] = secondActiveCellRowIndex;
-      }
-      else {
+      } else {
         rows[0] = secondActiveCellRowIndex;
         rows[1] = activeCellRowIndex;
       }
@@ -660,8 +590,7 @@
       if(me.activeCellColumnIndex <= me.secondActiveCellColumnIndex){
         columns[0] = me.activeCellColumnIndex;
         columns[1] = me.secondActiveCellColumnIndex;
-      }
-      else{
+      } else {
         columns[0] = me.secondActiveCellColumnIndex;
         columns[1] = me.activeCellColumnIndex;
       }
@@ -671,7 +600,6 @@
         columns
       };
     },
-
     selectCellsFromRange(){
       const me = this;
       const selectedCells = me.bodyEl.querySelectorAll(`div.${CELL_SELECTED}`);
@@ -713,7 +641,6 @@
         }
       }
     },
-
     isCellInSelectedRange(cell){
       const me = this;
       const columnIndex = Number(cell.getAttribute('col-index'));
@@ -731,25 +658,19 @@
 
       return rowIndex >= rows[0] && rowIndex <= rows[1] && columnIndex >= columns[0] && columnIndex <= columns[1];
     },
-
     clearSelectionRange(){
-      const me = this;
-      const selectedCells = me.bodyEl.querySelectorAll(`div.${CELL_SELECTED}`);
+      const selectedCells = this.bodyEl.querySelectorAll(`div.${CELL_SELECTED}`);
 
-      selectedCells.forEach(cell => {
-        cell.classList.remove(CELL_SELECTED);
-      });
+      selectedCells.forEach(cell => cell.classList.remove(CELL_SELECTED));
 
-      delete me.selectionCellsRange;
+      delete this.selectionCellsRange;
     },
-
     copySelectedCells(){
       const me = this;
       const text = me.getTextFromSelectionRange();
 
       Fancy.copyText(text);
     },
-
     getTextFromSelectionRange(){
       const me = this;
       const {
@@ -782,7 +703,7 @@
         }
 
         return cellInner;
-      }
+      };
 
       if(rows.length === 0 && me.activeCellEl){
         const row = me.activeCellEl.closest(`.${ROW}`);
@@ -794,7 +715,6 @@
         const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
         const column = me.columns[columnIndex];
         const rowIndex = row.getAttribute('row-index');
-
         const value = item[column.index];
         const cellInner = getCellInner({
           item,
@@ -830,7 +750,6 @@
 
       return data.map(row => row.join('\t')).join('\n');
     },
-
     insertCopiedCells(){
       const me = this;
       const textarea = document.createElement('textarea');
@@ -850,7 +769,7 @@
         }
 
         return offset;
-      }
+      };
 
       document.addEventListener('paste', (event) => {
         const text = event.clipboardData.getData('text');
@@ -868,7 +787,7 @@
         const activeRowIndex = Number(me.activeCellRowEl.getAttribute('row-index'));
         let rowOffset = 0;
 
-        data.forEach((dataRow, itemRowIndex)=>{
+        data.forEach((dataRow, itemRowIndex) => {
           const extraRowsOffset = getRowsOffSet(activeRowIndex + itemRowIndex + rowOffset);
           rowOffset += extraRowsOffset;
 
@@ -883,7 +802,7 @@
 
           let columnIndex = me.activeCellColumnIndex - 1;
 
-          dataRow.forEach((value, itemColumnIndex)=>{
+          dataRow.forEach(value => {
             columnIndex = me.getNextVisibleColumnIndex(columnIndex);
 
             const column = me.columns[columnIndex];
@@ -908,9 +827,9 @@
         });
       });
     },
-
     setBlankForSelectedCells(){
       const me = this;
+      const store = me.store;
       const {
         rows,
         columns
@@ -924,11 +843,11 @@
         let value = options.value;
 
         if(column.setter){
-          value = column.setter(options)
+          value = column.setter(options);
         }
 
         return value;
-      }
+      };
 
       if(rows.length === 0 && me.activeCellEl){
         const rowEl = me.activeCellEl.closest(`.${ROW}`);
@@ -937,7 +856,7 @@
         }
         const rowIndex = rowEl.getAttribute('row-index');
         const itemId = rowEl.getAttribute('row-id');
-        const item = me.store.idItemMap.get(itemId);
+        const item = store.idItemMap.get(itemId);
         const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
         const column = me.columns[columnIndex];
         const value = getCellSetterValue({
@@ -948,7 +867,7 @@
           value: ''
         });
 
-        me.store.setById(itemId ,column.index, value);
+        store.setById(itemId ,column.index, value);
 
         me.activeCellEl.remove();
 
@@ -961,7 +880,7 @@
 
       for(let i = rows[0];i<=rows[1];i++){
         const rowIndex = i;
-        let item = me.store.getItemByRowIndex(i);
+        let item = store.getItemByRowIndex(i);
         const rowEl = me.bodyEl.querySelector(`.${ROW}[row-index="${rowIndex}"]`);
 
         for(let j = columns[0];j<=columns[1];j++){
@@ -976,7 +895,7 @@
             value: ''
           });
 
-          me.store.setById(item.id ,column.index, value);
+          store.setById(item.id ,column.index, value);
 
           if(!rowEl || !column){
             return;
@@ -991,7 +910,7 @@
         }
       }
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinSelection);
 })();

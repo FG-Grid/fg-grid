@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     FILTER_BAR,
     FILTER_BAR_CELL,
@@ -31,7 +31,6 @@
         me.filterBarInnerContainerEl.appendChild(cell);
       }
     },
-
     renderFilterBar() {
       const me = this;
 
@@ -56,7 +55,6 @@
       me.filterBarInnerEl = filterBarInnerEl;
       me.filterBarEl = filterBarEl;
     },
-
     createFilterBarCell(columnIndex) {
       const me = this;
       const column = me.columns[columnIndex];
@@ -78,22 +76,19 @@
           value = filter.value;
         }
 
-        const field = new Fancy.FilterField({
+        column.filterField = new Fancy.FilterField({
           renderTo: cell,
           onChange: me.onFilterFieldChange.bind(this),
           column,
           sign,
           value
         });
-
-        column.filterField = field;
       }
 
       column.filterCellEl = cell;
 
       return cell;
     },
-
     onFilterFieldChange(value, sign, column, signWasChanged) {
       const me = this;
 
@@ -108,7 +103,7 @@
         column.filters = {
           sign,
           value
-        }
+        };
       }
 
       if (value === '') {
@@ -117,7 +112,6 @@
         me.filter(column, value, sign);
       }
     },
-
     appendFilterBarCell(columnIndex) {
       const me = this;
       const rowEl = me.filterBarInnerContainerEl;
@@ -125,7 +119,6 @@
 
       rowEl.appendChild(cell);
     },
-
     clearFilter(column, sign) {
       const me = this;
       const store = me.store;
@@ -159,7 +152,6 @@
 
       me.updateAfterFilter();
     },
-
     filter(column, value, sign = '=') {
       const me = this;
       const store = me.store;
@@ -177,44 +169,42 @@
       me.updateFiltersInColumns(column, value, sign);
       me.updateAfterFilter();
     },
-
     filterForRowGrouping(column, value, sign = '='){
       const me = this;
 
       me.store.filterForRowGrouping(column, value, sign);
       me.updateFiltersInColumns(column, value, sign);
     },
-
     updateFiltersInColumns(filterColumn, value, sign){
       this.columns.forEach(column => {
         if (column.id === filterColumn.id) {
           column.filters = {
             sign,
             value
-          }
+          };
         }
       });
     },
-
     updateAfterFilter() {
       const me = this;
+      const scroller = me.scroller;
 
-      me.scroller.calcMaxScrollTop();
-      me.scroller.updateScrollTop();
-      me.scroller.calcViewRange();
-      me.scroller.setVerticalSize();
-      me.scroller.updateHorizontalScrollSize();
+      scroller.calcMaxScrollTop();
+      scroller.updateScrollTop();
+      scroller.calcViewRange();
+      scroller.setVerticalSize();
+      scroller.updateHorizontalScrollSize();
       me.updateVisibleHeight();
 
       me.renderVisibleRowsAfterFilter();
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
     },
-
     renderVisibleRowsAfterFilter() {
       const me = this;
-      const startRow = me.scroller.getStartRow();
-      const endRow = me.scroller.getEndRow();
+      const scroller = me.scroller;
+      const startRow = scroller.getStartRow();
+      const endRow = scroller.getEndRow();
 
       me.actualRowsIdSet = new Set();
 
@@ -258,8 +248,7 @@
         });
       });
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinFilter);
-
 })();

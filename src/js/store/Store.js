@@ -1,5 +1,4 @@
-(()=> {
-
+(() => {
   /**
    * @mixes StoreMixinEdit
    * @mixes StoreMixinFilter
@@ -7,7 +6,6 @@
    * @mixes StoreMixinSelection
    * @mixes StoreMixinSort
    */
-
   class Store {
     data = [];
     sortedData = undefined;
@@ -26,7 +24,7 @@
 
     prevAction = '';
 
-    constructor({data, rowGroups, rowGroupExpanded, aggregations, defaultRowGroupSort}) {
+    constructor({ data, rowGroups, rowGroupExpanded, aggregations, defaultRowGroupSort }) {
       const me = this;
 
       me.prevAction = '';
@@ -48,7 +46,6 @@
         me.setIds();
       }
     }
-
     setData(data){
       const me = this;
 
@@ -72,16 +69,10 @@
       } else {
         me.setIds();
 
-        if(me.filters.length){
-          me.reFilter(false);
-        }
-
-        if(me.sorters.length){
-          me.reSort();
-        }
+        me.filters.length && me.reFilter(false);
+        me.sorters.length && me.reSort();
       }
     }
-
     lightSetIds() {
       const me = this;
 
@@ -96,7 +87,6 @@
         }
       });
     }
-
     // For row groups only
     setIndexAndItemsMaps() {
       const me = this;
@@ -106,7 +96,6 @@
       }
       me.updateIndexes();
     }
-
     // TODO: something wrong
     // Serious bug
     updateIndexes() {
@@ -151,7 +140,6 @@
       });
        */
     }
-
     setIds() {
       const me = this;
 
@@ -173,15 +161,12 @@
         me.idItemMap.set(item.id, item);
       });
     }
-
     generateId() {
       return 'id-' + this.idSeed++;
     }
-
     getDataTotal() {
       return this.data.length;
     }
-
     getDisplayedDataTotal() {
       const me = this;
       const {
@@ -196,7 +181,6 @@
 
       return me.getDataTotal();
     }
-
     getItemByRowIndex(rowIndex) {
       const me = this;
       const {
@@ -215,13 +199,9 @@
 
       return item;
     }
-
     memorizePrevRowIndexesMap() {
-      const me = this;
-
-      me.prevIdRowIndexesMap = me.idRowIndexesMap;
+      this.prevIdRowIndexesMap = this.idRowIndexesMap;
     }
-
     getPrevVisibleRowIndex(rowIndex){
       const me = this;
       const data = me.displayedData || me.data;
@@ -233,7 +213,6 @@
         }
       }
     }
-
     getNextVisibleRowIndex(rowIndex){
       const me = this;
       const totalDisplayed = me.getDisplayedDataTotal();
@@ -249,5 +228,4 @@
   }
 
   Fancy.Store = Store;
-
 })();

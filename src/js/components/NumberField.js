@@ -1,9 +1,7 @@
 (() => {
-
   class NumberField extends Fancy.Field {
     value = '';
     type = 'number';
-
     constructor(config) {
       super(config);
 
@@ -16,5 +14,4 @@
   }
 
   Fancy.NumberField = NumberField;
-
 })();

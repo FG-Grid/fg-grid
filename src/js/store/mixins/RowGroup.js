@@ -23,13 +23,10 @@
     }]
   ]
 */
-
-(()=> {
-
+(() => {
   /**
    * @mixin StoreMixinRowGroup
    */
-
   const StoreMixinRowGroup = {
     rowGroupData() {
       const me = this;
@@ -40,13 +37,9 @@
       me.sortGroups();
       me.generateDisplayedGroupedData();
     },
-
     rowGroupDataForFiltering() {
-      const me = this;
-
-      me.generateGroupDetailsForFiltering();
+      this.generateGroupDetailsForFiltering();
     },
-
     generateDisplayedGroupedData() {
       const me = this;
       // Possible bug
@@ -70,7 +63,6 @@
 
       me.displayedData = groupedData;
     },
-
     // Regenerate display group data
     // It is only for case when there are no sorters
     simpleReGenerateDisplayedGroupedData() {
@@ -91,7 +83,6 @@
 
       me.displayedData = groupedData;
     },
-
     generateDisplayedGroupedDataForFiltering(doNotSort = false) {
       const me = this;
       let displayedGroupsSorted = [];
@@ -119,7 +110,6 @@
 
       me.displayedData = groupedData;
     },
-
     /*
      Generates groupsChildren, groupDetails, levelsWithGroups
      */
@@ -212,6 +202,10 @@
         const children = me.groupsChildren[groupName];
         const childrenSorted = children.sort((groupA, groupB) => {
           switch (me.defaultRowGroupSort) {
+            case 'asc-string':
+              return groupA.$rowDisplayGroupValue.localeCompare(groupB.$rowDisplayGroupValue);
+            case 'desc-string':
+              return groupB.$rowDisplayGroupValue.localeCompare(groupA.$rowDisplayGroupValue);
             case 'asc-amount':
               return groupA.amount - groupB.amount;
             case 'desc-amount':
@@ -221,7 +215,6 @@
         me.groupsChildren[groupName] = childrenSorted;
       }
     },
-
     generateGroupDetailsForFiltering(groupNames, groupLevel) {
       const me = this;
       const parentGroups = {};
@@ -310,11 +303,10 @@
         me.generateGroupDetailsForFiltering(parentGroupNames, groupLevel - 1);
       }
     },
-
     clearGroups() {
       const me = this;
 
-      delete me.groupsChildren
+      delete me.groupsChildren;
       delete me.levelsWithGroups;
       delete me.expandedGroupsWithDataChildren;
 
@@ -322,7 +314,6 @@
         delete rowData.$rowGroupValue;
       });
     },
-
     set$rowGroupValue(data) {
       if(data === undefined){
         data = this.data;
@@ -340,7 +331,6 @@
 
       return data;
     },
-
     // Runs only on start and on setData
     // rowGroupExpanded will be deleted
     // On resetting data, rowGroupData won't be used.
@@ -382,7 +372,6 @@
 
       delete me.rowGroupExpanded;
     },
-
     generateDisplayedGroupsForFiltering(zeroLevelGroups) {
       const me = this;
 
@@ -395,18 +384,17 @@
       for(let group in me.expandedGroups){
         const subGroups = me.groupsChildrenForFiltering[group];
 
-        subGroups?.forEach(({$rowGroupValue}) => {
+        subGroups?.forEach(({ $rowGroupValue }) => {
           if ($rowGroupValue) {
             me.displayedGroupsForFiltering[$rowGroupValue] = true;
           }
         });
       }
     },
-
     sortGroups() {
       const me = this;
 
-      me.levelsWithGroups.forEach(({0: groupsContainer}) => {
+      me.levelsWithGroups.forEach(({ 0: groupsContainer }) => {
         for (const group in groupsContainer) {
           const subGroups = groupsContainer[group];
           const newSubGroupsOrder = subGroups.toSorted((a, b) => {
@@ -414,6 +402,10 @@
             const groupB = me.groupDetails[b];
 
             switch (me.defaultRowGroupSort) {
+              case 'asc-string':
+                return groupA.$rowDisplayGroupValue.localeCompare(groupB.$rowDisplayGroupValue);
+              case 'desc-string':
+                return groupB.$rowDisplayGroupValue.localeCompare(groupA.$rowDisplayGroupValue);
               case 'asc-amount':
                 return groupA.amount - groupB.amount;
               case 'desc-amount':
@@ -425,13 +417,12 @@
         }
       });
     },
-
     sortGroupsForFiltering() {
       const me = this;
       const levelsWithGroupsForFiltering = [];
 
-      me.levelsWithGroups.forEach(({0: groupsContainer}, level) => {
-        const filteredGroupsContainer = {}
+      me.levelsWithGroups.forEach(({ 0: groupsContainer }, level) => {
+        const filteredGroupsContainer = {};
 
         for (const group in groupsContainer) {
           const subGroups = groupsContainer[group].filter(value => me.displayedGroupsForFiltering[value]);
@@ -446,7 +437,6 @@
 
       me.levelsWithGroupsForFiltering = levelsWithGroupsForFiltering;
     },
-
     getSortedDisplayedGroups() {
       const me = this;
       let displayedGroupsSorted = [];
@@ -462,24 +452,24 @@
             recursiveDataExtraction(levelGroups, nextLevel);
           }
         });
-      }
+      };
 
+      // All these with levelsWithGroups and groupDetails looks incorrect
+      // It looks like it does sort on levelsWithGroups first and then for some types we do extra sort
       switch (me.defaultRowGroupSort) {
         case 'desc-string':
-          // Possible bug
-          displayedGroupsSorted = Array.from(Object.keys(me.displayedGroups)).sort();
-          break;
+        case 'asc-string':
         case 'desc-amount':
+        case 'asc-amount':
           const zeroLevelGroups = me.levelsWithGroups[0][0].root;
           recursiveDataExtraction(zeroLevelGroups);
           break;
         default:
-          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`)
+          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
     },
-
     getSortedDisplayedGroupsForFiltering() {
       const me = this;
       let displayedGroupsSorted = [];
@@ -495,7 +485,7 @@
             recursiveDataExtraction(levelGroups, nextLevel);
           }
         });
-      }
+      };
 
       switch (me.defaultRowGroupSort) {
         case 'desc-string':
@@ -506,12 +496,11 @@
           recursiveDataExtraction(zeroLevelGroups);
           break;
         default:
-          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`)
+          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
     },
-
     getAggregationResult(aggregation, values) {
       let result = '';
 
@@ -539,7 +528,6 @@
 
       return result;
     },
-
     expand(group) {
       const me = this;
       const groupDetails = me.groupDetails[group];
@@ -557,7 +545,6 @@
 
       me.updateIndexes();
     },
-
     expandForFiltering(group) {
       const me = this;
       const groupDetails = me.groupDetailsForFiltering[group];
@@ -575,7 +562,6 @@
       me.displayedData.splice(rowIndex + 1, 0, ...groupData);
       me.updateIndexes();
     },
-
     expandAll() {
       const me = this;
 
@@ -595,18 +581,12 @@
       me.generateDisplayedGroupedData();
       me.setIndexAndItemsMaps();
     },
-
     toggleExpand(group) {
       const me = this;
       const groupDetails = me.groupDetails[group];
 
-      if (groupDetails.expanded) {
-        me.collapse(group);
-      } else {
-        me.expand(group);
-      }
+      groupDetails.expanded? me.collapse(group): me.expand(group);
     },
-
     collapse(group) {
       const me = this;
       const groupData = me.getGroupExpandedChildren(group);
@@ -623,7 +603,6 @@
 
       me.updateIndexes();
     },
-
     collapseForFiltering(group) {
       const me = this;
       const groupDetails = me.groupDetailsForFiltering[group];
@@ -641,7 +620,6 @@
 
       me.updateIndexes();
     },
-
     collapseAll() {
       const me = this;
 
@@ -655,7 +633,6 @@
       me.generateDisplayedGroupedData();
       me.setIndexAndItemsMaps();
     },
-
     getGroupExpandedChildren(group, groupData = []) {
       const me = this;
       const groupDetails = me.groupDetails[group];
@@ -676,7 +653,6 @@
 
       return groupData;
     },
-
     getGroupExpandedChildrenForFiltering(group, groupData = []) {
       const me = this;
       const groupDetails = me.groupDetailsForFiltering[group];
@@ -697,7 +673,6 @@
 
       return groupData;
     },
-
     reConfigRowGroups(rowGroups) {
       const me = this;
       const {
@@ -751,11 +726,9 @@
         me.setIndexAndItemsMaps();
       }
     },
-
     setRowGroups(rowGroups) {
       this.rowGroups = rowGroups;
     },
-
     getGroupDataForFiltering() {
       const me = this;
       const sortedData = me.displayedData.slice();
@@ -774,7 +747,6 @@
 
       return sortedData;
     },
-
     addGroup(group){
       const me = this;
       const splitted = group.split('/');
@@ -841,7 +813,7 @@
           amount: 0,
           expanded: true,
           $agValues: {}
-        }
+        };
 
         addToGroupsChildren.push(name);
       }
@@ -857,9 +829,8 @@
 
         me.groupsChildren[parentGroup] = me.groupsChildren[parentGroup] || [];
         me.groupsChildren[parentGroup].push(me.groupDetails[group]);
-      })
+      });
     },
-
     agGroupUpdateData(groupName, items, sign = '-'){
       const me = this;
       const groupDetails = me.groupDetails[groupName];
@@ -909,15 +880,12 @@
         });
       });
     },
-
     isItemInCollapsedGroup(item){
       const splitted = item.$rowGroupValue.split('/');
+      const iL = splitted.length;
+      item.$isGroupRow && splitted.pop();
 
-      if(item.$isGroupRow){
-        splitted.pop();
-      }
-
-      for(let i = 0;i<splitted.length;i++) {
+      for(let i = 0;i<iL;i++) {
         const name = splitted.join('/');
         const expanded = this.expandedGroups[name];
 
@@ -930,8 +898,7 @@
 
       return false;
     }
-  }
+  };
 
   Object.assign(Fancy.Store.prototype, StoreMixinRowGroup);
-
 })();

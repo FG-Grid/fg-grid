@@ -1,16 +1,14 @@
-(()=> {
-
+(() => {
   /**
    * @mixin StoreMixinFilter
    */
-
   const StoreMixinFilter = {
-    removeFilter(column, sign, update){
+    removeFilter(column, sign){
       const me = this;
 
       if(sign){
         me.filters = me.filters.filter(filter => {
-          if(filter.column.id == column.id && filter.sign == sign){
+          if(filter.column.id === column.id && filter.sign === sign){
             return false;
           }
           return true;
@@ -22,7 +20,6 @@
       }
       delete me.prevFilterColumn;
     },
-
     clearFilter(column, sign) {
       const me = this;
 
@@ -31,12 +28,11 @@
       me.reFilter(false);
       me.reSort();
 
-      if(!column || me.filters.length == 0){
+      if(!column || me.filters.length === 0){
         delete me.prevAction;
         delete me.prevFilterColumn;
       }
     },
-
     clearFilterForGrouping(column, sign) {
       const me = this;
       const data = me.data.slice();
@@ -58,7 +54,6 @@
 
       me.prevAction = 'filter';
     },
-
     reFilter(useSortedDataIfPossible = true) {
       const me = this;
       let data;
@@ -82,7 +77,6 @@
 
       me.prevAction = 'filter';
     },
-
     filter(column, value, sign = '=') {
       const me = this;
       let data;
@@ -124,7 +118,6 @@
       me.prevAction = 'filter';
       me.prevFilterColumn = column;
     },
-
     filterForRowGrouping(column, value, sign = '=') {
       const me = this;
       const data = me.data.slice();
@@ -151,7 +144,6 @@
       me.prevAction = 'filter';
       me.prevFilterColumn = column;
     },
-
     updateIndexMapAfterFilter() {
       const me = this;
 
@@ -163,7 +155,6 @@
         item.rowIndex = index;
       });
     },
-
     filterData(data, column, value, sign) {
       let filteredData = [];
 
@@ -175,14 +166,14 @@
           itemValue = column.getter({
             item,
             column
-          })
+          });
         }
         else {
           itemValue = item[column.index];
         }
 
         return itemValue;
-      }
+      };
 
       switch (sign) {
         // Contains
@@ -307,8 +298,7 @@
 
       return filteredData;
     }
-  }
+  };
 
   Object.assign(Fancy.Store.prototype, StoreMixinFilter);
-
 })();

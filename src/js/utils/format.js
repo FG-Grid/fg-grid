@@ -24,4 +24,4 @@ Fancy.format = {
       maximumFractionDigits: maxDecimal
     }).format(value);
   }
-}
+};

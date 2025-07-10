@@ -120,4 +120,4 @@ Fancy.cls = {
   SVG_DRAG: 'fg-svg-drag',
   SVG_REMOVE: 'fg-svg-remove',
   SVG_BLOCK: 'fg-svg-block'
-}
+};

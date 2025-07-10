@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     ROW_GROUP,
     ROW_GROUP_CELL_AMOUNT
@@ -52,7 +52,7 @@
     expandAll() {
       const me = this;
 
-      me.beforeGrouping()
+      me.beforeGrouping();
 
       if (me.grouping) {
         return;
@@ -232,7 +232,7 @@
         if(domAmount !== groupDetail.amount){
           amountEl.innerHTML = amount;
         }
-      })
+      });
     },
 
     updateRowGroupAggregations(){
@@ -270,10 +270,10 @@
         });
       });
     },
-
     reConfigRowGroups(){
       const me = this;
       const store = me.store;
+      const scroller = me.scroller;
       let rowGroups = [];
 
       me.grouping = true;
@@ -285,27 +285,26 @@
           rowGroups.push(column.index);
         });
       } else {
-        rowGroups = store.rowGroups
+        rowGroups = store.rowGroups;
       }
 
       store.reConfigRowGroups(rowGroups);
 
-      me.scroller.calcMaxScrollTop();
-      me.scroller.updateScrollTop();
-      me.scroller.calcViewRange();
-      me.scroller.setVerticalSize();
-      me.scroller.updateHorizontalScrollSize();
+      scroller.calcMaxScrollTop();
+      scroller.updateScrollTop();
+      scroller.calcViewRange();
+      scroller.setVerticalSize();
+      scroller.updateHorizontalScrollSize();
       me.updateVisibleHeight();
 
-      me.scroller.calcVisibleRows();
+      scroller.calcVisibleRows();
 
       me.renderVisibleRows();
-      me.store.memorizePrevRowIndexesMap();
+      store.memorizePrevRowIndexesMap();
 
       me.grouping = false;
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinRowGroup);
-
 })();

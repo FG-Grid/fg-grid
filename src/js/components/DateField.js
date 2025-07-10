@@ -15,5 +15,4 @@
   }
 
   Fancy.DateField = DateField;
-
 })();

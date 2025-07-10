@@ -1,5 +1,4 @@
-(()=>{
-
+(() => {
   class TouchScroller {
     constructor(element, config) {
       const me = this;
@@ -20,15 +19,14 @@
 
       me.init();
     }
-
     init() {
       const me = this;
+      const el = me.element;
 
-      me.element.addEventListener('touchstart', me.touchStartHandler);
-      me.element.addEventListener('touchmove', me.touchMoveHandler);
-      me.element.addEventListener('touchend', me.touchEndHandler);
+      el.addEventListener('touchstart', me.touchStartHandler);
+      el.addEventListener('touchmove', me.touchMoveHandler);
+      el.addEventListener('touchend', me.touchEndHandler);
     }
-
     touchStart(e) {
       const me = this;
 
@@ -41,12 +39,8 @@
       me.velocityY = 0;
       me.lastMoveTime = Date.now();
 
-      if (me.intervalId) {
-        clearInterval(me.intervalId);
-        delete me.intervalId;
-      }
+      me.intervalId && clearInterval(me.intervalId);
     }
-
     touchMove(e) {
       const me = this;
       const currentY = e.touches[0].pageY;
@@ -84,7 +78,6 @@
 
       me.onTouchScroll(e);
     }
-
     smoothScroll() {
       const me = this;
       const deceleration = 0.98; // Deceleration factor
@@ -114,23 +107,21 @@
           //clearInterval(me.intervalId);
           //delete me.intervalId;
         } else {
-          requestAnimationFrame(()=> {
+          requestAnimationFrame(() => {
             requestAnimationFrame(step);
           });
         }
         //}, intervalDuration);
-      }
+      };
 
       requestAnimationFrame(step);
     }
-
     touchEnd() {
       const me = this;
 
       // Smooth continuation of the scroll
       me.smoothScroll();
     }
-
     destroy() {
       const me = this;
 
@@ -143,5 +134,4 @@
   }
 
   Fancy.TouchScroller = TouchScroller;
-
 })();

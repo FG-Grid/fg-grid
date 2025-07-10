@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     CELL,
     ROW,
@@ -8,7 +8,6 @@
   /**
    * @mixin GridMixinEdit
    */
-
   const GridMixinEdit = {
     onBodyCellDBLClick(event){
       const me = this;
@@ -17,7 +16,6 @@
 
       me.openEditorForCell(cell);
     },
-
     openEditorForCell(cell, startValue){
       const me = this;
       let columnIndex = Number(cell.getAttribute('col-index'));
@@ -43,14 +41,14 @@
           columnIndex,
           value,
           cell
-        }
+        };
 
         value = column.getter(params);
         valueBeforeEdit = value;
       }
 
-      const memorizeChange = (value)=>{
-        // Re-get cell on case of scroll
+      const memorizeChange = (value) => {
+        // Re-get cell on a case of scroll
         if(me.activeCellEl){
           cell = me.activeCellEl;
           row = cell.closest(`.${ROW}`);
@@ -70,7 +68,7 @@
             value,
             cell,
             newValue: value
-          }
+          };
 
           column.setter(params);
         } else {
@@ -98,7 +96,7 @@
             me.updateRowGroupAggregations();
           }
         }
-      }
+      };
 
       if(startValue !== undefined){
         value = startValue;
@@ -106,8 +104,10 @@
         memorizeChange(value);
       }
 
+      const type = column.type || 'string';
+
       if(column.editorField){
-        switch (column.type){
+        switch (type){
           case 'string':
           case 'number':
           case 'date':
@@ -118,7 +118,7 @@
             column.editorField.show({
               width: `${column.width}px`,
               left: `${column.left}px`,
-              transform: `translateY(${rowTop - 1}px)`,
+              transform: `translateY(${rowTop - 1}px)`
             });
             column.editorField.focus();
 
@@ -126,12 +126,12 @@
             break;
         }
       } else {
-        switch(column.type){
+        switch(type){
           case 'string':
           case 'number':
           case 'date':
             me.setStatusEditing(true);
-            column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${column.type}Field`)]({
+            column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${type}Field`)]({
               renderTo: me.editorsContainerEl,
               valueBeforeEdit,
               value,
@@ -163,7 +163,7 @@
 
                 if(activeCell === false){
                   me.$preventOpeningEditor = true;
-                  setTimeout(()=>{
+                  setTimeout(() => {
                     delete me.$preventOpeningEditor;
                   }, 100);
                 }
@@ -182,7 +182,6 @@
         }
       }
     },
-
     hideActiveEditor(){
       const me = this;
 
@@ -192,25 +191,22 @@
         me.setStatusEditing(false);
       }
     },
-
     setStatusEditing(value){
       const me = this;
 
       me.isEditing = value;
+      me.gridEl.classList[value? 'add' : 'remove'](EDITING);
 
       if(value){
-        me.gridEl.classList.add(EDITING);
         me.editingCell = me.activeCellEl;
       } else {
-        me.gridEl.classList.remove(EDITING);
         delete me.editingCell;
       }
     },
-
     rowCellsUpdateWithColumnIndex(row){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
-      const cells = row.querySelectorAll(`.${CELL}`)
+      const cells = row.querySelectorAll(`.${CELL}`);
 
       cells.forEach(cell => {
         const columnIndex = Number(cell.getAttribute('col-index'));
@@ -226,12 +222,11 @@
         row.appendChild(cell);
       });
     },
-
     rowCellsUpdateWithColumnRender(row, flash){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
       const itemId = row.getAttribute('row-id');
-      const cells = row.querySelectorAll(`.${CELL}`)
+      const cells = row.querySelectorAll(`.${CELL}`);
 
       cells.forEach(cell => {
         const columnIndex = Number(cell.getAttribute('col-index'));
@@ -254,11 +249,11 @@
           cellStyle.transition = 'background-color 2000ms';
           cellStyle.backgroundColor = me.flashChangesColors[me.store.selectedItemsMap.has(itemId)?1:0];
 
-          setTimeout(()=>{
+          setTimeout(() => {
             cellStyle.backgroundColor = '';
           });
 
-          setTimeout(()=>{
+          setTimeout(() => {
             cellStyle.transition = '';
             cellStyle.backgroundColor = '';
           }, 2000);
@@ -266,7 +261,6 @@
         row.appendChild(cell);
       });
     },
-
     updateAfterAddRemove(){
       const me = this;
 
@@ -301,17 +295,17 @@
         case 'string':
           rows = [{
             id: rows
-          }]
+          }];
           break;
         case 'object':
           rows = [rows];
           break;
         case 'array':
-          rows = rows.map((value)=>{
+          rows = rows.map((value) => {
             if(typeof value === 'string'){
               return {
                 id: value
-              }
+              };
             }
 
             return value;
@@ -321,7 +315,7 @@
 
       return rows;
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinEdit);
 })();

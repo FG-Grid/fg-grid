@@ -1,4 +1,4 @@
-(()=> {
+(() => {
   const {
     COLUMN_DRAGGING,
     ROW_GROUP_BAR,
@@ -22,7 +22,6 @@
   /**
    * @mixin GridMixinRowGroupBar
    */
-
   const GridMixinRowGroupBar = {
     renderRowGroupBar() {
       const me = this;
@@ -49,7 +48,6 @@
 
       me.renderRowGroupBarItems();
     },
-
     renderRowGroupBarItems(){
       const me = this;
 
@@ -60,20 +58,14 @@
       });
       delete me.activeRowGroupBarItemEl;
     },
-
-    // Syntactic mouseenter because cursor is over dragging cell
+    // Syntactic mouseenter because the cursor is over dragging cell
     onRowGroupBarMouseEnter(){
-      const me = this;
-
-      me.addGroupInBar(me.columnDragging.column);
+      this.addGroupInBar(this.columnDragging.column);
     },
-
     addGroupInBar(column, isItemActive = true){
       const me = this;
       const rowGroupBarItemEl = me.generateRowGroupBarItemEl(column);
-      if(isItemActive){
-        rowGroupBarItemEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
-      }
+      isItemActive && rowGroupBarItemEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
 
       me.activeRowGroupBarItemEl = rowGroupBarItemEl;
       me.rowGroupBarItems = me.rowGroupBarItems || [];
@@ -91,7 +83,6 @@
 
       me.rowGroupBarEmptyTextEl.style.setProperty('display', 'none');
     },
-
     generateRowGroupBarItemEl(column){
       const me = this;
 
@@ -130,7 +121,6 @@
 
       return containerEl;
     },
-
     onRowGroupBarItemDragElMouseDown(event){
       const me = this;
       const groupItemEl = event.target.closest(`.${ROW_GROUP_BAR_ITEM_CONTAINER}`);
@@ -139,10 +129,7 @@
 
       groupItemEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
       me.activeRowGroupBarItemEl = groupItemEl;
-
-      if(me.isEditing){
-        me.hideActiveEditor();
-      }
+      me.isEditing && me.hideActiveEditor();
 
       me.columnDragging = {
         column,
@@ -152,10 +139,9 @@
         dragItemFromRowGroupBar: true,
         rowGroupBarItemsRect: me.getRowGroupBarItemsRect(),
         originalRowGroupItemOrderIndex: rowGroupOrderIndex
-      }
+      };
 
       me.gridEl.classList.add(COLUMN_DRAGGING);
-
       me.onColumnDragMouseMoveFn = me.onColumnDragMouseMove.bind(this);
       document.body.addEventListener('mousemove', me.onColumnDragMouseMoveFn);
       document.addEventListener('mouseup', () => {
@@ -165,13 +151,13 @@
           changedRowGroupItemOrderIndex,
           originalRowGroupItemOrderIndex,
           inBar
-        } = me.columnDragging
+        } = me.columnDragging;
 
         if(dragItemFromRowGroupBar && !inBar){
           me.showColumn(columnDragging.column, true);
           //me.onRowGroupBarMouseLeave(event);
           me.removeGroupInBar(columnDragging.column);
-          setTimeout(()=>{
+          setTimeout(() => {
             me.reConfigRowGroups();
 
             if(me.store.rowGroups.length === 0 && me.$rowGroupColumn){
@@ -182,7 +168,7 @@
           me.activeRowGroupBarItemEl.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
 
           if(changedRowGroupItemOrderIndex !== undefined && changedRowGroupItemOrderIndex !== originalRowGroupItemOrderIndex){
-            setTimeout(()=>{
+            setTimeout(() => {
               me.reConfigRowGroups();
             }, 1);
           }
@@ -199,17 +185,15 @@
         once: true
       });
     },
-
     // Syntactic mouse leave because cursor is over dragging cell
     onRowGroupBarMouseLeave(){
       this.removeGroupInBar(this.columnDragging.column);
     },
-
     removeGroupInBar(column){
       const me = this;
 
       if(column){
-        const columnIndex = me.rowGroupBarItemColumns.findIndex((item)=>item.id === column.id);
+        const columnIndex = me.rowGroupBarItemColumns.findIndex((item) => item.id === column.id);
         const prevGroupItem = me.rowGroupBarItems.splice(columnIndex, 1)[0];
 
         me.rowGroupBarItemColumns.splice(columnIndex, 1);
@@ -228,7 +212,6 @@
         me.rowGroupBarEmptyTextEl.style.setProperty('display', '');
       }
     },
-
     onRowGroupBarItemRemoveClick(event){
       const me = this;
       const groupItemEl = event.target.closest(`.${ROW_GROUP_BAR_ITEM_CONTAINER}`);
@@ -256,17 +239,13 @@
         me.removeColumn(me.$rowGroupColumn);
       }
     },
-
     reSetRowGroupOrderIndex(){
-      const me = this;
-
-      me.rowGroupBarItems.forEach((item, index) => {
+      this.rowGroupBarItems.forEach((item, index) => {
         if(item.getAttribute('row-group-order-index') !== String(index)){
           item.setAttribute('row-group-order-index', index);
         }
       });
     },
-
     getRowGroupBarElRect() {
       const barRect = this.rowGroupBarEl.getBoundingClientRect();
 
@@ -275,7 +254,7 @@
         y: barRect.y,
         bottomX: barRect.x + barRect.width,
         rightY: barRect.y + barRect.height
-      }
+      };
     },
 
     getRowGroupBarItemsRect(){
@@ -316,8 +295,7 @@
       me.rowGroupBarItemColumns[from] = toColumn;
       me.rowGroupBarItemColumns[to] = fromColumn;
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinRowGroupBar);
-
 })();

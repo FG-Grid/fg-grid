@@ -1,18 +1,13 @@
-(()=> {
-
+(() => {
   /**
    * @mixin GridMixinScroll
    */
-
   const GridMixinScroll = {
     initScroller() {
-      const me = this;
-
-      me.scroller = new Fancy.Scroller({
-        grid: me
+      this.scroller = new Fancy.Scroller({
+        grid: this
       });
     },
-
     onMouseWheel(event) {
       const me = this;
       const delta = 'wheelDelta' in event ? event.wheelDelta : event.deltaY;
@@ -48,7 +43,6 @@
 
       me.debouceClearWheelScrollingFn();
     },
-
     onTouchScroll(event){
       const me = this;
       let changed = false;
@@ -83,12 +77,10 @@
 
       me.debouceClearWheelScrollingFn();
     },
-
     clearWheelScrolling() {
       delete this.wheelScrolling;
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinScroll);
-
 })();

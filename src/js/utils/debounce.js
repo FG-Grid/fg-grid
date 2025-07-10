@@ -8,4 +8,4 @@ Fancy.debounce = (func, delay) => {
       func.apply(this, args);
     }, delay);
   };
-}
+};

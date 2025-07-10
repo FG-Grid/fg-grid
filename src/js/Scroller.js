@@ -41,7 +41,6 @@
 
       me.initResizeObserver();
     }
-
     deltaChange(delta) {
       const me = this;
 
@@ -71,7 +70,6 @@
 
       return changed;
     }
-
     horizontalDeltaChange(delta){
       const me = this;
 
@@ -97,7 +95,6 @@
 
       return changed;
     }
-
     calcVisibleRows() {
       const me = this;
       let requiresRenderMoreRows = false;
@@ -111,7 +108,6 @@
 
       return requiresRenderMoreRows;
     }
-
     calcMaxScrollTop() {
       const me = this;
 
@@ -121,7 +117,6 @@
         me.maxScrollTop = 0;
       }
     }
-
     updateScrollTop() {
       const me = this;
 
@@ -130,7 +125,6 @@
         me.verticalScrollContainerEl.scrollTop = me.maxScrollTop;
       }
     }
-
     getStartRow() {
       const me = this;
 
@@ -138,7 +132,6 @@
 
       return me.startRow;
     }
-
     calcStartRow() {
       const me = this;
       let startRow = Math.round(me.scrollTop / me.grid.rowHeight) - me.topBufferRows;
@@ -155,7 +148,6 @@
 
       me.startRow = startRow;
     }
-
     getEndRow() {
       const me = this;
       const store = me.grid.store;
@@ -180,7 +172,6 @@
 
       return endRow;
     }
-
     render() {
       const me = this;
 
@@ -189,7 +180,6 @@
 
       me.ons();
     }
-
     renderVerticalScroll() {
       const me = this;
 
@@ -215,7 +205,6 @@
 
       me.setVerticalSize();
     }
-
     renderHorizontalScroll() {
       const me = this;
       const scrollBarWidth = `${me.scrollBarWidth}px`;
@@ -224,7 +213,7 @@
         height: scrollBarWidth,
         minHeight: scrollBarWidth,
         maxHeight: scrollBarWidth,
-        width: (me.isDomInvisibleScrollbar || !me.isVerticalVisible())? `100%`:
+        width: (me.isDomInvisibleScrollbar || !me.isVerticalVisible())? '100%':
           `calc(100% - ${scrollBarWidth})`
       });
 
@@ -252,29 +241,26 @@
 
       me.setHorizontalSize();
     }
-
     updateHorizontalScrollSize() {
       const me = this,
         horizontalScrollEl = me.horizontalScrollEl;
 
       if (me.isDomInvisibleScrollbar) {
-        horizontalScrollEl.style.width = `100%`;
+        horizontalScrollEl.style.width = '100%';
       } else {
         if (me.isVerticalVisible()) {
           horizontalScrollEl.style.width = `calc(100% - ${me.scrollBarWidth}px)`;
         } else {
-          horizontalScrollEl.style.width = `100%`;
+          horizontalScrollEl.style.width = '100%';
         }
       }
     }
-
     ons() {
       const me = this;
 
       me.verticalScrollContainerEl.addEventListener('scroll', me.onVerticalScroll);
       me.horizontalScrollContainerEl.addEventListener('scroll', me.onHorizontalScroll);
     }
-
     onVerticalScroll = () => {
       const me = this;
 
@@ -295,7 +281,6 @@
         });
       }
     }
-
     onHorizontalScroll = () => {
       const me = this;
       const grid = me.grid;
@@ -314,7 +299,6 @@
         me.generateNewRange();
       });
     }
-
     generateNewRange(doRender = true) {
       const me = this;
       const grid = me.grid;
@@ -341,7 +325,7 @@
 
         rangeSet.forEach(columnIndex => {
           if (!newRangeSet.has(columnIndex)) {
-            columnsToRemove.push(columnIndex)
+            columnsToRemove.push(columnIndex);
           }
         });
       }
@@ -359,9 +343,8 @@
         columnViewEnd: me.columnViewEnd,
         columnsToAdd,
         columnsToRemove
-      }
+      };
     }
-
     setVerticalSize() {
       const me = this;
       const grid = me.grid;
@@ -387,7 +370,6 @@
         me.verticalScrollEl.style.display = 'none';
       }
     }
-
     isHorizontalVisible() {
       const me = this;
       const bodyWidth = me.grid.bodyEl.getBoundingClientRect().width;
@@ -401,7 +383,6 @@
 
       return visibleColumnsWidth > bodyWidth;
     }
-
     isVerticalVisible() {
       const me = this;
       const grid = me.grid;
@@ -423,7 +404,6 @@
 
       return bodyHeight < visibleRowsHeight;
     }
-
     setHorizontalSize() {
       const me = this;
       const columnsWidth = me.grid.getTotalColumnsWidth();
@@ -436,7 +416,6 @@
         me.horizontalScrollEl.style.display = '';
       }
     }
-
     calcViewRange() {
       const me = this;
       const {
@@ -449,7 +428,6 @@
       me.columnViewEnd = columnEnd;
       me.columnsViewRange = range;
     }
-
     getColumnsViewRange() {
       const me = this;
       const gridWidth = me.grid.width;
@@ -464,7 +442,7 @@
         const column = me.grid.columns[i];
 
         if (column.hidden) {
-          continue
+          continue;
         }
 
         if (columnStart === undefined && columnPastWidth <= me.scrollLeft && (columnPastWidth + column.width) > me.scrollLeft) {
@@ -498,15 +476,11 @@
         columnStart,
         columnEnd,
         range
-      }
+      };
     }
-
     calcScrollBarWidth() {
-      const me = this;
-
-      me.scrollBarWidth = me.getScrollbarWidth();
+      this.scrollBarWidth = this.getScrollbarWidth();
     }
-
     getScrollbarWidth() {
       const body = document.body;
       const el = div([],{
@@ -520,16 +494,8 @@
       body.appendChild(el);
 
       let width = el.offsetWidth - el.clientWidth;
-      // if width is 0 and client width is 0, means the DOM isn't ready
-      /*
-      if (width === 0 && div.clientWidth === 0) {
-        width = null;
-      }
-       */
 
-      if (el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
+      el.parentNode && el.parentNode.removeChild(el);
 
       if (width === 0) {
         this.isDomInvisibleScrollbar = width === 0;
@@ -538,7 +504,6 @@
 
       return width;
     }
-
     initResizeObserver(){
       const me = this;
 
@@ -552,7 +517,6 @@
 
       me.resizeObserver.observe(me.grid.containerEl);
     }
-
     updateSize(){
       const me = this;
       const grid = me.grid;
@@ -565,7 +529,6 @@
 
       changedBufferedRows && grid.renderVisibleRows();
     }
-
     isColumnVisible(checkColumn){
       const me = this;
 
@@ -587,5 +550,4 @@
   }
 
   Fancy.Scroller = Scroller;
-
 })();

@@ -1,5 +1,4 @@
-(()=> {
-
+(() => {
   const {
     ANIMATE_CELLS_POSITION,
     COLUMN_DRAGGING,
@@ -19,7 +18,6 @@
   /**
    * @mixin GridMixinColumnDrag
    */
-
   const GridMixinColumnDrag = {
     onColumnDragMouseMove(event){
       const me = this;
@@ -112,13 +110,11 @@
         }
       }
     },
-
     createDragColumnCellEl(column){
       const cell = div([FAKE_COLUMN_CELL_DRAGGING, 'fg-theme-' + this.theme]);
 
       const textEl = span();
-      const cellText = column.title;
-      textEl.innerHTML = cellText
+      textEl.innerHTML = column.title;
 
       const svgGroup = Fancy.svg.group;
       const groupLogoEl = span([SVG_ITEM, SVG_GROUP]);
@@ -138,12 +134,10 @@
 
       return cell;
     },
-
-    isCursorInRowGroupBar({pageX, pageY}, barRect){
+    isCursorInRowGroupBar({ pageX, pageY }, barRect){
       return pageX < barRect.bottomX && pageX > barRect.x && pageY < barRect.rightY && pageY > barRect.y;
     },
-
-    isCursorInAnotherRowGroupBarItem({pageX}, barItemsRect){
+    isCursorInAnotherRowGroupBarItem({ pageX }, barItemsRect){
       if(barItemsRect.length === 0){
         return;
       }
@@ -164,8 +158,7 @@
         return barItemsRect.length - 1;
       }
     },
-
-    isCursorInAnotherColumn({pageX}){
+    isCursorInAnotherColumn({ pageX }){
       const me = this;
       const headerRect = me.headerEl.getBoundingClientRect();
       const columnsViewRange = me.scroller.columnsViewRange;
@@ -181,7 +174,6 @@
         }
       }
     },
-
     onColumnDragging(event){
       const me = this;
 
@@ -199,7 +191,6 @@
         me.columnDragMouseDownColumnIndex = cursorInColumnIndex;
       }
     },
-
     moveColumn(columnIndex, toIndex){
       const me = this;
 
@@ -241,8 +232,7 @@
         delete me.animatingColumnsPosition;
       }, 300);
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinColumnDrag);
-
 })();

@@ -1,4 +1,4 @@
-(()=>{
+(() => {
   const {
     CELL,
     CELL_VALUE,
@@ -54,7 +54,6 @@
         }
       });
     },
-
     appendCell(rowIndex, columnIndex) {
       const me = this;
       const item = me.store.getItemByRowIndex(rowIndex);
@@ -73,156 +72,152 @@
 
       rowEl.appendChild(cell);
     },
-
     createCell(rowIndex, columnIndex) {
-        const me = this;
-        const store = me.store;
-        const item = store.getItemByRowIndex(rowIndex);
-        const column = me.columns[columnIndex];
-        let value = item[column.index];
-        let cellInner;
-        const cell = div(CELL,{
-          width: column.width + 'px',
-          left: column.left + 'px'
-        });
-        const params = {
-          item,
-          column,
-          rowIndex,
-          columnIndex,
-          value,
-          cell
+      const me = this;
+      const store = me.store;
+      const item = store.getItemByRowIndex(rowIndex);
+      const column = me.columns[columnIndex];
+      let value = item[column.index];
+      let cellInner;
+      const cell = div(CELL,{
+        width: column.width + 'px',
+        left: column.left + 'px'
+      });
+      const params = {
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value,
+        cell
+      };
+
+      if(column.$type === 'currency'){
+        column.currency && (params.currency = column.currency);
+        column.minDecimal !== undefined && (params.minDecimal = column.minDecimal);
+        column.maxDecimal !== undefined && (params.maxDecimal = column.maxDecimal);
+      }
+
+      cell.setAttribute('col-index', columnIndex);
+      cell.setAttribute('col-id', column.id);
+
+      if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
+        cell.classList.add(ACTIVE_CELL);
+        me.activeCellEl = cell;
+      }
+
+      if(column.cellStyle) {
+        let cellExtraStyles;
+        switch(typeof column.cellStyle){
+          case 'function':
+            cellExtraStyles = column.cellStyle(params) || {};
+            break;
+          case 'object':
+            cellExtraStyles = column.cellStyle;
+            break;
         }
 
-        if(column.$type === 'currency'){
-          column.currency && (params.currency = column.currency);
-          column.minDecimal !== undefined && (params.minDecimal = column.minDecimal);
-          column.maxDecimal !== undefined && (params.maxDecimal = column.maxDecimal);
+        for (const p in cellExtraStyles) {
+          cell.style[p] = cellExtraStyles[p];
         }
+      }
 
-        cell.setAttribute('col-index', columnIndex);
-        cell.setAttribute('col-id', column.id);
-
-        if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
-          cell.classList.add(ACTIVE_CELL);
-          me.activeCellEl = cell;
-        }
-
-        if(column.cellStyle) {
-          let cellExtraStyles;
-          switch(typeof column.cellStyle){
-            case 'function':
-              cellExtraStyles = column.cellStyle(params) || {};
-              break;
-            case 'object':
-              cellExtraStyles = column.cellStyle;
-              break;
+      if(column.cellCls){
+        if(typeof column.cellCls === 'string'){
+          cell.classList.add(column.cellCls);
+        } else if(Array.isArray(column.cellCls)){
+          cell.classList.add(...column.cellCls);
+        } else if(typeof column.cellCls === 'function'){
+          let cls = column.cellCls(params);
+          if(typeof cls === 'string'){
+            cls = [cls];
           }
 
-          for (const p in cellExtraStyles) {
-            cell.style[p] = cellExtraStyles[p];
-          }
+          cls && cell.classList.add(...cls);
+        }
+      }
+
+      if(column.cellClsRules){
+        for(const cls in column.cellClsRules){
+          const fn = column.cellClsRules[cls];
+
+          fn(params) && cell.classList.add(cls);
+        }
+      }
+
+      if(column.format){
+        value = column.format(params);
+      }
+
+      if(column.render){
+        cellInner = column.render(params);
+      } else {
+        cellInner = value;
+      }
+
+      if(column.$isRowGroupColumn || column.rowGroupIndent){
+        cell.classList.add(ROW_GROUP_VALUE_CELL);
+      }
+
+      if(column.checkboxSelection){
+        const wrapperEl = div(CELL_WRAPPER);
+
+        if(column.rowGroupIndent){
+          wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length + 1}`);
         }
 
-        if(column.cellCls){
-          if(typeof column.cellCls === 'string'){
-            cell.classList.add(column.cellCls);
-          } else if(Array.isArray(column.cellCls)){
-            cell.classList.add(...column.cellCls);
-          } else if(typeof column.cellCls === 'function'){
-            let cls = column.cellCls(params);
-            if(typeof cls === 'string'){
-              cls = [cls];
-            }
+        const checkBoxEl = me.generateRowGroupCheckBoxEl(item);
+        checkBoxEl.addEventListener('click', this.onRowCellSelectionClick.bind(this));
+        wrapperEl.appendChild(checkBoxEl);
 
-            if(cls){
-              cell.classList.add(...cls);
-            }
-          }
+        const valueEl = me.generateSimpleValueEl(cellInner);
+        wrapperEl.appendChild(valueEl);
+
+        cell.appendChild(wrapperEl);
+        cell.classList.add(CELL_SELECTION);
+      } else if(column.$isRowGroupColumn){
+        const wrapperEl = div(CELL_WRAPPER);
+
+        if(column.rowGroupIndent){
+          wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length}`);
         }
 
-        if(column.cellClsRules){
-          for(const cls in column.cellClsRules){
-            const fn = column.cellClsRules[cls];
+        const valueEl = span(CELL_VALUE);
 
-            fn(params) && cell.classList.add(cls);
-          }
+        if(cellInner === ''){
+          cellInner = '&nbsp;';
+        }
+        valueEl.innerHTML = cellInner ?? '&nbsp;';
+
+        wrapperEl.appendChild(valueEl);
+
+        cell.appendChild(wrapperEl);
+      } else if (cellInner !== undefined) {
+        if(cellInner === ''){
+          cellInner = '&nbsp;';
         }
 
-        if(column.format){
-          value = column.format(params);
-        }
+        cell.innerHTML = cellInner ?? '&nbsp;';
+      }
 
-        if(column.render){
-          cellInner = column.render(params);
-        } else {
-          cellInner = value;
-        }
+      if(me.activeCell){
+        cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
+        if(me.selectingCells){
+          cell.addEventListener('mouseenter', me.onBodyCellMouseEnter.bind(this));
 
-        if(column.$isRowGroupColumn || column.rowGroupIndent){
-          cell.classList.add(ROW_GROUP_VALUE_CELL);
-        }
-
-        if(column.checkboxSelection){
-          const wrapperEl = div(CELL_WRAPPER);
-
-          if(column.rowGroupIndent){
-            wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length + 1}`);
-          }
-
-          const checkBoxEl = me.generateRowGroupCheckBoxEl(item);
-          checkBoxEl.addEventListener('click', this.onRowCellSelectionClick.bind(this));
-          wrapperEl.appendChild(checkBoxEl);
-
-          const valueEl = me.generateSimpleValueEl(cellInner);
-          wrapperEl.appendChild(valueEl);
-
-          cell.appendChild(wrapperEl);
-          cell.classList.add(CELL_SELECTION);
-        } else if(column.$isRowGroupColumn){
-          const wrapperEl = div(CELL_WRAPPER);
-
-          if(column.rowGroupIndent){
-            wrapperEl.style.setProperty('--grid-group-level', `${store.rowGroups.length}`);
-          }
-
-          const valueEl = span(CELL_VALUE);
-
-          if(cellInner === ''){
-            cellInner = '&nbsp;';
-          }
-          valueEl.innerHTML = cellInner ?? '&nbsp;';
-
-          wrapperEl.appendChild(valueEl);
-
-          cell.appendChild(wrapperEl);
-        } else if (cellInner !== undefined) {
-          if(cellInner === ''){
-            cellInner = '&nbsp;';
-          }
-
-          cell.innerHTML = cellInner ?? '&nbsp;';
-        }
-
-        if(me.activeCell){
-          cell.addEventListener('mousedown', me.onBodyCellMouseDown.bind(this));
-          if(me.selectingCells){
-            cell.addEventListener('mouseenter', me.onBodyCellMouseEnter.bind(this));
-
-            if(me.selectionCellsRange && cell){
-              requestAnimationFrame(()=> {
-                me.isCellInSelectedRange(cell) && cell.classList.add(CELL_SELECTED);
-              });
-            }
+          if(me.selectionCellsRange && cell){
+            requestAnimationFrame(() => {
+              me.isCellInSelectedRange(cell) && cell.classList.add(CELL_SELECTED);
+            });
           }
         }
+      }
 
-        column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
-        cell.addEventListener('click', me.onBodyCellClick.bind(this));
+      column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
+      cell.addEventListener('click', me.onBodyCellClick.bind(this));
 
-        return cell;
+      return cell;
     },
-
     createCellGroupTypeColumn(rowIndex, item, columnIndex) {
       const me = this;
       const column = me.columns[columnIndex];
@@ -264,7 +259,7 @@
             columnIndex: columnIndex,
             value,
             cell
-          })
+          });
         } else {
           cellInner = value;
         }
@@ -279,7 +274,6 @@
         return cell;
       }
     },
-
     createCellGroupTypeRow(rowIndex, item) {
       const cell = this.generateGroupCell(rowIndex, item);
 
@@ -287,7 +281,6 @@
 
       return cell;
     },
-
     generateSimpleValueEl(cellInner){
       const valueEl = span(CELL_VALUE);
 
@@ -298,7 +291,6 @@
 
       return valueEl;
     },
-
     generateGroupCell(rowIndex, item, column = {}){
       const me = this;
       const cell = div(ROW_GROUP_CELL);
@@ -322,14 +314,12 @@
 
       return cell;
     },
-
     generateAmountEl(item){
       const amountEl = span(ROW_GROUP_CELL_AMOUNT);
       amountEl.innerHTML = ` (${item.amount})`;
 
       return amountEl;
     },
-
     generateValueEl(item, rowIndex){
       const displayGroupValue = item.$rowDisplayGroupValue;
       const valueEl = span(ROW_GROUP_CELL_VALUE);
@@ -351,7 +341,6 @@
 
       return valueEl;
     },
-
     generateRowGroupExpanderEl(item){
       const svgChevronRight = Fancy.svg.chevronRight;
       const expanderEl = span([ROW_GROUP_CELL_EXPANDER, SVG_ITEM, SVG_CHEVRON_RIGHT]);
@@ -362,7 +351,6 @@
 
       return expanderEl;
     },
-
     generateRowGroupCheckBoxEl(item){
       const selected = item.$selected || false;
       const checkboxEl = input(INPUT_CHECKBOX);
@@ -375,7 +363,6 @@
 
       return checkboxEl;
     },
-
     generateRowGroupSelectionEl(item){
       const selectionEl = span(ROW_GROUP_CELL_SELECTION);
       const checkBoxEl = this.generateRowGroupCheckBoxEl(item);
@@ -385,7 +372,6 @@
 
       return selectionEl;
     },
-
     removeColumnCells(columnIndexes = []) {
       const me = this;
 
@@ -406,7 +392,7 @@
 
         me.renderedRowsIdMap.forEach(rowEl => {
           if (rowEl.classList.contains(ROW_GROUP)) {
-            return
+            return;
           }
 
           const cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
@@ -415,7 +401,6 @@
         });
       });
     },
-
     renderRow(index, item, style = {}) {
       const me = this;
 
@@ -431,7 +416,7 @@
       const params = {
         rowIndex: index,
         item
-      }
+      };
 
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
@@ -442,9 +427,7 @@
 
       me.applyExtraRowStyles(rowEl, params);
 
-      if(item.$selected){
-        rowEl.classList.add(ROW_SELECTED)
-      }
+      item.$selected && rowEl.classList.add(ROW_SELECTED);
 
       rowEl.setAttribute('row-id', item.id);
       rowEl.setAttribute('row-index', index);
@@ -466,7 +449,6 @@
 
       return rowEl;
     },
-
     applyExtraRowStyles(rowEl, params){
       const me = this;
 
@@ -497,14 +479,11 @@
           for(const cls in me.rowClsRules){
             const fn = me.rowClsRules[cls];
 
-            if(fn(params)){
-              rowEl.classList.add(cls);
-            }
+            fn(params) && rowEl.classList.add(cls);
           }
         }
       }
     },
-
     renderRowGroup(index, item, style = {}) {
       const me = this;
       const rowGroupType = me.rowGroupType;
@@ -517,10 +496,7 @@
       const rowEl = div(ROW_GROUP, style);
 
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
-
-      if(item.$selected){
-        rowEl.classList.add(ROW_SELECTED)
-      }
+      item.$selected && rowEl.classList.add(ROW_SELECTED);
 
       rowEl.style.transform = `translateY(${index * me.rowHeight}px)`;
       rowEl.setAttribute('row-id', item.id);
@@ -551,7 +527,6 @@
 
       return rowEl;
     },
-
     renderRowOnPrevPosition(item, smoothPositionAnimate) {
       const me = this;
 
@@ -572,14 +547,12 @@
         positionY = prevIndex * me.rowHeight;
       }
 
-      if(item.$selected){
-        rowEl.classList.add(ROW_SELECTED)
-      }
+      item.$selected && rowEl.classList.add(ROW_SELECTED);
 
       const params = {
         rowIndex: index,
         item
-      }
+      };
 
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
       me.applyExtraRowStyles(rowEl, params);
@@ -596,7 +569,7 @@
         const column = me.columns[i];
 
         if (column.hidden) {
-          continue
+          continue;
         }
 
         const cell = me.createCell(index, i);
@@ -607,7 +580,6 @@
       me.bodyInnerContainerEl.appendChild(rowEl);
       me.renderedRowsIdMap.set(item.id, rowEl);
     },
-
     updateCellPositions(columnIndex) {
       const me = this;
 
@@ -623,7 +595,7 @@
         const column = me.columns[i];
 
         if (column.hidden) {
-          continue
+          continue;
         }
 
         if(!column.headerCellEl){
@@ -640,7 +612,7 @@
       }
 
       // Update Body Cells
-      me.renderedRowsIdMap.forEach((rowEl, id) => {
+      me.renderedRowsIdMap.forEach(rowEl => {
         const cells = rowEl.querySelectorAll(`.${CELL}`);
         cells.forEach(cell => {
 
@@ -664,7 +636,6 @@
         }
       });
     },
-
     renderVisibleRows() {
       const me = this;
       const startRow = me.scroller.getStartRow();
@@ -693,15 +664,9 @@
         me.actualRowsIdSet.add(item.id);
       }
     },
-
     terminateVisibleRows(){
-      const me = this;
-
-      me.renderedRowsIdMap.forEach((row, key) => {
-        me.removeDomRowById(key);
-      });
+      this.renderedRowsIdMap.forEach((row, key) => this.removeDomRowById(key));
     },
-
     // For smooth filtering
     fakeHideRow(item) {
       const me = this;
@@ -714,7 +679,6 @@
 
       rowEl.style.opacity = '0';
     },
-
     // For smooth animating
     fakeRowPosition(item) {
       const me = this;
@@ -738,7 +702,6 @@
         }
       }
     },
-
     getSmoothPositionY(item, prevPosition) {
       const me = this;
       const bufferPosition = me.rowHeight * me.scroller.bufferRows;
@@ -759,7 +722,6 @@
 
       return positionY;
     },
-
     updateRowPosition(item) {
       const me = this;
       const rowEl = me.renderedRowsIdMap.get(item.id);
@@ -772,17 +734,13 @@
       rowEl.style.transform = `translateY(${item.rowIndex * me.rowHeight}px)`;
       rowEl.setAttribute('row-index', item.rowIndex);
     },
-
     removeNotNeededRows() {
       const me = this;
 
       me.renderedRowsIdMap.forEach((rowEl, id) => {
-        if (!me.actualRowsIdSet.has(id)) {
-          me.removeDomRowById(id);
-        }
+        !me.actualRowsIdSet.has(id) && me.removeDomRowById(id);
       });
     },
-
     onRowMouseEnter(event) {
       const me = this;
 
@@ -796,11 +754,9 @@
         once: true
       });
     },
-
     onRowMouseLeave(event) {
       event.target.classList.remove(ROW_HOVER);
     },
-
     onRowGroupExpanderClick(event) {
       const me = this;
 
@@ -818,18 +774,10 @@
         me.expand($rowGroupValue);
       }
     },
-
     updateRowGroupCellExpandedCls(group){
-      const me = this;
-      const cell = me.bodyEl.querySelector(`div[row-group="${group.replaceAll('-', '$').replaceAll('/', '-')}"] .${ROW_GROUP_CELL}`);
-
-      if (cell.classList.contains(ROW_GROUP_EXPANDED_CELL)) {
-        cell.classList.remove(ROW_GROUP_EXPANDED_CELL);
-      } else {
-        cell.classList.add(ROW_GROUP_EXPANDED_CELL);
-      }
+      const cell = this.bodyEl.querySelector(`div[row-group="${group.replaceAll('-', '$').replaceAll('/', '-')}"] .${ROW_GROUP_CELL}`);
+      cell.classList.toggle(ROW_GROUP_EXPANDED_CELL);
     },
-
     updateAllRowGroupCellsExtendedCls(){
       const me = this;
       const rows = me.bodyEl.querySelectorAll(`.${ROW_GROUP}`);
@@ -846,9 +794,8 @@
         else if(!expanded && hasExpandedCls){
           cell.classList.remove(ROW_GROUP_EXPANDED_CELL);
         }
-      })
+      });
     },
-
     reSetVisibleBodyColumnsIndex(from, to, oldOrders){
       const me = this;
       const cellsMap = {};
@@ -883,16 +830,16 @@
       }
 
       for(let i = from;i <= to;i++){
-          const cells = me.bodyEl.querySelectorAll(`.${CELL}[col-index="${i}"]`);
-          cellsMap[i] = cells;
+        const cells = me.bodyEl.querySelectorAll(`.${CELL}[col-index="${i}"]`);
+        cellsMap[i] = cells;
 
-          if(me.rowGroupType === 'column'){
-            const cells = me.bodyEl.querySelectorAll(`.${ROW_GROUP_CELL}[col-index="${i}"]`);
+        if(me.rowGroupType === 'column'){
+          const cells = me.bodyEl.querySelectorAll(`.${ROW_GROUP_CELL}[col-index="${i}"]`);
 
-            if(cells.length){
-              cellsGroupMap[i] = cells;
-            }
+          if(cells.length){
+            cellsGroupMap[i] = cells;
           }
+        }
       }
 
       for(let i = from, j = 0;i <= to;i++, j++){
@@ -908,14 +855,11 @@
         });
       }
     },
-
-    getCell(rowIndex, columnIndex){
-      const me = this;
-      const cell = me.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
+    getCell(rowIndex, columnIndex) {
+      const cell = this.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
 
       return cell;
     },
-
     updateOrderColumn(){
       const me = this;
 
@@ -938,8 +882,7 @@
         });
       }
     }
-  }
+  };
 
   Object.assign(Grid.prototype, GridMixinBody);
-
 })();

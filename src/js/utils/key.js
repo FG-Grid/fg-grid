@@ -158,4 +158,4 @@ Fancy.Key = {
         return false;
     }
   }
-}
+};

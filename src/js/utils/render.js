@@ -18,7 +18,7 @@ Fancy.render = {
       !column.editable && e.preventDefault();
     });
 
-    inputEl.addEventListener('change', (e)=>{
+    inputEl.addEventListener('change', (e) => {
       column.onCheckBoxChange?.(e, inputEl.checked);
     });
 
@@ -41,4 +41,4 @@ Fancy.render = {
 
     cell.innerHTML = rowIndex + 1;
   }
-}
+};

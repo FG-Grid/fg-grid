@@ -1,4 +1,4 @@
-(()=> {
+(() => {
 
   /**
    * @mixin StoreMixinSelection
@@ -218,7 +218,7 @@
         });
       }
     }
-  }
+  };
 
   Object.assign(Fancy.Store.prototype, StoreMixinSelection);
 })();
