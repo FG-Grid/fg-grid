@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.8.3',
+  version: '0.8.4',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -565,7 +565,7 @@ Fancy.format = {
 Fancy.copyText = (text) => {
   if(navigator.clipboard){
     navigator.clipboard.writeText(text)
-      .catch(err => console.error('Error copying: ', err));
+      .catch(err => console.error('FG-Grid: Error copying: ', err));
   } else {
     const textarea = document.createElement('textarea');
     textarea.value = text;
@@ -998,7 +998,7 @@ Fancy.copyText = (text) => {
                 }
 
                 if (!a.localeCompare) {
-                  console.error(`${a} is not a string`);
+                  console.error(`FG-Grid: ${a} is not a string`);
                 }
 
                 return a.localeCompare(b);
@@ -1150,6 +1150,9 @@ Fancy.copyText = (text) => {
         }
       } else {
         if (me.rowGroups.length) {
+          // Here is problem and bug
+          // Wrong setting rowIndex
+          /*
           for (const group in me.expandedGroupsWithDataChildren) {
             const groupData = me.groupsChildren[group];
 
@@ -1157,10 +1160,11 @@ Fancy.copyText = (text) => {
               me.idRowIndexesMap.set(item.id, item.originalRowIndex);
               item.rowIndex = item.originalRowIndex;
             });
-          }
+          }*/
 
           me.sortGroups();
           me.simpleReGenerateDisplayedGroupedData();
+          me.updateIndexes();
         } else {
           me.data.forEach((item, index) => {
             me.idRowIndexesMap.set(item.id, index);
@@ -1172,20 +1176,6 @@ Fancy.copyText = (text) => {
       if (me.sorters.length === 0) {
         delete me.sortedData;
       }
-    },
-    isParentCollapsed(group) {
-      const me = this;
-      const splitted = group.split('/');
-      const iL = splitted.length - 1;
-
-      for (let i = 0; i < iL; i++) {
-        splitted.pop();
-        if (!me.expandedGroups[splitted.join('/')]) {
-          return true;
-        }
-      }
-
-      return false;
     }
   };
 
@@ -1197,7 +1187,7 @@ Fancy.copyText = (text) => {
    * @mixin StoreMixinFilter
    */
   const StoreMixinFilter = {
-    removeFilter(column, sign){
+    removeFilter(column, sign, removePrevFilterColumn = true){
       const me = this;
 
       if(sign){
@@ -1212,7 +1202,10 @@ Fancy.copyText = (text) => {
       } else {
         me.filters = [];
       }
-      delete me.prevFilterColumn;
+
+      if(removePrevFilterColumn !== false){
+        delete me.prevFilterColumn;
+      }
     },
     clearFilter(column, sign) {
       const me = this;
@@ -1271,7 +1264,7 @@ Fancy.copyText = (text) => {
 
       me.prevAction = 'filter';
     },
-    filter(column, value, sign = '=') {
+    filter(column, value, sign = '=', oneFilterPerColumn = false) {
       const me = this;
       let data;
       let totalReFilterRequired = false;
@@ -1287,6 +1280,10 @@ Fancy.copyText = (text) => {
       }
 
       me.removeFilter(column, sign);
+
+      if(oneFilterPerColumn){
+        me.filters = me.filters.filter(filter => filter.column.id!== column.id);
+      }
 
       if (value !== null) {
         me.filters.push({
@@ -1312,11 +1309,15 @@ Fancy.copyText = (text) => {
       me.prevAction = 'filter';
       me.prevFilterColumn = column;
     },
-    filterForRowGrouping(column, value, sign = '=') {
+    filterForRowGrouping(column, value, sign = '=', oneFilterPerColumn = false) {
       const me = this;
       const data = me.data.slice();
 
       me.removeFilter(column, sign);
+
+      if(oneFilterPerColumn){
+        me.filters = me.filters.filter(filter => filter.column.id!== column.id);
+      }
 
       if (value !== null) {
         me.filters.push({
@@ -1419,7 +1420,7 @@ Fancy.copyText = (text) => {
           });
           break;
         // Starts with
-        case '_a':
+        case 'a_':
           filteredData = data.filter(item => {
             const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
@@ -1427,7 +1428,7 @@ Fancy.copyText = (text) => {
           });
           break;
         // Ends with
-        case 'a_':
+        case '_a':
           filteredData = data.filter(item => {
             const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
@@ -1749,7 +1750,7 @@ Fancy.copyText = (text) => {
         me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName].push(groupName);
 
         if(!groupDetails){
-          console.error(`groupDetails does not contain ${groupName}`);
+          console.error(`FG-Grid: groupDetails does not contain ${groupName}`);
         }
 
         const groupDetailsForFiltering = {
@@ -1959,7 +1960,7 @@ Fancy.copyText = (text) => {
           recursiveDataExtraction(zeroLevelGroups);
           break;
         default:
-          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
+          console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
@@ -1990,7 +1991,7 @@ Fancy.copyText = (text) => {
           recursiveDataExtraction(zeroLevelGroups);
           break;
         default:
-          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
+          console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
@@ -2391,6 +2392,20 @@ Fancy.copyText = (text) => {
       }
 
       return false;
+    },
+    isParentCollapsed(group) {
+      const me = this;
+      const splitted = group.split('/');
+      const iL = splitted.length - 1;
+
+      for (let i = 0; i < iL; i++) {
+        splitted.pop();
+        if (!me.expandedGroups[splitted.join('/')]) {
+          return true;
+        }
+      }
+
+      return false;
     }
   };
 
@@ -2494,7 +2509,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       if (item.$isGroupRow) {
-        console.warn('It is wrong to use selectedItemsMap for group row. Only for items that do not have children.');
+        console.warn('FG-Grid: It is wrong to use selectedItemsMap for group row. Only for items that do not have children.');
       }
 
       if (value) {
@@ -3555,7 +3570,7 @@ Fancy.copyText = (text) => {
       }
 
       if(!me.containerEl){
-        console.error('Could not find renderTo element');
+        console.error('FG-Grid: Could not find renderTo element');
       }
     }
     initId(id){
@@ -3755,8 +3770,8 @@ Fancy.copyText = (text) => {
         config.columns.forEach(column => {
           if(column.type === 'order'){
             if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
-              console.error('Order column is not supported for row grouping with rowGroupType equals to "row"');
-              console.error('For order column use rowGroupType equals to "column"');
+              console.error('FG-Grid: Order column is not supported for row grouping with rowGroupType equals to "row"');
+              console.error('FG-Grid: For order column use rowGroupType equals to "column"');
             }
           }
 
@@ -4185,7 +4200,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       if(!me.isPossibleToHideColumn()){
-        console.warn('Hiding column was prevented because it requires at least 1 visible column');
+        console.warn('FG-Grid: Hiding column was prevented because it requires at least 1 visible column');
         return false;
       }
 
@@ -4495,14 +4510,14 @@ Fancy.copyText = (text) => {
             sortable: false,
             render: Fancy.render.order,
             width: column.width || 45,
-            resizable: false,
             menu: false,
-            draggable: false
+            draggable: false,
+            filter: false
           });
           me.columnOrder = column;
 
           if(store?.rowGroups.length || me?.rowGroupBar){
-            console.error('Order column is not supported for row grouping');
+            console.error('FG-Grid: Order column is not supported for row grouping');
           }
           break;
       }
@@ -4662,7 +4677,14 @@ Fancy.copyText = (text) => {
       });
       const value = column.title;
 
-      column.sortable && column.type && cell.classList.add(HEADER_CELL_SORTABLE);
+      if(column.sortable){
+        if(column.type){
+          cell.classList.add(HEADER_CELL_SORTABLE);
+        } else {
+          console.warn('FG-Grid: Column has property sortable=true, but does not have type');
+          console.warn('FG-Grid: Add type for column to enable sorting', column);
+        }
+      }
 
       if(column.resizable === false){
         cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
@@ -4992,7 +5014,7 @@ Fancy.copyText = (text) => {
             e.preventDefault();
           }
 
-          console.warn('Hiding column was prevented because it requires at least 1 visible column');
+          console.warn('FG-Grid: Hiding column was prevented because it requires at least 1 visible column');
 
           return;
         }
@@ -5143,7 +5165,7 @@ Fancy.copyText = (text) => {
 
       rowEl.appendChild(cell);
     },
-    createCell(rowIndex, columnIndex) {
+    createCell(rowIndex, columnIndex, allowActiveCellSet = true) {
       const me = this;
       const store = me.store;
       const item = store.getItemByRowIndex(rowIndex);
@@ -5172,7 +5194,7 @@ Fancy.copyText = (text) => {
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
 
-      if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
+      if(allowActiveCellSet && me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
         cell.classList.add(ACTIVE_CELL);
         me.activeCellEl = cell;
       }
@@ -5476,7 +5498,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       if (!item) {
-        console.warn(`row ${index} does not exist`);
+        console.warn(`FG-Grid: row ${index} does not exist`);
         return;
       }
 
@@ -5560,7 +5582,7 @@ Fancy.copyText = (text) => {
       const rowGroupType = me.rowGroupType;
 
       if (!item) {
-        console.warn(`row ${index} does not exist`);
+        console.warn(`FG-Grid: row ${index} does not exist`);
         return;
       }
 
@@ -5602,7 +5624,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       if (!item) {
-        console.warn(`row ${item.index} does not exist`);
+        console.warn(`FG-Grid: row ${item.index} does not exist`);
         return;
       }
 
@@ -5720,7 +5742,7 @@ Fancy.copyText = (text) => {
         const item = me.store.getItemByRowIndex(i);
 
         if (!item) {
-          console.warn(`Item with index equals to ${i} does not exist`);
+          console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
           continue;
         }
 
@@ -5744,7 +5766,7 @@ Fancy.copyText = (text) => {
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if (!rowEl) {
-        console.warn(`Row el for row index ${item.rowIndex} does not exist`);
+        console.warn(`FG-Grid: Row el for row index ${item.rowIndex} does not exist`);
         return;
       }
 
@@ -5756,7 +5778,7 @@ Fancy.copyText = (text) => {
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if (!rowEl) {
-        console.warn(`Row el for row index ${item.rowIndex} does not exist`);
+        console.warn(`FG-Grid: Row el for row index ${item.rowIndex} does not exist`);
         return;
       }
 
@@ -5798,7 +5820,7 @@ Fancy.copyText = (text) => {
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if (!rowEl) {
-        console.warn(`Row el for row index ${item.rowIndex} does not exist`);
+        console.warn(`FG-Grid: Row el for row index ${item.rowIndex} does not exist`);
         return;
       }
 
@@ -6151,7 +6173,7 @@ Fancy.copyText = (text) => {
         const item = me.store.getItemByRowIndex(i);
 
         if (!item) {
-          console.warn(`Item with index equals to ${i} does not exist`);
+          console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
         } else {
           if (!me.renderedRowsIdMap.has(item.id)) {
             me.renderRowOnPrevPosition(item, true);
@@ -6172,7 +6194,7 @@ Fancy.copyText = (text) => {
               itemsToRemove.push(item);
             }
 
-            // me.updateRowPosition(item);
+            //me.updateRowPosition(item);
             me.fakeRowPosition(item);
           });
 
@@ -6288,7 +6310,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       if(signWasChanged){
-        me.store.removeFilter(column);
+        me.store.removeFilter(column, undefined, false);
       }
 
       if(sign === '=' && value === ''){
@@ -6351,23 +6373,44 @@ Fancy.copyText = (text) => {
       const me = this;
       const store = me.store;
 
+      switch (value){
+        case '=':
+        case '<':
+        case '>':
+        case '!=':
+        case '==':
+        case '!==':
+        case '_a':
+        case 'a_':
+        case 'regex':
+        case 'empty':
+        case '!empty':
+        case '+':
+        case '-':
+          if(String(sign).length >=2 ){
+            console.warn('FG-Grid: It looks like in method filter, value and sign have wrong argument positions');
+          }
+      }
+
       if(store.rowGroups.length){
         me.beforeGrouping();
         me.filterForRowGrouping(column, value, sign);
         me.afterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
+        me.filterBar && me.updateFilterBarCells();
         return;
       }
 
-      store.filter(column, value, sign);
+      store.filter(column, value, sign, me.filterBar === true);
       me.updateFiltersInColumns(column, value, sign);
       me.updateAfterFilter();
+      me.filterBar && me.updateFilterBarCells();
     },
     filterForRowGrouping(column, value, sign = '='){
       const me = this;
 
-      me.store.filterForRowGrouping(column, value, sign);
+      me.store.filterForRowGrouping(column, value, sign, me.filterBar === true);
       me.updateFiltersInColumns(column, value, sign);
     },
     updateFiltersInColumns(filterColumn, value, sign){
@@ -6409,7 +6452,7 @@ Fancy.copyText = (text) => {
         const item = me.store.getItemByRowIndex(i);
 
         if (!item) {
-          console.warn(`Item with index equals to ${i} does not exist`);
+          console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
         } else {
           !me.renderedRowsIdMap.has(item.id) && me.renderRowOnPrevPosition(item, true);
           me.actualRowsIdSet.add(item.id);
@@ -6442,6 +6485,32 @@ Fancy.copyText = (text) => {
           }, 500);
         });
       });
+    },
+    updateFilterBarCells() {
+      const me = this;
+
+      let columnStart = me.scroller.columnViewStart,
+        columnEnd = me.scroller.columnViewEnd;
+
+      for (let i = columnStart; i <= columnEnd; i++) {
+        const column = me.columns[i];
+
+        if(column.hidden){
+          continue;
+        }
+
+        if (Object.entries(column.filters || {}).length) {
+          const filterField = column.filterField;
+          const filter = column.filters;
+
+          if(filterField.sign !== filter.sign){
+            if(!(filter.sign === '=' && filterField.sign === '')){
+              filterField.setSign(filter.sign);
+            }
+            filterField.setValue(filter.value, false);
+          }
+        }
+      }
     }
   };
 
@@ -6595,7 +6664,7 @@ Fancy.copyText = (text) => {
         const item = me.store.getItemByRowIndex(i);
 
         if (!item) {
-          console.warn(`Item with index equals to ${i} does not exist`);
+          console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
         } else {
           if (!me.renderedRowsIdMap.has(item.id)) {
             //me.renderRowOnPrevPosition(item, true);
@@ -7204,7 +7273,7 @@ Fancy.copyText = (text) => {
         const itemId = row.getAttribute('row-id');
         const item = store.idItemMap.get(itemId);
         if(!item){
-          console.error(`store.idItemMap does not contain ${itemId}`);
+          console.error(`FG-Grid: store.idItemMap does not contain ${itemId}`);
         }
         const selected = item.$selected;
         const checkBoxEl = row.querySelector(`.${CELL_SELECTION} .${INPUT_CHECKBOX}`);
@@ -8499,7 +8568,7 @@ Fancy.copyText = (text) => {
         if(column.setter){
           me.rowCellsUpdateWithColumnIndex(row);
         } else {
-          me.rowCellsUpdateWithColumnRender(row);
+          me.rowCellsUpdateWithColumnRender(row,false, false);
         }
 
         if(item.$rowGroupValue && column.agFn){
@@ -8638,7 +8707,7 @@ Fancy.copyText = (text) => {
         row.appendChild(cell);
       });
     },
-    rowCellsUpdateWithColumnRender(row, flash){
+    rowCellsUpdateWithColumnRender(row, flash, allowActiveCellSet = true){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
       const itemId = row.getAttribute('row-id');
@@ -8652,7 +8721,7 @@ Fancy.copyText = (text) => {
           return;
         }
 
-        const newCell = me.createCell(rowIndex, columnIndex);
+        const newCell = me.createCell(rowIndex, columnIndex, allowActiveCellSet);
         if(cell.innerHTML === newCell.innerHTML){
           return;
         }
@@ -8868,8 +8937,8 @@ Fancy.copyText = (text) => {
     'Not Equals': '!==',
     'Empty': 'empty',
     'Not Empty': '!empty',
-    'Starts with': '_a',
-    'Ends with': 'a_',
+    'Starts with': 'a_',
+    'Ends with': '_a',
     'Regex': 'regex',
     'Greater Than': '>',
     'Less Than': '<',
@@ -8885,8 +8954,8 @@ Fancy.copyText = (text) => {
     '!==': 'Not Equals',
     'empty': 'Empty',
     '!empty': 'Not Empty',
-    '_a': 'Starts with',
-    'a_': 'Ends with',
+    'a_': 'Starts with',
+    '_a': 'Ends with',
     'regex': 'Regex',
     '>': 'Greater Than',
     '<': 'Less Than',
@@ -8951,7 +9020,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       if(!me.column.type){
-        console.warn('To use column header filter, column type should be set');
+        console.warn('FG-Grid: To use column header filter, column type should be set');
         return;
       }
 
@@ -9065,7 +9134,7 @@ Fancy.copyText = (text) => {
       me.setSign(sign);
       me.setValue('');
     }
-    setValue(value) {
+    setValue(value, fire = true) {
       const me = this;
       const sign = me.sign || me.defaultSign;
 
@@ -9080,7 +9149,7 @@ Fancy.copyText = (text) => {
           me.input.value = value;
       }
 
-      me.onChange?.(value, sign, me.column, me.signWasChanged);
+      fire && me.onChange?.(value, sign, me.column, me.signWasChanged);
       delete me.signWasChanged;
     }
     clearValue(preventFire = false) {
@@ -9097,7 +9166,11 @@ Fancy.copyText = (text) => {
       const me = this;
       const prevSign = me.sign;
 
-      me.sign = FancyTextSign[sign];
+      if(FancySignText[sign]){
+        sign = FancySignText[sign];
+      }
+
+      me.sign = FancyTextSign[sign] || sign;
       if(prevSign !== me.sign){
         me.signWasChanged = true;
       }

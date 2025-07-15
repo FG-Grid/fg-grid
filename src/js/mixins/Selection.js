@@ -141,7 +141,7 @@
         const itemId = row.getAttribute('row-id');
         const item = store.idItemMap.get(itemId);
         if(!item){
-          console.error(`store.idItemMap does not contain ${itemId}`);
+          console.error(`FG-Grid: store.idItemMap does not contain ${itemId}`);
         }
         const selected = item.$selected;
         const checkBoxEl = row.querySelector(`.${CELL_SELECTION} .${INPUT_CHECKBOX}`);

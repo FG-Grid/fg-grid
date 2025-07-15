@@ -93,7 +93,7 @@
       const me = this;
 
       if(signWasChanged){
-        me.store.removeFilter(column);
+        me.store.removeFilter(column, undefined, false);
       }
 
       if(sign === '=' && value === ''){
@@ -156,23 +156,44 @@
       const me = this;
       const store = me.store;
 
+      switch (value){
+        case '=':
+        case '<':
+        case '>':
+        case '!=':
+        case '==':
+        case '!==':
+        case '_a':
+        case 'a_':
+        case 'regex':
+        case 'empty':
+        case '!empty':
+        case '+':
+        case '-':
+          if(String(sign).length >=2 ){
+            console.warn('FG-Grid: It looks like in method filter, value and sign have wrong argument positions');
+          }
+      }
+
       if(store.rowGroups.length){
         me.beforeGrouping();
         me.filterForRowGrouping(column, value, sign);
         me.afterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
+        me.filterBar && me.updateFilterBarCells();
         return;
       }
 
-      store.filter(column, value, sign);
+      store.filter(column, value, sign, me.filterBar === true);
       me.updateFiltersInColumns(column, value, sign);
       me.updateAfterFilter();
+      me.filterBar && me.updateFilterBarCells();
     },
     filterForRowGrouping(column, value, sign = '='){
       const me = this;
 
-      me.store.filterForRowGrouping(column, value, sign);
+      me.store.filterForRowGrouping(column, value, sign, me.filterBar === true);
       me.updateFiltersInColumns(column, value, sign);
     },
     updateFiltersInColumns(filterColumn, value, sign){
@@ -214,7 +235,7 @@
         const item = me.store.getItemByRowIndex(i);
 
         if (!item) {
-          console.warn(`Item with index equals to ${i} does not exist`);
+          console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
         } else {
           !me.renderedRowsIdMap.has(item.id) && me.renderRowOnPrevPosition(item, true);
           me.actualRowsIdSet.add(item.id);
@@ -247,6 +268,32 @@
           }, 500);
         });
       });
+    },
+    updateFilterBarCells() {
+      const me = this;
+
+      let columnStart = me.scroller.columnViewStart,
+        columnEnd = me.scroller.columnViewEnd;
+
+      for (let i = columnStart; i <= columnEnd; i++) {
+        const column = me.columns[i];
+
+        if(column.hidden){
+          continue;
+        }
+
+        if (Object.entries(column.filters || {}).length) {
+          const filterField = column.filterField;
+          const filter = column.filters;
+
+          if(filterField.sign !== filter.sign){
+            if(!(filter.sign === '=' && filterField.sign === '')){
+              filterField.setSign(filter.sign);
+            }
+            filterField.setValue(filter.value, false);
+          }
+        }
+      }
     }
   };
 

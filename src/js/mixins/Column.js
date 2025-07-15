@@ -37,7 +37,7 @@
       const me = this;
 
       if(!me.isPossibleToHideColumn()){
-        console.warn('Hiding column was prevented because it requires at least 1 visible column');
+        console.warn('FG-Grid: Hiding column was prevented because it requires at least 1 visible column');
         return false;
       }
 
@@ -347,14 +347,14 @@
             sortable: false,
             render: Fancy.render.order,
             width: column.width || 45,
-            resizable: false,
             menu: false,
-            draggable: false
+            draggable: false,
+            filter: false
           });
           me.columnOrder = column;
 
           if(store?.rowGroups.length || me?.rowGroupBar){
-            console.error('Order column is not supported for row grouping');
+            console.error('FG-Grid: Order column is not supported for row grouping');
           }
           break;
       }

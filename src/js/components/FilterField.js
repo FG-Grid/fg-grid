@@ -32,8 +32,8 @@
     'Not Equals': '!==',
     'Empty': 'empty',
     'Not Empty': '!empty',
-    'Starts with': '_a',
-    'Ends with': 'a_',
+    'Starts with': 'a_',
+    'Ends with': '_a',
     'Regex': 'regex',
     'Greater Than': '>',
     'Less Than': '<',
@@ -49,8 +49,8 @@
     '!==': 'Not Equals',
     'empty': 'Empty',
     '!empty': 'Not Empty',
-    '_a': 'Starts with',
-    'a_': 'Ends with',
+    'a_': 'Starts with',
+    '_a': 'Ends with',
     'regex': 'Regex',
     '>': 'Greater Than',
     '<': 'Less Than',
@@ -115,7 +115,7 @@
       const me = this;
 
       if(!me.column.type){
-        console.warn('To use column header filter, column type should be set');
+        console.warn('FG-Grid: To use column header filter, column type should be set');
         return;
       }
 
@@ -229,7 +229,7 @@
       me.setSign(sign);
       me.setValue('');
     }
-    setValue(value) {
+    setValue(value, fire = true) {
       const me = this;
       const sign = me.sign || me.defaultSign;
 
@@ -244,7 +244,7 @@
           me.input.value = value;
       }
 
-      me.onChange?.(value, sign, me.column, me.signWasChanged);
+      fire && me.onChange?.(value, sign, me.column, me.signWasChanged);
       delete me.signWasChanged;
     }
     clearValue(preventFire = false) {
@@ -261,7 +261,11 @@
       const me = this;
       const prevSign = me.sign;
 
-      me.sign = FancyTextSign[sign];
+      if(FancySignText[sign]){
+        sign = FancySignText[sign];
+      }
+
+      me.sign = FancyTextSign[sign] || sign;
       if(prevSign !== me.sign){
         me.signWasChanged = true;
       }

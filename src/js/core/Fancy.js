@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '0.8.3',
+  version: '0.8.4',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),

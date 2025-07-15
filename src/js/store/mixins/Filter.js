@@ -3,7 +3,7 @@
    * @mixin StoreMixinFilter
    */
   const StoreMixinFilter = {
-    removeFilter(column, sign){
+    removeFilter(column, sign, removePrevFilterColumn = true){
       const me = this;
 
       if(sign){
@@ -18,7 +18,10 @@
       } else {
         me.filters = [];
       }
-      delete me.prevFilterColumn;
+
+      if(removePrevFilterColumn !== false){
+        delete me.prevFilterColumn;
+      }
     },
     clearFilter(column, sign) {
       const me = this;
@@ -77,7 +80,7 @@
 
       me.prevAction = 'filter';
     },
-    filter(column, value, sign = '=') {
+    filter(column, value, sign = '=', oneFilterPerColumn = false) {
       const me = this;
       let data;
       let totalReFilterRequired = false;
@@ -93,6 +96,10 @@
       }
 
       me.removeFilter(column, sign);
+
+      if(oneFilterPerColumn){
+        me.filters = me.filters.filter(filter => filter.column.id!== column.id);
+      }
 
       if (value !== null) {
         me.filters.push({
@@ -118,11 +125,15 @@
       me.prevAction = 'filter';
       me.prevFilterColumn = column;
     },
-    filterForRowGrouping(column, value, sign = '=') {
+    filterForRowGrouping(column, value, sign = '=', oneFilterPerColumn = false) {
       const me = this;
       const data = me.data.slice();
 
       me.removeFilter(column, sign);
+
+      if(oneFilterPerColumn){
+        me.filters = me.filters.filter(filter => filter.column.id!== column.id);
+      }
 
       if (value !== null) {
         me.filters.push({
@@ -225,7 +236,7 @@
           });
           break;
         // Starts with
-        case '_a':
+        case 'a_':
           filteredData = data.filter(item => {
             const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 
@@ -233,7 +244,7 @@
           });
           break;
         // Ends with
-        case 'a_':
+        case '_a':
           filteredData = data.filter(item => {
             const itemValue = String(getItemValue(item)).toLocaleLowerCase();
 

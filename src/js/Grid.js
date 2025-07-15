@@ -122,7 +122,7 @@
       }
 
       if(!me.containerEl){
-        console.error('Could not find renderTo element');
+        console.error('FG-Grid: Could not find renderTo element');
       }
     }
     initId(id){
@@ -322,8 +322,8 @@
         config.columns.forEach(column => {
           if(column.type === 'order'){
             if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
-              console.error('Order column is not supported for row grouping with rowGroupType equals to "row"');
-              console.error('For order column use rowGroupType equals to "column"');
+              console.error('FG-Grid: Order column is not supported for row grouping with rowGroupType equals to "row"');
+              console.error('FG-Grid: For order column use rowGroupType equals to "column"');
             }
           }
 

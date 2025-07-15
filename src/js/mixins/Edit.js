@@ -83,7 +83,7 @@
         if(column.setter){
           me.rowCellsUpdateWithColumnIndex(row);
         } else {
-          me.rowCellsUpdateWithColumnRender(row);
+          me.rowCellsUpdateWithColumnRender(row,false, false);
         }
 
         if(item.$rowGroupValue && column.agFn){
@@ -222,7 +222,7 @@
         row.appendChild(cell);
       });
     },
-    rowCellsUpdateWithColumnRender(row, flash){
+    rowCellsUpdateWithColumnRender(row, flash, allowActiveCellSet = true){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
       const itemId = row.getAttribute('row-id');
@@ -236,7 +236,7 @@
           return;
         }
 
-        const newCell = me.createCell(rowIndex, columnIndex);
+        const newCell = me.createCell(rowIndex, columnIndex, allowActiveCellSet);
         if(cell.innerHTML === newCell.innerHTML){
           return;
         }

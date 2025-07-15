@@ -255,7 +255,7 @@
         me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName].push(groupName);
 
         if(!groupDetails){
-          console.error(`groupDetails does not contain ${groupName}`);
+          console.error(`FG-Grid: groupDetails does not contain ${groupName}`);
         }
 
         const groupDetailsForFiltering = {
@@ -465,7 +465,7 @@
           recursiveDataExtraction(zeroLevelGroups);
           break;
         default:
-          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
+          console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
@@ -496,7 +496,7 @@
           recursiveDataExtraction(zeroLevelGroups);
           break;
         default:
-          console.error(`Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
+          console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
@@ -894,6 +894,20 @@
         }
 
         splitted.pop();
+      }
+
+      return false;
+    },
+    isParentCollapsed(group) {
+      const me = this;
+      const splitted = group.split('/');
+      const iL = splitted.length - 1;
+
+      for (let i = 0; i < iL; i++) {
+        splitted.pop();
+        if (!me.expandedGroups[splitted.join('/')]) {
+          return true;
+        }
       }
 
       return false;

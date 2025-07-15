@@ -1,7 +1,7 @@
 Fancy.copyText = (text) => {
   if(navigator.clipboard){
     navigator.clipboard.writeText(text)
-      .catch(err => console.error('Error copying: ', err));
+      .catch(err => console.error('FG-Grid: Error copying: ', err));
   } else {
     const textarea = document.createElement('textarea');
     textarea.value = text;

@@ -72,7 +72,7 @@
 
       rowEl.appendChild(cell);
     },
-    createCell(rowIndex, columnIndex) {
+    createCell(rowIndex, columnIndex, allowActiveCellSet = true) {
       const me = this;
       const store = me.store;
       const item = store.getItemByRowIndex(rowIndex);
@@ -101,7 +101,7 @@
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
 
-      if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
+      if(allowActiveCellSet && me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
         cell.classList.add(ACTIVE_CELL);
         me.activeCellEl = cell;
       }
@@ -405,7 +405,7 @@
       const me = this;
 
       if (!item) {
-        console.warn(`row ${index} does not exist`);
+        console.warn(`FG-Grid: row ${index} does not exist`);
         return;
       }
 
@@ -489,7 +489,7 @@
       const rowGroupType = me.rowGroupType;
 
       if (!item) {
-        console.warn(`row ${index} does not exist`);
+        console.warn(`FG-Grid: row ${index} does not exist`);
         return;
       }
 
@@ -531,7 +531,7 @@
       const me = this;
 
       if (!item) {
-        console.warn(`row ${item.index} does not exist`);
+        console.warn(`FG-Grid: row ${item.index} does not exist`);
         return;
       }
 
@@ -649,7 +649,7 @@
         const item = me.store.getItemByRowIndex(i);
 
         if (!item) {
-          console.warn(`Item with index equals to ${i} does not exist`);
+          console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
           continue;
         }
 
@@ -673,7 +673,7 @@
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if (!rowEl) {
-        console.warn(`Row el for row index ${item.rowIndex} does not exist`);
+        console.warn(`FG-Grid: Row el for row index ${item.rowIndex} does not exist`);
         return;
       }
 
@@ -685,7 +685,7 @@
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if (!rowEl) {
-        console.warn(`Row el for row index ${item.rowIndex} does not exist`);
+        console.warn(`FG-Grid: Row el for row index ${item.rowIndex} does not exist`);
         return;
       }
 
@@ -727,7 +727,7 @@
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if (!rowEl) {
-        console.warn(`Row el for row index ${item.rowIndex} does not exist`);
+        console.warn(`FG-Grid: Row el for row index ${item.rowIndex} does not exist`);
         return;
       }
 

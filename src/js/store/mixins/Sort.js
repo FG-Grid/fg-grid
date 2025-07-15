@@ -188,7 +188,7 @@
                 }
 
                 if (!a.localeCompare) {
-                  console.error(`${a} is not a string`);
+                  console.error(`FG-Grid: ${a} is not a string`);
                 }
 
                 return a.localeCompare(b);
@@ -340,6 +340,9 @@
         }
       } else {
         if (me.rowGroups.length) {
+          // Here is problem and bug
+          // Wrong setting rowIndex
+          /*
           for (const group in me.expandedGroupsWithDataChildren) {
             const groupData = me.groupsChildren[group];
 
@@ -347,10 +350,11 @@
               me.idRowIndexesMap.set(item.id, item.originalRowIndex);
               item.rowIndex = item.originalRowIndex;
             });
-          }
+          }*/
 
           me.sortGroups();
           me.simpleReGenerateDisplayedGroupedData();
+          me.updateIndexes();
         } else {
           me.data.forEach((item, index) => {
             me.idRowIndexesMap.set(item.id, index);
@@ -362,20 +366,6 @@
       if (me.sorters.length === 0) {
         delete me.sortedData;
       }
-    },
-    isParentCollapsed(group) {
-      const me = this;
-      const splitted = group.split('/');
-      const iL = splitted.length - 1;
-
-      for (let i = 0; i < iL; i++) {
-        splitted.pop();
-        if (!me.expandedGroups[splitted.join('/')]) {
-          return true;
-        }
-      }
-
-      return false;
     }
   };
 

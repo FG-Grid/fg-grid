@@ -130,7 +130,14 @@
       });
       const value = column.title;
 
-      column.sortable && column.type && cell.classList.add(HEADER_CELL_SORTABLE);
+      if(column.sortable){
+        if(column.type){
+          cell.classList.add(HEADER_CELL_SORTABLE);
+        } else {
+          console.warn('FG-Grid: Column has property sortable=true, but does not have type');
+          console.warn('FG-Grid: Add type for column to enable sorting', column);
+        }
+      }
 
       if(column.resizable === false){
         cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
@@ -460,7 +467,7 @@
             e.preventDefault();
           }
 
-          console.warn('Hiding column was prevented because it requires at least 1 visible column');
+          console.warn('FG-Grid: Hiding column was prevented because it requires at least 1 visible column');
 
           return;
         }

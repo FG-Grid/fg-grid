@@ -145,7 +145,7 @@
         const item = me.store.getItemByRowIndex(i);
 
         if (!item) {
-          console.warn(`Item with index equals to ${i} does not exist`);
+          console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
         } else {
           if (!me.renderedRowsIdMap.has(item.id)) {
             //me.renderRowOnPrevPosition(item, true);

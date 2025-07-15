@@ -95,7 +95,7 @@
       const me = this;
 
       if (item.$isGroupRow) {
-        console.warn('It is wrong to use selectedItemsMap for group row. Only for items that do not have children.');
+        console.warn('FG-Grid: It is wrong to use selectedItemsMap for group row. Only for items that do not have children.');
       }
 
       if (value) {

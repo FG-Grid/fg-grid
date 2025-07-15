@@ -60,6 +60,7 @@ export interface Column<TData = any> {
   title?: string;
   editable?: boolean;
   rowGroup?: boolean;
+  rowGroupOrder?: number;
 
   checkboxSelection?: boolean;
   headerCheckboxSelection?: boolean;
