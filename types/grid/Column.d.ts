@@ -58,9 +58,11 @@ export interface Column<TData = any> {
   menu?: boolean;
   type?: 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'order';
   title?: string;
+  sticky?: boolean;
   editable?: boolean;
   rowGroup?: boolean;
   rowGroupOrder?: number;
+  children?: Column<TData>[];
 
   checkboxSelection?: boolean;
   headerCheckboxSelection?: boolean;
