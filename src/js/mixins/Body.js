@@ -376,7 +376,7 @@
       const me = this;
 
       columnIndexes.forEach((columnIndex) => {
-        const headerCell = me.headerEl.querySelector(`[col-index="${columnIndex}"]`);
+        const headerCell = me.headerInnerContainerEl.querySelector(`[col-index="${columnIndex}"]`);
 
         if(!headerCell){
           return;
@@ -594,16 +594,29 @@
       for (let i = columnStart; i <= columnEnd; i++) {
         const column = me.columns[i];
 
+        if(me.columnsLevel > 1){
+          const columnLevel2 = me.columns2[i];
+          const headerCellEl = columnLevel2.headerCellEl;
+          if(headerCellEl){
+            headerCellEl.style.left = columnLevel2.left + 'px';
+            headerCellEl.style.width = columnLevel2.width + 'px';
+          }
+        }
+
         if (column.hidden) {
           continue;
         }
 
-        if(!column.headerCellEl){
-          me.appendHeaderCell(i);
-        }
+        !column.headerCellEl && me.appendHeaderCell(i);
 
         column.headerCellEl.style.left = column.left + 'px';
         column.headerCellEl.style.width = column.width + 'px';
+
+        if(column.parent){
+          const parent = column.parent;
+          parent.headerCellEl.style.left = parent.left + 'px';
+          parent.headerCellEl.style.width = parent.width + 'px';
+        }
 
         if (column.filterCellEl) {
           column.filterCellEl.style.left = column.left + 'px';

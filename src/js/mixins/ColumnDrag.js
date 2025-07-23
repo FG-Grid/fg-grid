@@ -164,6 +164,7 @@
       const columnsViewRange = me.scroller.columnsViewRange;
 
       pageX -= headerRect.x;
+      pageX += me.scroller.scrollLeft;
 
       for(let i = 0, iL = columnsViewRange.length;i<iL;i++){
         const columnIndex = columnsViewRange[i];
@@ -201,6 +202,13 @@
 
       me.columns.splice(toIndex, 0, column);
       let oldOrders = [];
+
+      if(me.columnsLevel > 1){
+        const columnLevel2 = me.columns2.splice(columnIndex, 1)[0];
+        me.columns2.splice(toIndex, 0, columnLevel2);
+
+        me.updateColumnGroupLevel2();
+      }
 
       me.reSetVisibleHeaderColumnsIndex();
       if(columnIndex<toIndex){

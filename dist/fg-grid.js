@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.8.4',
+  version: '0.8.5',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -134,6 +134,10 @@ const Fancy$1 = {
     }
 
     for(let p in style){
+      if(style[p] === undefined){
+        continue;
+      }
+
       el.style[p] = style[p];
     }
 
@@ -212,7 +216,8 @@ Fancy.cls = {
   // Header
   HEADER: 'fg-header',
   HEADER_INNER: 'fg-header-inner',
-  HEADER_INNER_CONTAINER: 'fg-header-inner-container',
+  HEADER_ROW: 'fg-header-row',
+  HEADER_ROW_COLUMN_GROUP: 'fg-header-row-column-group',
   HEADER_CELL: 'fg-header-cell',
   HEADER_CELL_SORTABLE: 'fg-header-cell-sortable',
   HEADER_CELL_NOT_RESIZABLE: 'fg-header-cell-not-resizable',
@@ -222,6 +227,10 @@ Fancy.cls = {
   HEADER_CELL_RESIZE: 'fg-header-cell-resize',
   HEADER_CELL_MENU: 'fg-header-cell-menu',
   HEADER_CELL_SELECTION: 'fg-header-cell-selection',
+  HEADER_CELL_COLUMN_GROUP: 'fg-header-cell-column-group',
+  HEADER_CELL_COLUMN_GROUP_CHILD: 'fg-header-cell-column-group-child',
+  HEADER_CELL_SPAN_HEIGHT: 'fg-header-span-height',
+  HEADER_CELL_STICKY: 'fg-header-cell-sticky',
 
   // Body
   BODY: 'fg-body',
@@ -238,6 +247,7 @@ Fancy.cls = {
   COLUMNS_MENU: 'fg-columns-menu',
   COLUMNS_MENU_ITEM: 'fg-columns-menu-item',
   COLUMNS_MENU_ITEM_TEXT: 'fg-columns-menu-item-text',
+  COLUMNS_MENU_ITEM_GROUP_TEXT: 'fg-columns-menu-item-group-text',
 
   // Cell
   CELL: 'fg-cell',
@@ -3453,7 +3463,8 @@ Fancy.copyText = (text) => {
     ROW_ANIMATION,
     HEADER,
     HEADER_INNER,
-    HEADER_INNER_CONTAINER,
+    HEADER_ROW,
+    HEADER_ROW_COLUMN_GROUP,
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
@@ -3626,18 +3637,32 @@ Fancy.copyText = (text) => {
     }
     renderHeader() {
       const me = this;
+      const headerRowHeight = me.headerRowHeight;
+      const columnsLevel = me.columnsLevel;
+      const headerHeight = columnsLevel * headerRowHeight + 1;
+      const columnsWidth = me.getTotalColumnsWidth();
+      const scrollBarWidth = me.scroller.scrollBarWidth;
 
       const headerEl = div(HEADER, {
-        height: (this.headerRowHeight + 1) + 'px'
+        height: headerHeight + 'px'
       });
 
       const headerInnerEl = div(HEADER_INNER, {
-        width: (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px'
+        width: (columnsWidth + scrollBarWidth) + 'px'
       });
 
-      const headerInnerContainerEl = div(HEADER_INNER_CONTAINER, {
-        height: me.headerRowHeight + 'px',
-        width: me.getTotalColumnsWidth() + 'px'
+      if(columnsLevel > 1){
+        const headerInnerGroup1ContainerEl = div([HEADER_ROW, HEADER_ROW_COLUMN_GROUP], {
+          height: headerRowHeight + 'px',
+          width: columnsWidth + 'px'
+        });
+        headerInnerEl.appendChild(headerInnerGroup1ContainerEl);
+        me.headerInnerGroup1ContainerEl = headerInnerGroup1ContainerEl;
+      }
+
+      const headerInnerContainerEl = div(HEADER_ROW, {
+        height: headerRowHeight + 'px',
+        width: columnsWidth + 'px'
       });
 
       headerInnerEl.appendChild(headerInnerContainerEl);
@@ -3713,11 +3738,13 @@ Fancy.copyText = (text) => {
 
       if(config.columns){
         config.columns = Fancy.deepClone(config.columns);
+        me.prepareGroupHeaderColumns(config);
 
         let left = 0;
         let newRowGroupsOrder = false;
 
         me.generateColumnIds(config.columns);
+        config.columns2 && me.generateColumnIds(config.columns2);
 
         if(config.rowGroupType === 'column') {
           config.rowGroupColumn = config.rowGroupColumn || {};
@@ -3767,7 +3794,8 @@ Fancy.copyText = (text) => {
           }
         }
 
-        config.columns.forEach(column => {
+        let prevGroupColumn;
+        config.columns.forEach((column, columnIndex) => {
           if(column.type === 'order'){
             if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
               console.error('FG-Grid: Order column is not supported for row grouping with rowGroupType equals to "row"');
@@ -3789,6 +3817,21 @@ Fancy.copyText = (text) => {
           }
 
           column.left = left;
+
+          if(config.columnsLevel > 1){
+            const groupColumnAtIndex = config.columns2[columnIndex];
+
+            if(groupColumnAtIndex.spanning){
+              prevGroupColumn.width += column.width;
+              groupColumnAtIndex.left = left;
+              groupColumnAtIndex.width = column.width;
+            } else if(groupColumnAtIndex.ignore !== true){
+              prevGroupColumn = groupColumnAtIndex;
+              groupColumnAtIndex.left = left;
+              groupColumnAtIndex.width = column.width;
+            }
+          }
+
           if(!column.hidden){
             left += column.width;
           }
@@ -3838,8 +3881,13 @@ Fancy.copyText = (text) => {
     reCalcColumnsPositions(){
       const me = this;
 
-      me.columns.reduce((left, column) => {
+      me.columns.reduce((left, column, columnIndex) => {
         column.left = left;
+
+        if(me.columnsLevel > 1){
+          const columnLevel2 = me.columns2[columnIndex];
+          columnLevel2.left = left;
+        }
 
         return left + (column.hidden? 0: column.width);
       }, 0);
@@ -4188,6 +4236,7 @@ Fancy.copyText = (text) => {
       me.reCalcColumnsPositions();
       me.updateWidth();
       me.updateCellPositions();
+      me.columnsLevel > 1 && column.parent && me.updateColumnGroupLevel2();
 
       if(animate){
         setTimeout(() => {
@@ -4217,6 +4266,7 @@ Fancy.copyText = (text) => {
       me.reCalcColumnsPositions();
       me.updateWidth();
       me.updateCellPositions();
+      me.columnsLevel > 1 && column.parent && me.updateColumnGroupLevel2();
 
       if(animate && me.animatingColumnsPosition){
         setTimeout(() => {
@@ -4306,19 +4356,22 @@ Fancy.copyText = (text) => {
     },
     generateColumnIds(columns, updateMaps = true){
       const me = this;
-      const columnIdsMap = new Map();
-      const columnIdsSeedMap = new Map();
+      const columnIdsMap = me.columnIdsMap || new Map();
+      const columnIdsSeedMap = me.columnIdsSeedMap || new Map();
 
       columns.forEach(column => {
         const index = (column.index || column.title || '').toLocaleLowerCase();
+
         if(!column.id){
           let seed = columnIdsSeedMap.get(index);
 
           if(seed === undefined){
             column.id = index || me.getAutoColumnIdSeed();
             seed = 0;
-          } else {
+          } else if(index) {
             column.id = `${index}-${seed}`;
+          } else {
+            column.id = `id-${seed}`;
           }
 
           seed++;
@@ -4346,6 +4399,42 @@ Fancy.copyText = (text) => {
         columnIdsMap,
         columnIdsSeedMap
       };
+    },
+    generateColumnId(column){
+      const me = this;
+      const columnIdsMap = me.columnIdsMap || new Map();
+      const columnIdsSeedMap = me.columnIdsSeedMap || new Map();
+      const index = (column.index || column.title || '').toLocaleLowerCase();
+
+      if(!column.id){
+        let seed = columnIdsSeedMap.get(index);
+
+        if(seed === undefined){
+          column.id = index || me.getAutoColumnIdSeed();
+          seed = 0;
+        } else if(index) {
+          column.id = `${index}-${seed}`;
+        } else {
+          column.id = `id-${seed}`;
+        }
+
+        seed++;
+        columnIdsSeedMap.set(index, seed);
+      } else {
+        let seed = columnIdsSeedMap.get(index);
+
+        if(seed === undefined){
+          seed = 0;
+        }
+
+        seed++;
+        columnIdsSeedMap.set(index, seed);
+      }
+
+      columnIdsMap.set(column.id, column);
+
+      me.columnIdsMap = columnIdsMap;
+      me.columnIdsSeedMap = columnIdsSeedMap;
     },
     setColumns(columns){
       const me = this;
@@ -4539,6 +4628,64 @@ Fancy.copyText = (text) => {
           column[key] = defaults[key];
         }
       });
+    },
+    updateColumnGroupLevel2(){
+      const me = this;
+
+      let i = 0;
+      let iL = me.columns2.length;
+      // TODO: optimization from to(i, iL)
+      // It can be from range
+      // Usual view range does not suit
+      for(;i<iL;i++) {
+        const columnLevel2 = me.columns2[i];
+        const prevColumn = me.columns2[i - 1];
+
+        if(columnLevel2.ignore){
+          continue;
+        }
+
+        if(!prevColumn || prevColumn.ignore || (prevColumn.columnGroup && columnLevel2.columnGroup && prevColumn.columnGroup.id !== columnLevel2.columnGroup.id)){
+          delete columnLevel2.spanning;
+
+          let j = i;
+          let jL = iL;
+          const children = [];
+          for(;j<jL;j++){
+            const _columnLevel2 = me.columns2[j];
+
+            if(_columnLevel2.columnGroup && _columnLevel2.columnGroup.id === columnLevel2.columnGroup.id){
+              me.columns2[i].firstColumn = columnLevel2;
+              children.push(me.columns[j]);
+
+              if(children.length !== 1){
+                delete me.columns2[j].children;
+                if(me.columns2[j].headerCellEl){
+                  me.columns2[j].headerCellEl.style.display = 'none';
+                }
+              }
+            } else {
+              break;
+            }
+          }
+
+          columnLevel2.children = children;
+          const width = children.reduce((result, column) => {
+            if(column.hidden){
+              return result;
+            }
+
+            return result + column.width;
+          }, 0);
+          columnLevel2.width = width;
+          if(width === 0 && columnLevel2.headerCellEl){
+            columnLevel2.headerCellEl.style.display = 'none';
+          } else if(!columnLevel2.hidden && columnLevel2.headerCellEl){
+            columnLevel2.headerCellEl.style.display = '';
+            columnLevel2.headerCellEl.style.width = width + 'px';
+          }
+        }
+      }
     }
   };
 
@@ -4558,12 +4705,17 @@ Fancy.copyText = (text) => {
     HEADER_CELL_TEXT,
     HEADER_FILTER_EL,
     HEADER_CELL_RESIZE,
+    HEADER_CELL_COLUMN_GROUP,
+    HEADER_CELL_COLUMN_GROUP_CHILD,
+    HEADER_CELL_SPAN_HEIGHT,
+    HEADER_CELL_STICKY,
     BODY,
     COLUMN_RESIZING,
     COLUMN_DRAGGING,
     COLUMNS_MENU,
     COLUMNS_MENU_ITEM,
     COLUMNS_MENU_ITEM_TEXT,
+    COLUMNS_MENU_ITEM_GROUP_TEXT,
     FILTER_INDICATOR_CONTAINER,
     SORT_ASC,
     SORT_DESC,
@@ -4659,6 +4811,11 @@ Fancy.copyText = (text) => {
         const cell = me.createHeaderCell(i);
 
         me.headerInnerContainerEl.appendChild(cell);
+
+        if(me.columnsLevel > 1){
+          const cellGroup = me.createGroupHeaderCell(i, 1);
+          cellGroup && me.headerInnerGroup1ContainerEl.appendChild(cellGroup);
+        }
       }
     },
     appendHeaderCell(columnIndex) {
@@ -4667,13 +4824,21 @@ Fancy.copyText = (text) => {
       const cell = me.createHeaderCell(columnIndex);
 
       rowEl.appendChild(cell);
+
+      if(me.columnsLevel > 1){
+        const cellGroup = me.createGroupHeaderCell(columnIndex, 1);
+        cellGroup && me.headerInnerGroup1ContainerEl.appendChild(cellGroup);
+      }
     },
     createHeaderCell(columnIndex) {
       const me = this;
       const column = me.columns[columnIndex];
+      const headerRowHeight = me.headerRowHeight;
+      const cellHeight = column.columnGroupSpanHeight ? headerRowHeight * 2 : headerRowHeight;
       const cell = div(HEADER_CELL, {
         width: column.width + 'px',
-        left: column.left + 'px'
+        left: column.left + 'px',
+        height: cellHeight + 'px'
       });
       const value = column.title;
 
@@ -4689,6 +4854,11 @@ Fancy.copyText = (text) => {
       if(column.resizable === false){
         cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
       }
+
+      column.sticky && cell.classList.add(HEADER_CELL_STICKY);
+
+      column.parent && cell.classList.add(HEADER_CELL_COLUMN_GROUP_CHILD);
+      column.columnGroupSpanHeight && cell.classList.add(HEADER_CELL_SPAN_HEIGHT);
 
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
@@ -4774,6 +4944,55 @@ Fancy.copyText = (text) => {
 
       return cell;
     },
+    createGroupHeaderCell(columnIndex, level) {
+      const me = this;
+      let column;
+
+      if(level === 1){
+        column = me['columns' + (level + 1)][columnIndex];
+      }
+
+      if(column.ignore){
+        return false;
+      }
+
+      if(column.headerCellEl){
+        return false;
+      }
+
+      const cell = div([HEADER_CELL, HEADER_CELL_COLUMN_GROUP], {
+        width: column.width + 'px',
+        left: column.left + 'px',
+        height: me.headerRowHeight + 'px',
+        display: column.spanning ? 'none': undefined
+      });
+      const value = column.title;
+
+      column.resizable === false && cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
+      column.sticky && cell.classList.add(HEADER_CELL_STICKY);
+
+      cell.setAttribute('col-index', columnIndex);
+      cell.setAttribute('col-id', column.id);
+
+      const label = div(HEADER_CELL_LABEL);
+      const cellText = div(HEADER_CELL_TEXT);
+      cellText.innerHTML = value;
+
+      const cellResize = div(HEADER_CELL_RESIZE);
+      cellResize.addEventListener('mousedown', me.onResizeMouseDown.bind(this));
+
+      label.appendChild(cellText);
+
+      cell.appendChild(label);
+
+      column.resizable !== false && cell.appendChild(cellResize);
+
+      //cell.addEventListener('mousedown', me.onCellMouseDown.bind(this));
+
+      column.headerCellEl = cell;
+
+      return cell;
+    },
     onCellMouseDown(event){
       const me = this;
       const isTargetHeaderCellMenu = event.target.closest(`.${HEADER_CELL_MENU}`);
@@ -4805,9 +5024,7 @@ Fancy.copyText = (text) => {
         delete me.debouceColumnDraggingFn;
 
         setTimeout(() => {
-          if(me.activeRowGroupBarItemEl){
-            me.activeRowGroupBarItemEl.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
-          }
+          me.activeRowGroupBarItemEl?.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
 
           me.gridEl.classList.remove(COLUMN_DRAGGING);
           me.columnDragging?.dragColumnCellEl.remove();
@@ -4816,16 +5033,16 @@ Fancy.copyText = (text) => {
           if(me.$requiresReSetGroupColumn && me.rowGroupType === 'column'){
             delete me.$requiresReSetGroupColumn;
             if(me.rowGroupBarItemColumns.length === 1){
-              setTimeout(() => {
-                let indexToAddColumn = 0;
-                me.$rowGroupColumn.hidden = true;
-                if(me.columns[0].type === 'order'){
-                  me.columns.splice(1, 0, me.$rowGroupColumn);
-                  indexToAddColumn = 1;
-                } else {
-                  me.columns.unshift(me.$rowGroupColumn);
-                }
+              let indexToAddColumn = 0;
+              me.$rowGroupColumn.hidden = true;
+              if(me.columns[0].type === 'order'){
+                me.columns.splice(1, 0, me.$rowGroupColumn);
+                indexToAddColumn = 1;
+              } else {
+                me.columns.unshift(me.$rowGroupColumn);
+              }
 
+              setTimeout(() => {
                 me.scroller.generateNewRange(false);
                 me.reSetVisibleHeaderColumnsIndex();
 
@@ -4833,6 +5050,7 @@ Fancy.copyText = (text) => {
                 //me.reCalcColumnsPositions();
                 //me.updateWidth();
                 //me.updateCellPositions();
+
                 me.showColumn(me.columns[indexToAddColumn]);
               },1);
             }
@@ -4867,6 +5085,14 @@ Fancy.copyText = (text) => {
       me.columnResizing = true;
 
       me.resizeDownX = event.pageX;
+
+      if(cell.classList.contains(HEADER_CELL_COLUMN_GROUP)){
+        me.resizeColumnGroup = me.columns2[columnIndex];
+        me.resizeColumnGroupChildrenWidths = me.resizeColumnGroup.children
+          .map(column => !column.hidden && column.width)
+          .filter(value => value !== false);
+      }
+
       me.resizeDownColumnWidth = column.width;
       me.resizeDownColumnIndex = columnIndex;
 
@@ -4891,6 +5117,10 @@ Fancy.copyText = (text) => {
       const me = this;
 
       me.columnResizing = false;
+      delete me.resizeColumnGroup;
+      delete me.resizeDownX;
+      delete me.resizeDownColumnWidth;
+      delete me.resizeDownColumnIndex;
 
       me.gridEl.classList.remove(COLUMN_RESIZING);
       me.gridEl.style.cursor = '';
@@ -4915,7 +5145,34 @@ Fancy.copyText = (text) => {
         newWidth = minColumnWidth;
       }
 
-      column.width = newWidth;
+      if (me.resizeColumnGroup) {
+        const children = me.resizeColumnGroup.children.filter(column => column.hidden !== true);
+        const resizeColumnGroupChildrenWidths = me.resizeColumnGroupChildrenWidths;
+        children.forEach((column, i) => {
+          column.width = resizeColumnGroupChildrenWidths[i] + deltaX/children.length;
+        });
+      } else {
+        column.width = newWidth;
+      }
+
+      if(column.parent){
+        column.parent.firstColumn.width = column.parent.firstColumn.children.reduce((value, column, i) => {
+          const groupLevel2Column = me.columns2[i];
+          if(groupLevel2Column.spanning){
+            groupLevel2Column.width = column.width;
+            groupLevel2Column.left = column.left;
+            groupLevel2Column.headerCellEl.style.left = column.left + 'px';
+            groupLevel2Column.headerCellEl.style.width = column.width + 'px';
+          }
+
+          if(column.hidden){
+            return value;
+          }
+
+          return value + column.width;
+        }, 0);
+        column.parent.firstColumn.headerCellEl.style.width = column.parent.firstColumn.width + 'px';
+      }
 
       requestAnimationFrame(() => {
         me.reCalcColumnsPositions();
@@ -4977,9 +5234,12 @@ Fancy.copyText = (text) => {
           return '';
         }
 
+
+
         return [
           `<div col-index="${index}" class="${COLUMNS_MENU_ITEM}">`,
             `<input type="checkbox" ${column.hidden ? '' : 'checked'}>`,
+            column.parent ? `<div class="${COLUMNS_MENU_ITEM_GROUP_TEXT}">${column.parent.title}</div>`: '',
             `<div class="${COLUMNS_MENU_ITEM_TEXT}">${column.title}</div>`,
           '</div>'
         ].join('');
@@ -5081,10 +5341,105 @@ Fancy.copyText = (text) => {
           headerCellEl.setAttribute('col-index', columnIndex);
         }
 
+        if(me.columnsLevel > 1){
+          const columnGroup = me.columns2[columnIndex];
+          const headerCellEl = columnGroup?.headerCellEl;
+
+          if(headerCellEl && Number(headerCellEl.getAttribute('col-index')) !== columnIndex){
+            headerCellEl.setAttribute('col-index', columnIndex);
+          }
+        }
+
         if(filterCellEl && Number(filterCellEl.getAttribute('col-index')) !== columnIndex){
           filterCellEl.setAttribute('col-index', columnIndex);
         }
       }
+    },
+    prepareGroupHeaderColumns(config){
+      const me = this;
+      let levels = [];
+
+      me.columnsGroups = {};
+
+      const goThroughColumns = (columns, level, index = 0) => {
+        let hasChildren = columns.some(column => column.children !== undefined);
+
+        columns.forEach(column => {
+          levels[level] = levels[level] || [];
+
+          if(column.children){
+            me.generateColumnId(column);
+            me.columnsGroups[column.id] = column;
+
+            let iL = index + column.children.length;
+            goThroughColumns(column.children, level + 1, index);
+            let spanned = false;
+            let firstColumn;
+            let i = 0;
+            for(;index<iL;index++,i++){
+              if(!spanned){
+                levels[level][index] = {
+                  columnGroup: column,
+                  ...column
+                };
+
+                levels[level][index].children = [...column.children];
+                delete levels[level][index].id;
+                firstColumn = levels[level][index];
+                // Link to self
+                levels[level][index].firstColumn = levels[level][index];
+              } else {
+                levels[level][index] = {
+                  firstColumn,
+                  spanning: true,
+                  columnGroup: column,
+                  ...column
+                };
+                delete levels[level][index].children;
+                delete levels[level][index].id;
+              }
+              levels[level][index].child = column.children[i];
+              spanned = true;
+            }
+          } else {
+            if(hasChildren){
+              levels[level + 1] = levels[level + 1] || [];
+              column.columnGroupSpanHeight = true;
+              levels[level + 1][index] = column;
+              levels[level][index] = {
+                ignore: true
+              };
+            } else {
+              if(level > 0){
+                column.parent = true;
+              }
+
+              levels[level][index] = column;
+            }
+
+            index++;
+          }
+        });
+      };
+
+      goThroughColumns(config.columns, 0);
+
+      levels = levels.reverse();
+      levels.forEach((columns, level) => {
+        if(level === 0){
+          config.columns = columns;
+        } else {
+          config[`columns${level + 1}`] = columns;
+        }
+
+        columns.forEach((column, columnIndex) => {
+          if(column.parent === true){
+            column.parent = levels[level + 1][columnIndex];
+          }
+        });
+      });
+
+      config.columnsLevel = levels.length;
     }
   };
 
@@ -5469,7 +5824,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       columnIndexes.forEach((columnIndex) => {
-        const headerCell = me.headerEl.querySelector(`[col-index="${columnIndex}"]`);
+        const headerCell = me.headerInnerContainerEl.querySelector(`[col-index="${columnIndex}"]`);
 
         if(!headerCell){
           return;
@@ -5687,16 +6042,29 @@ Fancy.copyText = (text) => {
       for (let i = columnStart; i <= columnEnd; i++) {
         const column = me.columns[i];
 
+        if(me.columnsLevel > 1){
+          const columnLevel2 = me.columns2[i];
+          const headerCellEl = columnLevel2.headerCellEl;
+          if(headerCellEl){
+            headerCellEl.style.left = columnLevel2.left + 'px';
+            headerCellEl.style.width = columnLevel2.width + 'px';
+          }
+        }
+
         if (column.hidden) {
           continue;
         }
 
-        if(!column.headerCellEl){
-          me.appendHeaderCell(i);
-        }
+        !column.headerCellEl && me.appendHeaderCell(i);
 
         column.headerCellEl.style.left = column.left + 'px';
         column.headerCellEl.style.width = column.width + 'px';
+
+        if(column.parent){
+          const parent = column.parent;
+          parent.headerCellEl.style.left = parent.left + 'px';
+          parent.headerCellEl.style.width = parent.width + 'px';
+        }
 
         if (column.filterCellEl) {
           column.filterCellEl.style.left = column.left + 'px';
@@ -8410,6 +8778,7 @@ Fancy.copyText = (text) => {
       const columnsViewRange = me.scroller.columnsViewRange;
 
       pageX -= headerRect.x;
+      pageX += me.scroller.scrollLeft;
 
       for(let i = 0, iL = columnsViewRange.length;i<iL;i++){
         const columnIndex = columnsViewRange[i];
@@ -8447,6 +8816,13 @@ Fancy.copyText = (text) => {
 
       me.columns.splice(toIndex, 0, column);
       let oldOrders = [];
+
+      if(me.columnsLevel > 1){
+        const columnLevel2 = me.columns2.splice(columnIndex, 1)[0];
+        me.columns2.splice(toIndex, 0, columnLevel2);
+
+        me.updateColumnGroupLevel2();
+      }
 
       me.reSetVisibleHeaderColumnsIndex();
       if(columnIndex<toIndex){

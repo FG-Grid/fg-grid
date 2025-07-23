@@ -7,7 +7,8 @@ Fancy.cls = {
   // Header
   HEADER: 'fg-header',
   HEADER_INNER: 'fg-header-inner',
-  HEADER_INNER_CONTAINER: 'fg-header-inner-container',
+  HEADER_ROW: 'fg-header-row',
+  HEADER_ROW_COLUMN_GROUP: 'fg-header-row-column-group',
   HEADER_CELL: 'fg-header-cell',
   HEADER_CELL_SORTABLE: 'fg-header-cell-sortable',
   HEADER_CELL_NOT_RESIZABLE: 'fg-header-cell-not-resizable',
@@ -17,6 +18,10 @@ Fancy.cls = {
   HEADER_CELL_RESIZE: 'fg-header-cell-resize',
   HEADER_CELL_MENU: 'fg-header-cell-menu',
   HEADER_CELL_SELECTION: 'fg-header-cell-selection',
+  HEADER_CELL_COLUMN_GROUP: 'fg-header-cell-column-group',
+  HEADER_CELL_COLUMN_GROUP_CHILD: 'fg-header-cell-column-group-child',
+  HEADER_CELL_SPAN_HEIGHT: 'fg-header-span-height',
+  HEADER_CELL_STICKY: 'fg-header-cell-sticky',
 
   // Body
   BODY: 'fg-body',
@@ -33,6 +38,7 @@ Fancy.cls = {
   COLUMNS_MENU: 'fg-columns-menu',
   COLUMNS_MENU_ITEM: 'fg-columns-menu-item',
   COLUMNS_MENU_ITEM_TEXT: 'fg-columns-menu-item-text',
+  COLUMNS_MENU_ITEM_GROUP_TEXT: 'fg-columns-menu-item-group-text',
 
   // Cell
   CELL: 'fg-cell',

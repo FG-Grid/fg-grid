@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '0.8.4',
+  version: '0.8.5',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -118,6 +118,10 @@ const Fancy = {
     }
 
     for(let p in style){
+      if(style[p] === undefined){
+        continue;
+      }
+
       el.style[p] = style[p];
     }
 

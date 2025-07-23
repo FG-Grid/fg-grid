@@ -11,12 +11,17 @@
     HEADER_CELL_TEXT,
     HEADER_FILTER_EL,
     HEADER_CELL_RESIZE,
+    HEADER_CELL_COLUMN_GROUP,
+    HEADER_CELL_COLUMN_GROUP_CHILD,
+    HEADER_CELL_SPAN_HEIGHT,
+    HEADER_CELL_STICKY,
     BODY,
     COLUMN_RESIZING,
     COLUMN_DRAGGING,
     COLUMNS_MENU,
     COLUMNS_MENU_ITEM,
     COLUMNS_MENU_ITEM_TEXT,
+    COLUMNS_MENU_ITEM_GROUP_TEXT,
     FILTER_INDICATOR_CONTAINER,
     SORT_ASC,
     SORT_DESC,
@@ -112,6 +117,11 @@
         const cell = me.createHeaderCell(i);
 
         me.headerInnerContainerEl.appendChild(cell);
+
+        if(me.columnsLevel > 1){
+          const cellGroup = me.createGroupHeaderCell(i, 1);
+          cellGroup && me.headerInnerGroup1ContainerEl.appendChild(cellGroup);
+        }
       }
     },
     appendHeaderCell(columnIndex) {
@@ -120,13 +130,21 @@
       const cell = me.createHeaderCell(columnIndex);
 
       rowEl.appendChild(cell);
+
+      if(me.columnsLevel > 1){
+        const cellGroup = me.createGroupHeaderCell(columnIndex, 1);
+        cellGroup && me.headerInnerGroup1ContainerEl.appendChild(cellGroup);
+      }
     },
     createHeaderCell(columnIndex) {
       const me = this;
       const column = me.columns[columnIndex];
+      const headerRowHeight = me.headerRowHeight;
+      const cellHeight = column.columnGroupSpanHeight ? headerRowHeight * 2 : headerRowHeight;
       const cell = div(HEADER_CELL, {
         width: column.width + 'px',
-        left: column.left + 'px'
+        left: column.left + 'px',
+        height: cellHeight + 'px'
       });
       const value = column.title;
 
@@ -142,6 +160,11 @@
       if(column.resizable === false){
         cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
       }
+
+      column.sticky && cell.classList.add(HEADER_CELL_STICKY);
+
+      column.parent && cell.classList.add(HEADER_CELL_COLUMN_GROUP_CHILD);
+      column.columnGroupSpanHeight && cell.classList.add(HEADER_CELL_SPAN_HEIGHT);
 
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
@@ -227,6 +250,55 @@
 
       return cell;
     },
+    createGroupHeaderCell(columnIndex, level) {
+      const me = this;
+      let column;
+
+      if(level === 1){
+        column = me['columns' + (level + 1)][columnIndex];
+      }
+
+      if(column.ignore){
+        return false;
+      }
+
+      if(column.headerCellEl){
+        return false;
+      }
+
+      const cell = div([HEADER_CELL, HEADER_CELL_COLUMN_GROUP], {
+        width: column.width + 'px',
+        left: column.left + 'px',
+        height: me.headerRowHeight + 'px',
+        display: column.spanning ? 'none': undefined
+      });
+      const value = column.title;
+
+      column.resizable === false && cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
+      column.sticky && cell.classList.add(HEADER_CELL_STICKY);
+
+      cell.setAttribute('col-index', columnIndex);
+      cell.setAttribute('col-id', column.id);
+
+      const label = div(HEADER_CELL_LABEL);
+      const cellText = div(HEADER_CELL_TEXT);
+      cellText.innerHTML = value;
+
+      const cellResize = div(HEADER_CELL_RESIZE);
+      cellResize.addEventListener('mousedown', me.onResizeMouseDown.bind(this));
+
+      label.appendChild(cellText);
+
+      cell.appendChild(label);
+
+      column.resizable !== false && cell.appendChild(cellResize);
+
+      //cell.addEventListener('mousedown', me.onCellMouseDown.bind(this));
+
+      column.headerCellEl = cell;
+
+      return cell;
+    },
     onCellMouseDown(event){
       const me = this;
       const isTargetHeaderCellMenu = event.target.closest(`.${HEADER_CELL_MENU}`);
@@ -258,9 +330,7 @@
         delete me.debouceColumnDraggingFn;
 
         setTimeout(() => {
-          if(me.activeRowGroupBarItemEl){
-            me.activeRowGroupBarItemEl.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
-          }
+          me.activeRowGroupBarItemEl?.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
 
           me.gridEl.classList.remove(COLUMN_DRAGGING);
           me.columnDragging?.dragColumnCellEl.remove();
@@ -269,16 +339,16 @@
           if(me.$requiresReSetGroupColumn && me.rowGroupType === 'column'){
             delete me.$requiresReSetGroupColumn;
             if(me.rowGroupBarItemColumns.length === 1){
-              setTimeout(() => {
-                let indexToAddColumn = 0;
-                me.$rowGroupColumn.hidden = true;
-                if(me.columns[0].type === 'order'){
-                  me.columns.splice(1, 0, me.$rowGroupColumn);
-                  indexToAddColumn = 1;
-                } else {
-                  me.columns.unshift(me.$rowGroupColumn);
-                }
+              let indexToAddColumn = 0;
+              me.$rowGroupColumn.hidden = true;
+              if(me.columns[0].type === 'order'){
+                me.columns.splice(1, 0, me.$rowGroupColumn);
+                indexToAddColumn = 1;
+              } else {
+                me.columns.unshift(me.$rowGroupColumn);
+              }
 
+              setTimeout(() => {
                 me.scroller.generateNewRange(false);
                 me.reSetVisibleHeaderColumnsIndex();
 
@@ -286,6 +356,7 @@
                 //me.reCalcColumnsPositions();
                 //me.updateWidth();
                 //me.updateCellPositions();
+
                 me.showColumn(me.columns[indexToAddColumn]);
               },1);
             }
@@ -320,6 +391,14 @@
       me.columnResizing = true;
 
       me.resizeDownX = event.pageX;
+
+      if(cell.classList.contains(HEADER_CELL_COLUMN_GROUP)){
+        me.resizeColumnGroup = me.columns2[columnIndex];
+        me.resizeColumnGroupChildrenWidths = me.resizeColumnGroup.children
+          .map(column => !column.hidden && column.width)
+          .filter(value => value !== false);
+      }
+
       me.resizeDownColumnWidth = column.width;
       me.resizeDownColumnIndex = columnIndex;
 
@@ -344,6 +423,10 @@
       const me = this;
 
       me.columnResizing = false;
+      delete me.resizeColumnGroup;
+      delete me.resizeDownX;
+      delete me.resizeDownColumnWidth;
+      delete me.resizeDownColumnIndex;
 
       me.gridEl.classList.remove(COLUMN_RESIZING);
       me.gridEl.style.cursor = '';
@@ -368,7 +451,34 @@
         newWidth = minColumnWidth;
       }
 
-      column.width = newWidth;
+      if (me.resizeColumnGroup) {
+        const children = me.resizeColumnGroup.children.filter(column => column.hidden !== true);
+        const resizeColumnGroupChildrenWidths = me.resizeColumnGroupChildrenWidths;
+        children.forEach((column, i) => {
+          column.width = resizeColumnGroupChildrenWidths[i] + deltaX/children.length;
+        });
+      } else {
+        column.width = newWidth;
+      }
+
+      if(column.parent){
+        column.parent.firstColumn.width = column.parent.firstColumn.children.reduce((value, column, i) => {
+          const groupLevel2Column = me.columns2[i];
+          if(groupLevel2Column.spanning){
+            groupLevel2Column.width = column.width;
+            groupLevel2Column.left = column.left;
+            groupLevel2Column.headerCellEl.style.left = column.left + 'px';
+            groupLevel2Column.headerCellEl.style.width = column.width + 'px';
+          }
+
+          if(column.hidden){
+            return value;
+          }
+
+          return value + column.width;
+        }, 0);
+        column.parent.firstColumn.headerCellEl.style.width = column.parent.firstColumn.width + 'px';
+      }
 
       requestAnimationFrame(() => {
         me.reCalcColumnsPositions();
@@ -430,9 +540,12 @@
           return '';
         }
 
+
+
         return [
           `<div col-index="${index}" class="${COLUMNS_MENU_ITEM}">`,
             `<input type="checkbox" ${column.hidden ? '' : 'checked'}>`,
+            column.parent ? `<div class="${COLUMNS_MENU_ITEM_GROUP_TEXT}">${column.parent.title}</div>`: '',
             `<div class="${COLUMNS_MENU_ITEM_TEXT}">${column.title}</div>`,
           '</div>'
         ].join('');
@@ -534,10 +647,105 @@
           headerCellEl.setAttribute('col-index', columnIndex);
         }
 
+        if(me.columnsLevel > 1){
+          const columnGroup = me.columns2[columnIndex];
+          const headerCellEl = columnGroup?.headerCellEl;
+
+          if(headerCellEl && Number(headerCellEl.getAttribute('col-index')) !== columnIndex){
+            headerCellEl.setAttribute('col-index', columnIndex);
+          }
+        }
+
         if(filterCellEl && Number(filterCellEl.getAttribute('col-index')) !== columnIndex){
           filterCellEl.setAttribute('col-index', columnIndex);
         }
       }
+    },
+    prepareGroupHeaderColumns(config){
+      const me = this;
+      let levels = [];
+
+      me.columnsGroups = {};
+
+      const goThroughColumns = (columns, level, index = 0) => {
+        let hasChildren = columns.some(column => column.children !== undefined);
+
+        columns.forEach(column => {
+          levels[level] = levels[level] || [];
+
+          if(column.children){
+            me.generateColumnId(column);
+            me.columnsGroups[column.id] = column;
+
+            let iL = index + column.children.length;
+            goThroughColumns(column.children, level + 1, index, column);
+            let spanned = false;
+            let firstColumn;
+            let i = 0;
+            for(;index<iL;index++,i++){
+              if(!spanned){
+                levels[level][index] = {
+                  columnGroup: column,
+                  ...column
+                };
+
+                levels[level][index].children = [...column.children];
+                delete levels[level][index].id;
+                firstColumn = levels[level][index];
+                // Link to self
+                levels[level][index].firstColumn = levels[level][index];
+              } else {
+                levels[level][index] = {
+                  firstColumn,
+                  spanning: true,
+                  columnGroup: column,
+                  ...column
+                };
+                delete levels[level][index].children;
+                delete levels[level][index].id;
+              }
+              levels[level][index].child = column.children[i];
+              spanned = true;
+            }
+          } else {
+            if(hasChildren){
+              levels[level + 1] = levels[level + 1] || [];
+              column.columnGroupSpanHeight = true;
+              levels[level + 1][index] = column;
+              levels[level][index] = {
+                ignore: true
+              };
+            } else {
+              if(level > 0){
+                column.parent = true;
+              }
+
+              levels[level][index] = column;
+            }
+
+            index++;
+          }
+        });
+      };
+
+      goThroughColumns(config.columns, 0);
+
+      levels = levels.reverse();
+      levels.forEach((columns, level) => {
+        if(level === 0){
+          config.columns = columns;
+        } else {
+          config[`columns${level + 1}`] = columns;
+        }
+
+        columns.forEach((column, columnIndex) => {
+          if(column.parent === true){
+            column.parent = levels[level + 1][columnIndex];
+          }
+        });
+      });
+
+      config.columnsLevel = levels.length;
     }
   };
 

@@ -233,7 +233,34 @@
 
 .fg-header-inner {}
 
-.fg-header-inner-container {}
+.fg-header-row {}
+
+.fg-header-row-column-group {
+  .fg-header-cell-label {
+    /*justify-content: center;*/
+  }
+}
+
+.fg-header-cell-sticky.fg-header-cell {
+  overflow: visible;
+  .fg-header-cell-label {
+    overflow: visible;
+    .fg-header-cell-text {
+      position: sticky;
+      left: 12px;
+    }
+  }
+}
+
+.fg-header-cell-column-group-child {
+  border-top: 1px solid rgb(189, 195, 199);
+}
+
+.fg-header-span-height {
+  top: 0;
+}
+
+.fg-header-cell-column-group {}
 
 .fg-header-cell {
   display: inline-flex;
@@ -758,7 +785,7 @@
   position: absolute;
   border: 1px solid #b7b7b7;
   background: #ffffff;
-  width: 150px;
+  width: 152px;
   min-height: 50px;
   max-height: 200px;
   overflow-y: auto;
@@ -791,6 +818,17 @@
   font-weight: 600;
   line-height: 18px;
   padding-left: 5px;
+}
+
+.fg-columns-menu-item-group-text {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  padding: 0px 3px;
+  margin-left: 5px;
+  background: #E8E8E8;
+  border: 1px solid #b7b7b7;
+  border-radius: 2px;
 }
 
 /* For hiding and showing columns */

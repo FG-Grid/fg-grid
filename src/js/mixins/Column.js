@@ -25,6 +25,7 @@
       me.reCalcColumnsPositions();
       me.updateWidth();
       me.updateCellPositions();
+      me.columnsLevel > 1 && column.parent && me.updateColumnGroupLevel2();
 
       if(animate){
         setTimeout(() => {
@@ -54,6 +55,7 @@
       me.reCalcColumnsPositions();
       me.updateWidth();
       me.updateCellPositions();
+      me.columnsLevel > 1 && column.parent && me.updateColumnGroupLevel2();
 
       if(animate && me.animatingColumnsPosition){
         setTimeout(() => {
@@ -143,19 +145,22 @@
     },
     generateColumnIds(columns, updateMaps = true){
       const me = this;
-      const columnIdsMap = new Map();
-      const columnIdsSeedMap = new Map();
+      const columnIdsMap = me.columnIdsMap || new Map();
+      const columnIdsSeedMap = me.columnIdsSeedMap || new Map();
 
       columns.forEach(column => {
         const index = (column.index || column.title || '').toLocaleLowerCase();
+
         if(!column.id){
           let seed = columnIdsSeedMap.get(index);
 
           if(seed === undefined){
             column.id = index || me.getAutoColumnIdSeed();
             seed = 0;
-          } else {
+          } else if(index) {
             column.id = `${index}-${seed}`;
+          } else {
+            column.id = `id-${seed}`;
           }
 
           seed++;
@@ -183,6 +188,42 @@
         columnIdsMap,
         columnIdsSeedMap
       };
+    },
+    generateColumnId(column){
+      const me = this;
+      const columnIdsMap = me.columnIdsMap || new Map();
+      const columnIdsSeedMap = me.columnIdsSeedMap || new Map();
+      const index = (column.index || column.title || '').toLocaleLowerCase();
+
+      if(!column.id){
+        let seed = columnIdsSeedMap.get(index);
+
+        if(seed === undefined){
+          column.id = index || me.getAutoColumnIdSeed();
+          seed = 0;
+        } else if(index) {
+          column.id = `${index}-${seed}`;
+        } else {
+          column.id = `id-${seed}`;
+        }
+
+        seed++;
+        columnIdsSeedMap.set(index, seed);
+      } else {
+        let seed = columnIdsSeedMap.get(index);
+
+        if(seed === undefined){
+          seed = 0;
+        }
+
+        seed++;
+        columnIdsSeedMap.set(index, seed);
+      }
+
+      columnIdsMap.set(column.id, column);
+
+      me.columnIdsMap = columnIdsMap;
+      me.columnIdsSeedMap = columnIdsSeedMap;
     },
     setColumns(columns){
       const me = this;
@@ -376,6 +417,64 @@
           column[key] = defaults[key];
         }
       });
+    },
+    updateColumnGroupLevel2(){
+      const me = this;
+
+      let i = 0;
+      let iL = me.columns2.length;
+      // TODO: optimization from to(i, iL)
+      // It can be from range
+      // Usual view range does not suit
+      for(;i<iL;i++) {
+        const columnLevel2 = me.columns2[i];
+        const prevColumn = me.columns2[i - 1];
+
+        if(columnLevel2.ignore){
+          continue;
+        }
+
+        if(!prevColumn || prevColumn.ignore || (prevColumn.columnGroup && columnLevel2.columnGroup && prevColumn.columnGroup.id !== columnLevel2.columnGroup.id)){
+          delete columnLevel2.spanning;
+
+          let j = i;
+          let jL = iL;
+          const children = [];
+          for(;j<jL;j++){
+            const _columnLevel2 = me.columns2[j];
+
+            if(_columnLevel2.columnGroup && _columnLevel2.columnGroup.id === columnLevel2.columnGroup.id){
+              me.columns2[i].firstColumn = columnLevel2;
+              children.push(me.columns[j]);
+
+              if(children.length !== 1){
+                delete me.columns2[j].children;
+                if(me.columns2[j].headerCellEl){
+                  me.columns2[j].headerCellEl.style.display = 'none';
+                }
+              }
+            } else {
+              break;
+            }
+          }
+
+          columnLevel2.children = children;
+          const width = children.reduce((result, column) => {
+            if(column.hidden){
+              return result;
+            }
+
+            return result + column.width;
+          }, 0);
+          columnLevel2.width = width;
+          if(width === 0 && columnLevel2.headerCellEl){
+            columnLevel2.headerCellEl.style.display = 'none';
+          } else if(!columnLevel2.hidden && columnLevel2.headerCellEl){
+            columnLevel2.headerCellEl.style.display = '';
+            columnLevel2.headerCellEl.style.width = width + 'px';
+          }
+        }
+      }
     }
   };
 

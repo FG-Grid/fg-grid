@@ -5,7 +5,8 @@
     ROW_ANIMATION,
     HEADER,
     HEADER_INNER,
-    HEADER_INNER_CONTAINER,
+    HEADER_ROW,
+    HEADER_ROW_COLUMN_GROUP,
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
@@ -178,18 +179,32 @@
     }
     renderHeader() {
       const me = this;
+      const headerRowHeight = me.headerRowHeight;
+      const columnsLevel = me.columnsLevel;
+      const headerHeight = columnsLevel * headerRowHeight + 1;
+      const columnsWidth = me.getTotalColumnsWidth();
+      const scrollBarWidth = me.scroller.scrollBarWidth;
 
       const headerEl = div(HEADER, {
-        height: (this.headerRowHeight + 1) + 'px'
+        height: headerHeight + 'px'
       });
 
       const headerInnerEl = div(HEADER_INNER, {
-        width: (me.getTotalColumnsWidth() + me.scroller.scrollBarWidth) + 'px'
+        width: (columnsWidth + scrollBarWidth) + 'px'
       });
 
-      const headerInnerContainerEl = div(HEADER_INNER_CONTAINER, {
-        height: me.headerRowHeight + 'px',
-        width: me.getTotalColumnsWidth() + 'px'
+      if(columnsLevel > 1){
+        const headerInnerGroup1ContainerEl = div([HEADER_ROW, HEADER_ROW_COLUMN_GROUP], {
+          height: headerRowHeight + 'px',
+          width: columnsWidth + 'px'
+        });
+        headerInnerEl.appendChild(headerInnerGroup1ContainerEl);
+        me.headerInnerGroup1ContainerEl = headerInnerGroup1ContainerEl;
+      }
+
+      const headerInnerContainerEl = div(HEADER_ROW, {
+        height: headerRowHeight + 'px',
+        width: columnsWidth + 'px'
       });
 
       headerInnerEl.appendChild(headerInnerContainerEl);
@@ -265,11 +280,13 @@
 
       if(config.columns){
         config.columns = Fancy.deepClone(config.columns);
+        me.prepareGroupHeaderColumns(config);
 
         let left = 0;
         let newRowGroupsOrder = false;
 
         me.generateColumnIds(config.columns);
+        config.columns2 && me.generateColumnIds(config.columns2);
 
         if(config.rowGroupType === 'column') {
           config.rowGroupColumn = config.rowGroupColumn || {};
@@ -319,7 +336,8 @@
           }
         }
 
-        config.columns.forEach(column => {
+        let prevGroupColumn;
+        config.columns.forEach((column, columnIndex) => {
           if(column.type === 'order'){
             if((rowGroups.length || config.rowGroupBar) && config.rowGroupType !== 'column'){
               console.error('FG-Grid: Order column is not supported for row grouping with rowGroupType equals to "row"');
@@ -341,6 +359,21 @@
           }
 
           column.left = left;
+
+          if(config.columnsLevel > 1){
+            const groupColumnAtIndex = config.columns2[columnIndex];
+
+            if(groupColumnAtIndex.spanning){
+              prevGroupColumn.width += column.width;
+              groupColumnAtIndex.left = left;
+              groupColumnAtIndex.width = column.width;
+            } else if(groupColumnAtIndex.ignore !== true){
+              prevGroupColumn = groupColumnAtIndex;
+              groupColumnAtIndex.left = left;
+              groupColumnAtIndex.width = column.width;
+            }
+          }
+
           if(!column.hidden){
             left += column.width;
           }
@@ -390,8 +423,13 @@
     reCalcColumnsPositions(){
       const me = this;
 
-      me.columns.reduce((left, column) => {
+      me.columns.reduce((left, column, columnIndex) => {
         column.left = left;
+
+        if(me.columnsLevel > 1){
+          const columnLevel2 = me.columns2[columnIndex];
+          columnLevel2.left = left;
+        }
 
         return left + (column.hidden? 0: column.width);
       }, 0);
