@@ -260,7 +260,14 @@
   top: 0;
 }
 
-.fg-header-cell-column-group {}
+.fg-header-cell-column-group {
+  .fg-header-cell-label {
+    user-select: none;
+  }
+  .fg-header-cell-text {
+    user-select: none;
+  }
+}
 
 .fg-header-cell {
   display: inline-flex;

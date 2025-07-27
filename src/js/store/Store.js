@@ -81,8 +81,7 @@
       me.data.forEach(item => {
         if (item.id === undefined) {
           item.id = me.generateId();
-        }
-        else if(typeof item.id === 'number'){
+        } else if (typeof item.id === 'number') {
           item.id = String(item.id);
         }
       });
@@ -208,9 +207,7 @@
 
       for(let i = rowIndex - 1;i>-1;i--){
         const row = data[i];
-        if(row.$isGroupRow !== true){
-          return i;
-        }
+        if (row.$isGroupRow !== true) return i;
       }
     }
     getNextVisibleRowIndex(rowIndex){
@@ -220,9 +217,7 @@
 
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
-        if(row.$isGroupRow !== true){
-          return i;
-        }
+        if (row.$isGroupRow !== true) return i;
       }
     }
   }

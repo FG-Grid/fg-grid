@@ -31,16 +31,11 @@
     ROW_GROUP_BAR_ITEM_ACTIVE
   } = Fancy.cls;
 
-  const {
-    div,
-    span,
-    input
-  } = Fancy;
+  const { div, span, input } = Fancy;
 
   /**
    * @mixin GridMixinHeader
    */
-
   const GridMixinHeader = {
     deltaStartColumnDrag: 10,
     onHeaderMouseDown(event) {
@@ -148,6 +143,11 @@
       });
       const value = column.title;
 
+      if(column.headerCellEl){
+        column.headerCellEl.remove();
+        delete column.headerCellEl;
+      }
+
       if(column.sortable){
         if(column.type){
           cell.classList.add(HEADER_CELL_SORTABLE);
@@ -214,9 +214,7 @@
       const cellResize = div(HEADER_CELL_RESIZE);
       cellResize.addEventListener('mousedown', me.onResizeMouseDown.bind(this));
 
-      label.appendChild(cellText);
-      label.appendChild(filterContainer);
-      label.appendChild(sortContainer);
+      label.append(cellText, filterContainer, sortContainer);
 
       const elMenu = div(HEADER_CELL_MENU);
       elMenu.innerHTML = Fancy.svg.menu;
@@ -293,11 +291,80 @@
 
       column.resizable !== false && cell.appendChild(cellResize);
 
-      //cell.addEventListener('mousedown', me.onCellMouseDown.bind(this));
+      cell.addEventListener('mousedown', me.onCellGroupMouseDown.bind(this));
 
       column.headerCellEl = cell;
 
       return cell;
+    },
+    onCellGroupMouseDown(event){
+      const me = this;
+
+      const cell = event.target.classList.contains(HEADER_CELL)? event.target : event.target.closest(`.${HEADER_CELL}`);
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const column = me.columns2[columnIndex];
+
+      if(column.draggable === false){
+        return;
+      }
+
+      me.columnDragDownX = event.pageX;
+      me.columnDragDownY = event.pageY;
+      me.columnDragMouseDownColumn = column;
+      me.columnDragMouseDownColumnIndex = columnIndex;
+
+      if(column.children.length < column.columnGroup.children.length){
+        const childrenOutSideChildren = column.columnGroup.children.filter($column => {
+          return !column.children.some($$column => {
+            return $$column.id === $column.id;
+          });
+        });
+
+        childrenOutSideChildren.forEach($column => {
+          const toIndex = columnIndex + column.children.length;
+          me.moveColumn(me.columnsIdIndexMap.get($column.id), toIndex);
+        });
+      }
+
+      me.onColumnGroupDragMouseMoveFn = me.onColumnGroupDragMouseMove.bind(this);
+      document.addEventListener('mousemove', me.onColumnGroupDragMouseMoveFn);
+
+      document.addEventListener('mouseup', () => {
+        delete me.columnDragDownX;
+        delete me.columnDragDownY;
+        delete me.columnDragMouseDownColumn;
+        delete me.debouceColumnDraggingFn;
+
+        setTimeout(() => {
+          me.gridEl.classList.remove(COLUMN_DRAGGING);
+          me.columnDragging?.dragColumnCellEl.remove();
+          delete me.columnDragging;
+
+          if(me.$requiresReSetGroupColumn && me.rowGroupType === 'column'){
+            delete me.$requiresReSetGroupColumn;
+            if(me.rowGroupBarItemColumns.length === 1){
+              let indexToAddColumn = 0;
+              me.$rowGroupColumn.hidden = true;
+              if(me.columns[0].type === 'order'){
+                me.columns.splice(1, 0, me.$rowGroupColumn);
+                indexToAddColumn = 1;
+              } else {
+                me.columns.unshift(me.$rowGroupColumn);
+              }
+
+              setTimeout(() => {
+                me.scroller.generateNewRange(false);
+                me.reSetVisibleHeaderColumnsIndex();
+                me.showColumn(me.columns[indexToAddColumn]);
+              },1);
+            }
+          }
+        }, 1);
+
+        document.removeEventListener('mousemove', me.onColumnGroupDragMouseMoveFn);
+      }, {
+        once: true
+      });
     },
     onCellMouseDown(event){
       const me = this;
@@ -346,10 +413,20 @@
                 indexToAddColumn = 1;
               } else {
                 me.columns.unshift(me.$rowGroupColumn);
+
+                if(me.columnsLevel > 1){
+                  me.columns2.unshift({
+                    ignore: true
+                  });
+
+                  me.generateColumnId(me.columns2[0]);
+                  me.columns[0].columnGroupSpanHeight = true;
+                }
               }
 
               setTimeout(() => {
                 me.scroller.generateNewRange(false);
+                me.reSetColumnsIdIndexMap();
                 me.reSetVisibleHeaderColumnsIndex();
 
                 //me.scroller.generateNewRange();
@@ -362,9 +439,7 @@
             }
           }
 
-          if(me.rowGroupBarItemColumns && me.rowGroupBarItemColumns.length !== me.store.rowGroups.length){
-            me.reConfigRowGroups();
-          }
+          if(me.rowGroupBarItemColumns && me.rowGroupBarItemColumns.length !== me.store.rowGroups.length) me.reConfigRowGroups();
         }, 1);
 
         document.removeEventListener('mousemove', me.onColumnDragMouseMoveFn);
@@ -540,8 +615,6 @@
           return '';
         }
 
-
-
         return [
           `<div col-index="${index}" class="${COLUMNS_MENU_ITEM}">`,
             `<input type="checkbox" ${column.hidden ? '' : 'checked'}>`,
@@ -629,6 +702,16 @@
       }
       delete me.activeElMenuList;
     },
+    isColumnIndexInViewRange(columnIndex){
+      const me = this;
+      const columnsViewRange = me.scroller.columnsViewRange;
+
+      if(columnsViewRange.length < 2){
+        return true;
+      }
+
+      return columnsViewRange[0] <= columnIndex && columnIndex <= columnsViewRange.at(-1);
+    },
     reSetVisibleHeaderColumnsIndex(){
       const me = this;
       const columnsViewRange = me.scroller.columnsViewRange;
@@ -639,9 +722,7 @@
         const headerCellEl = column.headerCellEl;
         const filterCellEl = column.filterCellEl;
 
-        if(column.hidden){
-          continue;
-        }
+        if(column.hidden) continue;
 
         if(headerCellEl && Number(headerCellEl.getAttribute('col-index')) !== columnIndex){
           headerCellEl.setAttribute('col-index', columnIndex);
@@ -716,9 +797,7 @@
                 ignore: true
               };
             } else {
-              if(level > 0){
-                column.parent = true;
-              }
+              if(level > 0) (column.parent = true);
 
               levels[level][index] = column;
             }

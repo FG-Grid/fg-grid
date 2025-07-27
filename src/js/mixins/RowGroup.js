@@ -1,39 +1,27 @@
 (() => {
-  const {
-    ROW_GROUP,
-    ROW_GROUP_CELL_AMOUNT
-  } = Fancy.cls;
+  const { ROW_GROUP, ROW_GROUP_CELL_AMOUNT } = Fancy.cls;
 
   /**
    * @mixin GridMixinRowGroup
    */
-
   const GridMixinRowGroup = {
     toggleExpand(group) {
       const me = this;
 
       me.beforeGrouping();
 
-      if (me.grouping) {
-        return;
-      }
+      if (me.grouping) return;
 
       me.store.toggleExpand(group);
 
       me.afterGrouping();
     },
-
     expand(group) {
       const me = this;
       const store = me.store;
 
-      if (me.grouping) {
-        return;
-      }
-
-      if(store.expandedGroups[group]){
-        return false;
-      }
+      if (me.grouping) return;
+      if (store.expandedGroups[group]) return false;
 
       me.beforeGrouping();
 
@@ -48,15 +36,12 @@
       me.updateRowGroupCellExpandedCls(group);
       me.afterGrouping();
     },
-
     expandAll() {
       const me = this;
 
       me.beforeGrouping();
 
-      if (me.grouping) {
-        return;
-      }
+      if (me.grouping) return;
 
       me.grouping = true;
 
@@ -65,18 +50,13 @@
       me.updateAllRowGroupCellsExtendedCls();
       me.afterGrouping();
     },
-
     collapse(group) {
       const me = this;
       const store = me.store;
 
-      if (me.grouping) {
-        return;
-      }
+      if (me.grouping) return;
 
-      if(!store.expandedGroups[group]){
-        return false;
-      }
+      if (!store.expandedGroups[group]) return false;
 
       me.beforeGrouping();
 
@@ -91,15 +71,12 @@
       me.updateRowGroupCellExpandedCls(group);
       me.afterGrouping();
     },
-
     collapseAll() {
       const me = this;
 
       me.beforeGrouping();
 
-      if (me.grouping) {
-        return;
-      }
+      if (me.grouping) return;
 
       me.grouping = true;
 
@@ -108,14 +85,12 @@
       me.updateAllRowGroupCellsExtendedCls();
       me.afterGrouping();
     },
-
     beforeGrouping(){
       const me = this;
 
       me.isEditing && me.hideActiveEditor();
       me.activeCell && me.clearActiveCell();
     },
-
     afterGrouping() {
       const me = this;
       const scroller = me.scroller;
@@ -130,7 +105,6 @@
       me.renderVisibleRowsAfterGrouping();
       me.store.memorizePrevRowIndexesMap();
     },
-
     renderVisibleRowsAfterGrouping() {
       const me = this;
       const startRow = me.scroller.getStartRow();
@@ -174,9 +148,7 @@
           me.renderedRowsIdMap.forEach((rowEl, id) => {
             const item = me.store.idItemMap.get(id);
 
-            if (!me.actualRowsIdSet.has(item.id)) {
-              itemsToRemove.push(item);
-            }
+            if (!me.actualRowsIdSet.has(item.id)) itemsToRemove.push(item);
 
             me.updateRowPosition(item);
             me.fakeRowPosition(item);
@@ -195,9 +167,7 @@
           });
 
           me.timeOutRemoveRows = setTimeout(() => {
-            itemsToRemove.forEach(item => {
-              me.removeDomRowById(item.id);
-            });
+            itemsToRemove.forEach(item => me.removeDomRowById(item.id));
 
             newExpendedRowEls.forEach(rowEl => {
               rowEl.style['z-index'] = '';
@@ -209,7 +179,6 @@
         });
       });
     },
-
     updateRowGroupAmount() {
       const me = this;
       const store = me.store;
@@ -222,9 +191,7 @@
         const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
 
         //if(filters.length || !groupDetail){
-        if(!groupDetail){
-          return;
-        }
+        if(!groupDetail) return;
 
         let amount = ` (${groupDetail.amount})`;
         const domAmount = Number(amountEl.innerHTML);
@@ -234,16 +201,13 @@
         }
       });
     },
-
     updateRowGroupAggregations(){
       const me = this;
       const store = me.store;
       const filters = store.filters;
 
       // Aggregations work only for rowGroupType equals to 'column'
-      if(me.rowGroupType === 'row'){
-        return;
-      }
+      if(me.rowGroupType === 'row') return;
 
       store.aggregations.forEach(ag => {
         const rowGroups = me.bodyEl.querySelectorAll(`.${ROW_GROUP}`);
@@ -252,9 +216,7 @@
           const groupDetail = filters.length? store.groupDetailsForFiltering[$rowGroupValue]:store.groupDetails[$rowGroupValue];
 
           // Group was removed because all children were removed
-          if(!groupDetail){
-            return;
-          }
+          if(!groupDetail) return;
 
           const item = me.getItemById(groupDetail.id);
 

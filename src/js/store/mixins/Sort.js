@@ -80,9 +80,7 @@
       const sortedData = me.displayedData.slice();
 
       for (const group in me.expandedGroupsWithDataChildren) {
-        if (me.isParentCollapsed(group)) {
-          continue;
-        }
+        if (me.isParentCollapsed(group)) continue;
 
         const groupData = me.groupsChildren[group].slice();
         const groupDetails = me.groupDetails[group];
@@ -107,9 +105,7 @@
       const sortedData = me.displayedData.slice();
 
       for (const group in me.expandedGroupsWithDataChildrenForFiltering) {
-        if (me.isParentCollapsed(group)) {
-          continue;
-        }
+        if (me.isParentCollapsed(group)) continue;
 
         const groupData = me.groupsChildrenForFiltering[group].slice();
         const groupDetails = me.groupDetailsForFiltering[group];
@@ -146,7 +142,7 @@
           switch (column.type) {
             case 'number':
               sortedData = data.sort((a, b) => {
-                if(column.getter){
+                if (column.getter) {
                   a = column.getter({
                     item: a
                   });
@@ -160,20 +156,15 @@
                   b = b[column.index];
                 }
 
-                if (a === null) {
-                  a = Number.MIN_SAFE_INTEGER;
-                }
-
-                if (b === null) {
-                  b = Number.MIN_SAFE_INTEGER;
-                }
+                if (a === null) (a = Number.MIN_SAFE_INTEGER);
+                if (b === null) (b = Number.MIN_SAFE_INTEGER);
 
                 return a - b;
               });
               break;
             case 'string':
               sortedData = data.sort((a, b) => {
-                if(column.getter){
+                if (column.getter) {
                   a = column.getter({
                     item: a
                   }) || '';
@@ -187,16 +178,14 @@
                   b = b[column.index] || '';
                 }
 
-                if (!a.localeCompare) {
-                  console.error(`FG-Grid: ${a} is not a string`);
-                }
+                if (!a.localeCompare) console.error(`FG-Grid: ${a} is not a string`);
 
                 return a.localeCompare(b);
               });
               break;
             case 'boolean':
               sortedData = data.sort((a, b) => {
-                if(column.getter){
+                if (column.getter) {
                   a = column.getter({
                     item: a
                   }) || false;
@@ -232,13 +221,8 @@
                   b = b[column.index];
                 }
 
-                if (a === null) {
-                  a = Number.MIN_SAFE_INTEGER;
-                }
-
-                if (b === null) {
-                  b = Number.MIN_SAFE_INTEGER;
-                }
+                if (a === null) (a = Number.MIN_SAFE_INTEGER);
+                if (b === null) (b = Number.MIN_SAFE_INTEGER);
 
                 return b - a;
               });
@@ -264,7 +248,7 @@
               break;
             case 'boolean':
               sortedData = data.sort((a, b) => {
-                if(column.getter){
+                if (column.getter) {
                   a = column.getter({
                     item: a
                   }) || false;
@@ -297,9 +281,7 @@
         me.sorters = [];
       }
 
-      if (!me.rowGroups.length) {
-        me.idRowIndexesMap = new Map();
-      }
+      if (!me.rowGroups.length) (me.idRowIndexesMap = new Map());
 
       if (me.sorters.length) {
         if (me.rowGroups.length) {

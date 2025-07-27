@@ -6,9 +6,7 @@ Fancy.render = {
       cell
     } = params;
 
-    if(value === ''){
-      return;
-    }
+    if (value === '') return;
 
     const inputEl = document.createElement('input');
     inputEl.setAttribute('type', 'checkbox');
@@ -23,7 +21,6 @@ Fancy.render = {
     });
 
     cell.classList.add(Fancy.cls.CELL_BOOLEAN);
-
     cell.appendChild(inputEl);
   },
   order(params){
@@ -33,12 +30,9 @@ Fancy.render = {
     } = params;
 
     // For copy CTRL + C
-    if(!cell){
-      return Number(rowIndex) + 1;
-    }
+    if(!cell) return Number(rowIndex) + 1;
 
     cell.classList.add(Fancy.cls.CELL_ORDER);
-
     cell.innerHTML = rowIndex + 1;
   }
 };

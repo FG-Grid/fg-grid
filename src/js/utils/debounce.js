@@ -4,8 +4,6 @@ Fancy.debounce = (func, delay) => {
   return function(...args) {
     clearTimeout(timeoutId);
 
-    timeoutId = setTimeout(() => {
-      func.apply(this, args);
-    }, delay);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
   };
 };

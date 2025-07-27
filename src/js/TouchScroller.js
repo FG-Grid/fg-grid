@@ -1,4 +1,6 @@
 (() => {
+  const { EL } = Fancy;
+
   class TouchScroller {
     constructor(element, config) {
       const me = this;
@@ -21,11 +23,11 @@
     }
     init() {
       const me = this;
-      const el = me.element;
+      const el = EL(me.element);
 
-      el.addEventListener('touchstart', me.touchStartHandler);
-      el.addEventListener('touchmove', me.touchMoveHandler);
-      el.addEventListener('touchend', me.touchEndHandler);
+      el.on('touchstart', me.touchStartHandler);
+      el.on('touchmove', me.touchMoveHandler);
+      el.on('touchend', me.touchEndHandler);
     }
     touchStart(e) {
       const me = this;
@@ -117,17 +119,16 @@
       requestAnimationFrame(step);
     }
     touchEnd() {
-      const me = this;
-
       // Smooth continuation of the scroll
-      me.smoothScroll();
+      this.smoothScroll();
     }
     destroy() {
       const me = this;
+      const el = EL(me.element);
 
-      me.element.removeEventListener('touchstart', me.touchStartHandler);
-      me.element.removeEventListener('touchmove', me.touchMoveHandler);
-      me.element.removeEventListener('touchend', me.touchEndHandler);
+      el.un('touchstart', me.touchStartHandler);
+      el.un('touchmove', me.touchMoveHandler);
+      el.un('touchend', me.touchEndHandler);
 
       me.intervalId && clearInterval(me.intervalId);
     }

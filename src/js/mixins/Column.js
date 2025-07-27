@@ -86,11 +86,16 @@
       me.columns.splice(hiddenColumnIndex, 1);
       me.clearColumFromLinks(column);
 
+      if(me.columnsLevel > 1){
+        me.columns2.splice(hiddenColumnIndex, 1);
+      }
+
       delete me.$rowGroupColumn.elSortOrder;
       delete me.$rowGroupColumn.filterCellEl;
       delete me.$rowGroupColumn.headerCellEl;
       delete me.$rowGroupColumn.left;
 
+      me.reSetColumnsIdIndexMap();
       me.scroller.generateNewRange(false);
       me.reSetVisibleHeaderColumnsIndex();
       me.reSetVisibleBodyColumnsIndex();
@@ -113,13 +118,10 @@
       return this.columnIdsMap.get(id);
     },
     getNextVisibleColumnIndex(index){
-      const me = this;
+      const columns = this.columns;
 
-      for(let i = index + 1;i<me.columns.length;i++){
-        const column = me.columns[i];
-        if(column.hidden !== true){
-          return i;
-        }
+      for(let i = index + 1;i<columns.length;i++){
+        if (columns[i].hidden !== true) return i;
       }
     },
     getPrevVisibleColumnIndex(index){
@@ -167,10 +169,7 @@
           columnIdsSeedMap.set(index, seed);
         } else {
           let seed = columnIdsSeedMap.get(index);
-
-          if(seed === undefined){
-            seed = 0;
-          }
+          if (seed === undefined) (seed = 0);
 
           seed++;
           columnIdsSeedMap.set(index, seed);
@@ -212,9 +211,7 @@
       } else {
         let seed = columnIdsSeedMap.get(index);
 
-        if(seed === undefined){
-          seed = 0;
-        }
+        if (seed === undefined) (seed = 0);
 
         seed++;
         columnIdsSeedMap.set(index, seed);
@@ -234,6 +231,7 @@
       me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
 
       me.$setColumns(columns);
+      me.reSetColumnsIdIndexMap();
 
       me.scroller.generateNewRange(false);
       me.reCalcColumnsPositions();
@@ -261,13 +259,9 @@
       for(let i = columnStart; i <= columnEnd; i++){
         const column = me.columns[i];
 
-        if(column.hidden){
-          continue;
-        }
+        if (column.hidden) continue;
 
-        if(!column.headerCellEl){
-          columnIndexes.push(i);
-        }
+        !column.headerCellEl && columnIndexes.push(i);
       }
 
       me.addColumnCells(columnIndexes);
@@ -289,9 +283,7 @@
           filterCellEl?.remove();
 
           const bodyCells = me.bodyEl.querySelectorAll(`.${CELL}[col-id="${columnId}"]`);
-          bodyCells.forEach(bodyCell => {
-            bodyCell.remove();
-          });
+          bodyCells.forEach(bodyCell => bodyCell.remove());
         }
 
         column && !isColumnVisible && me.clearColumFromLinks(column);
@@ -353,9 +345,7 @@
 
       const orderedColumns = [];
       newColumnsOrderMap.forEach((columnId, index) => {
-        const column = me.getColumnById(columnId);
-
-        orderedColumns[index] = column;
+        orderedColumns[index] = me.getColumnById(columnId);
       });
 
       me.columns = orderedColumns;
@@ -394,28 +384,19 @@
           });
           me.columnOrder = column;
 
-          if(store?.rowGroups.length || me?.rowGroupBar){
-            console.error('FG-Grid: Order column is not supported for row grouping');
-          }
+          if(store?.rowGroups.length || me?.rowGroupBar) console.error('FG-Grid: Order column is not supported for row grouping');
           break;
       }
 
-      if(column.width === undefined){
-        column.width = me.defaultColumnWidth;
-      }
+      if(column.width === undefined) (column.width = me.defaultColumnWidth);
+      if(column.minWidth && column.width < column.minWidth) (column.width = column.minWidth);
 
-      if(column.minWidth && column.width < column.minWidth){
-        column.width = column.minWidth;
-      }
-
-      if(!column.title){
+      if(!column.title) {
         column.title = Fancy.capitalizeFirstLetter(column.index || '');
       }
 
       Object.keys(defaults).forEach(key => {
-        if(column[key] === undefined){
-          column[key] = defaults[key];
-        }
+        if(column[key] === undefined) (column[key] = defaults[key]);
       });
     },
     updateColumnGroupLevel2(){
@@ -430,9 +411,7 @@
         const columnLevel2 = me.columns2[i];
         const prevColumn = me.columns2[i - 1];
 
-        if(columnLevel2.ignore){
-          continue;
-        }
+        if (columnLevel2.ignore) continue;
 
         if(!prevColumn || prevColumn.ignore || (prevColumn.columnGroup && columnLevel2.columnGroup && prevColumn.columnGroup.id !== columnLevel2.columnGroup.id)){
           delete columnLevel2.spanning;
@@ -460,9 +439,7 @@
 
           columnLevel2.children = children;
           const width = children.reduce((result, column) => {
-            if(column.hidden){
-              return result;
-            }
+            if (column.hidden) return result;
 
             return result + column.width;
           }, 0);
@@ -475,6 +452,18 @@
           }
         }
       }
+    },
+    reSetColumnsIdIndexMap() {
+      const me = this;
+
+      me.columnsIdIndexMap = new Map();
+      me.columns.forEach((column, index) => {
+        me.columnsIdIndexMap.set(column.id, index);
+      });
+
+      me.columns2?.forEach((column, index) => {
+        me.columnsIdIndexMap.set(column.id, index);
+      });
     }
   };
 

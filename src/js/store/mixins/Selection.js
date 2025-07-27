@@ -1,9 +1,7 @@
 (() => {
-
   /**
    * @mixin StoreMixinSelection
    */
-
   const StoreMixinSelection = {
     selectRowItem(item, value = true) {
       const me = this;
@@ -26,14 +24,11 @@
           splitted.pop();
           const parentGroup = splitted.join('/');
 
-          if(value || !groupItem.selectedStatus){
-            me.updateSelectedRowGroupsChildren(parentGroup, value, groupItem);
-          }
+          if(value || !groupItem.selectedStatus) me.updateSelectedRowGroupsChildren(parentGroup, value, groupItem);
           me.updateSelectedStatus(parentGroup);
         }
       }
     },
-
     updateGroupsChildrenSelection(group, value) {
       const me = this;
       const children = me.filters.length ? me.groupsChildrenForFiltering[group] : me.groupsChildren[group] ;
@@ -41,9 +36,7 @@
       children.forEach(childItem => {
         childItem.$selected = value;
 
-        if (!childItem.$isGroupRow) {
-          me.updateSelectedItemsMap(value, childItem);
-        }
+        !childItem.$isGroupRow && me.updateSelectedItemsMap(value, childItem);
         me.updateSelectedRowGroupsChildren(group, value, childItem);
 
         const childGroup = childItem.$rowGroupValue;
@@ -58,21 +51,14 @@
         }
       });
     },
-
     selectGroupRowItems(item, value = true) {
       const me = this;
       const group = item.$rowGroupValue;
 
       item.$selected = value;
-      if (value) {
-        item.selectedStatus = 'full';
-      } else {
-        item.selectedStatus = false;
-      }
+      item.selectedStatus = value? 'full' : false;
 
-      if (!item.$isGroupRow) {
-        me.updateSelectedItemsMap(value, item);
-      }
+      !item.$isGroupRow && me.updateSelectedItemsMap(value, item);
       me.updateGroupsChildrenSelection(group, value);
       me.updateSelectedStatus(group);
 
@@ -90,13 +76,10 @@
         me.updateSelectedStatus(parentGroup);
       }
     },
-
     updateSelectedItemsMap(value, item) {
       const me = this;
 
-      if (item.$isGroupRow) {
-        console.warn('FG-Grid: It is wrong to use selectedItemsMap for group row. Only for items that do not have children.');
-      }
+      item.$isGroupRow && console.warn('FG-Grid: It is wrong to use selectedItemsMap for group row. Only for items that do not have children.');
 
       if (value) {
         me.selectedItemsMap.set(item.id, item);
@@ -104,24 +87,20 @@
         me.selectedItemsMap.delete(item.id);
       }
     },
-
     updateSelectedRowGroupsChildren(group, value, item) {
       const me = this;
-      const selectedRowGroupsChildren = me.selectedRowGroupsChildren;
+      const children = me.selectedRowGroupsChildren;
 
       if (value) {
-        if (selectedRowGroupsChildren[group] === undefined) {
-          selectedRowGroupsChildren[group] = new Set();
+        if (children[group] === undefined) {
+          children[group] = new Set();
         }
-        selectedRowGroupsChildren[group].add(item.id);
-      } else if (selectedRowGroupsChildren[group]) {
-        selectedRowGroupsChildren[group].delete(item.id);
-        if (selectedRowGroupsChildren[group].size === 0) {
-          delete selectedRowGroupsChildren[group];
-        }
+        children[group].add(item.id);
+      } else if (children[group]) {
+        children[group].delete(item.id);
+        if (children[group].size === 0) delete children[group];
       }
     },
-
     updateSelectedStatus(group) {
       const me = this;
       const groupDetails = me.filters.length ? me.groupDetailsForFiltering : me.groupDetails;
@@ -164,7 +143,6 @@
 
       groupDetails[group].selectedStatus = groupSelectedStatus;
     },
-
     selectAll(value = true) {
       const me = this;
       const groupsChildren = me.filters.length ? me.groupsChildrenForFiltering : me.groupsChildren;

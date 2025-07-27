@@ -1,20 +1,14 @@
 (() => {
-  const {
-    CELL,
-    ROW,
-    EDITING
-  } = Fancy.cls;
+  const { CELL, ROW, EDITING } = Fancy.cls;
 
   /**
    * @mixin GridMixinEdit
    */
   const GridMixinEdit = {
     onBodyCellDBLClick(event){
-      const me = this;
-      const target = event.target;
-      const cell = target.closest(`.${CELL}`);
+      const cell = event.target.closest(`.${CELL}`);
 
-      me.openEditorForCell(cell);
+      this.openEditorForCell(cell);
     },
     openEditorForCell(cell, startValue){
       const me = this;
@@ -143,9 +137,7 @@
                 height: `${me.rowHeight + 1}px`
               },
               onChange(value, fromTyping){
-                if(fromTyping === false){
-                  return;
-                }
+                if(fromTyping === false) return;
 
                 memorizeChange(value);
               },
@@ -163,9 +155,7 @@
 
                 if(activeCell === false){
                   me.$preventOpeningEditor = true;
-                  setTimeout(() => {
-                    delete me.$preventOpeningEditor;
-                  }, 100);
+                  setTimeout(() => delete me.$preventOpeningEditor, 100);
                 }
               },
               onESC(){
@@ -212,9 +202,7 @@
         const columnIndex = Number(cell.getAttribute('col-index'));
         const column = me.columns[columnIndex];
 
-        if(column.index === undefined){
-          return;
-        }
+        if(column.index === undefined) return;
 
         cell?.remove();
 
@@ -232,14 +220,10 @@
         const columnIndex = Number(cell.getAttribute('col-index'));
         const column = me.columns[columnIndex];
 
-        if(column.render === undefined || column.type === 'order' || column.index === 'id'){
-          return;
-        }
+        if(column.render === undefined || column.type === 'order' || column.index === 'id') return;
 
         const newCell = me.createCell(rowIndex, columnIndex, allowActiveCellSet);
-        if(cell.innerHTML === newCell.innerHTML){
-          return;
-        }
+        if(cell.innerHTML === newCell.innerHTML) return;
         cell?.remove();
         cell = newCell;
 
@@ -249,9 +233,7 @@
           cellStyle.transition = 'background-color 2000ms';
           cellStyle.backgroundColor = me.flashChangesColors[me.store.selectedItemsMap.has(itemId)?1:0];
 
-          setTimeout(() => {
-            cellStyle.backgroundColor = '';
-          });
+          setTimeout(() => cellStyle.backgroundColor = '');
 
           setTimeout(() => {
             cellStyle.transition = '';
@@ -263,12 +245,13 @@
     },
     updateAfterAddRemove(){
       const me = this;
+      const scroller = me.scroller;
 
-      me.scroller.calcMaxScrollTop();
-      me.scroller.updateScrollTop();
-      me.scroller.calcViewRange();
-      me.scroller.setVerticalSize();
-      me.scroller.updateHorizontalScrollSize();
+      scroller.calcMaxScrollTop();
+      scroller.updateScrollTop();
+      scroller.calcViewRange();
+      scroller.setVerticalSize();
+      scroller.updateHorizontalScrollSize();
       me.updateVisibleHeight();
 
       me.updateVisibleRowsAfterRemove();

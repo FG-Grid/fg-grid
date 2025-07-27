@@ -30,6 +30,27 @@ interface GridConfig<TData = any> {
   flashChanges?: boolean;
   flashChangesColors?: [string, string];
   columnLines?: boolean;
+
+  lang?: {
+    group?: string;
+    groupBarDragEmpty?: string;
+    sign?: {
+      clear?: string;
+      contains?: string;
+      notContains?: string;
+      equals?: string;
+      notEquals?: string;
+      empty?: string;
+      notEmpty?: string;
+      startsWith?: string;
+      endsWith?: string;
+      regex?: string;
+      greaterThan?: string;
+      lessThan?: string;
+      positive?: string;
+      negative?: string;
+    }
+  }
 }
 
 type Sign = '<'|'>'|'<='|'>='|'='|'!=';

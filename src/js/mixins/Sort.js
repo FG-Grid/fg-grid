@@ -6,13 +6,9 @@
     sort(sortingColumn, dir = 'ASC', multi) {
       const me = this;
 
-      if (me.sorting) {
-        return;
-      }
+      if (me.sorting) return;
 
-      if(me.isEditing){
-        me.hideActiveEditor();
-      }
+      me.isEditing && me.hideActiveEditor();
 
       me.sorting = true;
 
@@ -36,9 +32,7 @@
             delete column.sortOrder;
           }
         } else {
-          if (!multi) {
-            delete column.sort;
-          }
+          if (!multi) delete column.sort;
 
           if (sorterOrdersMap[column.id]) {
             column.sortOrder = sorterOrdersMap[column.id];
@@ -52,15 +46,11 @@
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
 
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.activeCell && me.clearActiveCell();
     },
 
     multiSort(column, dir) {
-      const me = this;
-
-      me.sort(column, dir, true);
+      this.sort(column, dir, true);
     },
 
     clearSort($column, multi) {
@@ -86,9 +76,7 @@
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
 
-      if(me.activeCell){
-        me.clearActiveCell();
-      }
+      me.activeCell && me.clearActiveCell();
     },
 
     renderVisibleRowsAfterSort() {
@@ -106,9 +94,7 @@
         if (!item) {
           console.warn(`FG-Grid: Item with index equals to ${i} does not exist`);
         } else {
-          if (!me.renderedRowsIdMap.has(item.id)) {
-            me.renderRowOnPrevPosition(item, true);
-          }
+          if (!me.renderedRowsIdMap.has(item.id)) me.renderRowOnPrevPosition(item, true);
 
           me.actualRowsIdSet.add(item.id);
         }
@@ -121,9 +107,7 @@
           me.renderedRowsIdMap.forEach((rowEl, id) => {
             const item = me.store.idItemMap.get(id);
 
-            if (!me.actualRowsIdSet.has(item.id)) {
-              itemsToRemove.push(item);
-            }
+            !me.actualRowsIdSet.has(item.id) && itemsToRemove.push(item);
 
             //me.updateRowPosition(item);
             me.fakeRowPosition(item);
@@ -132,9 +116,7 @@
           clearTimeout(me.timeOutRemoveRows);
 
           me.timeOutRemoveRows = setTimeout(() => {
-            itemsToRemove.forEach(item => {
-              me.removeDomRowById(item.id);
-            });
+            itemsToRemove.forEach(item => me.removeDomRowById(item.id));
 
             me.sorting = false;
           }, 500);

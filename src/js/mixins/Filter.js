@@ -11,7 +11,6 @@
   /**
    * @mixin GridMixinFilter
    */
-
   const GridMixinFilter = {
     renderVisibleFilterBarCells() {
       const me = this;
@@ -20,11 +19,7 @@
         columnEnd = me.scroller.columnViewEnd;
 
       for (let i = columnStart; i <= columnEnd; i++) {
-        const column = me.columns[i];
-
-        if(column.hidden){
-          continue;
-        }
+        if (me.columns[i].hidden) continue;
 
         const cell = me.createFilterBarCell(i);
 
@@ -81,7 +76,8 @@
           onChange: me.onFilterFieldChange.bind(this),
           column,
           sign,
-          value
+          value,
+          lang: me.lang
         });
       }
 
@@ -92,9 +88,7 @@
     onFilterFieldChange(value, sign, column, signWasChanged) {
       const me = this;
 
-      if(signWasChanged){
-        me.store.removeFilter(column, undefined, false);
-      }
+      signWasChanged && me.store.removeFilter(column, undefined, false);
 
       if(sign === '=' && value === ''){
         delete column.filters;
@@ -260,9 +254,7 @@
           clearTimeout(me.timeOutRemoveRows);
 
           me.timeOutRemoveRows = setTimeout(() => {
-            itemsToRemove.forEach(item => {
-              me.removeDomRowById(item.id);
-            });
+            itemsToRemove.forEach(item => me.removeDomRowById(item.id));
 
             me.filtering = false;
           }, 500);
@@ -278,18 +270,14 @@
       for (let i = columnStart; i <= columnEnd; i++) {
         const column = me.columns[i];
 
-        if(column.hidden){
-          continue;
-        }
+        if (column.hidden) continue;
 
         if (Object.entries(column.filters || {}).length) {
           const filterField = column.filterField;
           const filter = column.filters;
 
           if(filterField.sign !== filter.sign){
-            if(!(filter.sign === '=' && filterField.sign === '')){
-              filterField.setSign(filter.sign);
-            }
+            if (!(filter.sign === '=' && filterField.sign === '')) filterField.setSign(filter.sign);
             filterField.setValue(filter.value, false);
           }
         }

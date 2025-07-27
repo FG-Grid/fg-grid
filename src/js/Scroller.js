@@ -53,17 +53,9 @@
       let changed = false;
       let scrollTop = me.scrollTop - delta;
 
-      if (scrollTop < 0) {
-        scrollTop = 0;
-      }
-
-      if(scrollTop > me.maxScrollTop){
-        scrollTop = me.maxScrollTop;
-      }
-
-      if(me.scrollTop !== scrollTop){
-        changed = true;
-      }
+      if (scrollTop < 0) (scrollTop = 0);
+      if (scrollTop > me.maxScrollTop) (scrollTop = me.maxScrollTop);
+      if (me.scrollTop !== scrollTop) (changed = true);
 
       me.scrollTop = scrollTop;
       me.verticalScrollContainerEl.scrollTop = scrollTop;
@@ -82,13 +74,9 @@
       let changed = false;
       let scrollLeft = me.scrollLeft - delta;
 
-      if (scrollLeft < 0) {
-        scrollLeft = 0;
-      }
+      if (scrollLeft < 0) (scrollLeft = 0);
 
-      if(me.horizontalScrollContainerEl.scrollLeft !== scrollLeft){
-        changed = true;
-      }
+      if (me.horizontalScrollContainerEl.scrollLeft !== scrollLeft) (changed = true);
 
       me.horizontalScrollContainerEl.scrollLeft = scrollLeft;
       me.scrollLeft = me.horizontalScrollContainerEl.scrollLeft;
@@ -100,9 +88,7 @@
       let requiresRenderMoreRows = false;
       const newBufferRows = Math.ceil(me.grid.height / me.grid.rowHeight) + me.extraBufferRows;
 
-      if(me.bufferRows < newBufferRows){
-        requiresRenderMoreRows = true;
-      }
+      if (me.bufferRows < newBufferRows) (requiresRenderMoreRows = true);
 
       me.bufferRows = newBufferRows;
 
@@ -113,9 +99,7 @@
 
       me.maxScrollTop = me.grid.store.getDisplayedDataTotal() * me.grid.rowHeight - me.grid.bodyEl.getBoundingClientRect().height;
 
-      if(me.maxScrollTop < 0){
-        me.maxScrollTop = 0;
-      }
+      if (me.maxScrollTop < 0) (me.maxScrollTop = 0);
     }
     updateScrollTop() {
       const me = this;
@@ -126,11 +110,9 @@
       }
     }
     getStartRow() {
-      const me = this;
+      this.calcStartRow();
 
-      me.calcStartRow();
-
-      return me.startRow;
+      return this.startRow;
     }
     calcStartRow() {
       const me = this;
@@ -142,9 +124,7 @@
         startRow = endRow - me.bufferRows;
       }
 
-      if (startRow < 0) {
-        startRow = 0;
-      }
+      if (startRow < 0) (startRow = 0);
 
       me.startRow = startRow;
     }
@@ -164,21 +144,17 @@
         endRow = me.grid.store.getDataTotal();
       }
 
-      if (endRow > displayedDataTotal) {
-        endRow = displayedDataTotal;
-      }
+      if (endRow > displayedDataTotal) (endRow = displayedDataTotal);
 
       me.endRow = endRow;
 
       return endRow;
     }
     render() {
-      const me = this;
+      this.renderVerticalScroll();
+      this.renderHorizontalScroll();
 
-      me.renderVerticalScroll();
-      me.renderHorizontalScroll();
-
-      me.ons();
+      this.ons();
     }
     renderVerticalScroll() {
       const me = this;
@@ -317,16 +293,11 @@
       if(doRender){
         newRange.forEach(newColumnIndex => {
           const column = grid.columns[newColumnIndex];
-
-          if (!column.hidden && !rangeSet.has(newColumnIndex)) {
-            columnsToAdd.push(newColumnIndex);
-          }
+          if (!column.hidden && !rangeSet.has(newColumnIndex)) columnsToAdd.push(newColumnIndex);
         });
 
         rangeSet.forEach(columnIndex => {
-          if (!newRangeSet.has(columnIndex)) {
-            columnsToRemove.push(columnIndex);
-          }
+          !newRangeSet.has(columnIndex) && columnsToRemove.push(columnIndex);
         });
       }
 
@@ -374,9 +345,7 @@
       const me = this;
       const bodyWidth = me.grid.bodyEl.getBoundingClientRect().width;
       const visibleColumnsWidth = me.grid.columns.reduce((sum, column) => {
-        if (column.hidden) {
-          return sum;
-        }
+        if (column.hidden) return sum;
 
         return sum + column.width;
       }, 0);
@@ -441,17 +410,13 @@
       for (let i = 0; i < me.grid.columns.length; i++) {
         const column = me.grid.columns[i];
 
-        if (column.hidden) {
-          continue;
-        }
+        if (column.hidden) continue;
 
         if (columnStart === undefined && columnPastWidth <= me.scrollLeft && (columnPastWidth + column.width) > me.scrollLeft) {
           columnStart = i;
         }
 
-        if (columnStart !== undefined) {
-          range.push(i);
-        }
+        if (columnStart !== undefined) range.push(i);
 
         if (columnEnd === undefined && columnPastWidth <= me.scrollLeft + gridWidth && columnPastWidth + column.width >= me.scrollLeft + gridWidth) {
           const nextColumn = me.grid.columns[i + 1];
@@ -508,9 +473,7 @@
       const me = this;
 
       me.resizeObserver = new ResizeObserver((entries) => {
-        if (!Array.isArray(entries) || !entries.length) {
-          return;
-        }
+        if (!Array.isArray(entries) || !entries.length) return;
 
         me.grid.checkSize() && me.updateSize();
       });
@@ -532,17 +495,13 @@
     isColumnVisible(checkColumn){
       const me = this;
 
-      if(!checkColumn){
-        return false;
-      }
+      if (!checkColumn) return false;
 
       for(let i = 0, iL = me.columnsViewRange.length;i<iL;i++){
         const columnIndex = me.columnsViewRange[i];
         const column = me.grid.columns[columnIndex];
 
-        if(column.id === checkColumn.id){
-          return true;
-        }
+        if (column.id === checkColumn.id) return true;
       }
 
       return false;

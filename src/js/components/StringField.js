@@ -5,11 +5,10 @@
     constructor(config) {
       super(config);
 
-      const me = this;
-      Object.assign(me, config);
+      Object.assign(this, config);
 
-      me.render();
-      me.ons();
+      this.render();
+      this.ons();
     }
   }
 

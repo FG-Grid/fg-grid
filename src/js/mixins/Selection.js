@@ -74,9 +74,7 @@
       store.groupsChildren[group].forEach(child => {
         const childRow = me.bodyEl.querySelector(`[row-id="${child.id}"]`);
 
-        if(!childRow){
-          return;
-        }
+        if(!childRow) return;
 
         const childRowCheckBox = childRow.querySelector(`.${INPUT_CHECKBOX}`);
         childRow.classList[selected?'add':'remove'](ROW_SELECTED);
@@ -95,9 +93,7 @@
 
       me.scroller.columnsViewRange.forEach(columnIndex => {
         const column = me.columns[columnIndex];
-        if(column.headerCheckboxSelection){
-          me.updateHeaderCheckboxSelection(column);
-        }
+        column.headerCheckboxSelection && me.updateHeaderCheckboxSelection(column);
       });
     },
     updateRowGroupRowsAndCheckBoxes(){
@@ -109,9 +105,7 @@
         const checkBoxEl = row.querySelector(`.${ROW_GROUP_CELL_SELECTION} .${INPUT_CHECKBOX}`);
         const groupDetail = store.filters.length? store.groupDetailsForFiltering[group] : store.groupDetails[group];
 
-        if(!groupDetail){
-          return;
-        }
+        if (!groupDetail) return;
 
         const groupSelectedStatus = groupDetail.selectedStatus;
 
@@ -140,17 +134,14 @@
       me.bodyEl.querySelectorAll(`.${ROW}`).forEach(row => {
         const itemId = row.getAttribute('row-id');
         const item = store.idItemMap.get(itemId);
-        if(!item){
-          console.error(`FG-Grid: store.idItemMap does not contain ${itemId}`);
-        }
+        if(!item) console.error(`FG-Grid: store.idItemMap does not contain ${itemId}`);
+
         const selected = item.$selected;
         const checkBoxEl = row.querySelector(`.${CELL_SELECTION} .${INPUT_CHECKBOX}`);
         row.classList[selected?'add':'remove'](ROW_SELECTED);
 
         if(selected){
-          if(checkBoxEl){
-            checkBoxEl.checked = true;
-          }
+          if(checkBoxEl) (checkBoxEl.checked = true);
         } else {
           if(checkBoxEl){
             checkBoxEl.indeterminate = false;
@@ -213,9 +204,7 @@
       const target = event.target;
       const cell = target.closest(`.${CELL}`);
 
-      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined || me.isSelectingCells !== true){
-        return;
-      }
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined || me.isSelectingCells !== true) return;
 
       const columnIndex = Number(cell.getAttribute('col-index'));
       const row = cell.closest(`.${ROW}`);
@@ -232,16 +221,12 @@
       const me = this;
       const store = me.store;
 
-      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
-        return;
-      }
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined) return;
 
       const secondActiveCellRowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
       const prevRowIndex = store.getPrevVisibleRowIndex(secondActiveCellRowIndex);
 
-      if(prevRowIndex === undefined){
-        return;
-      }
+      if(prevRowIndex === undefined) return;
 
       const itemId = store.getItemByRowIndex(prevRowIndex).id;
 
@@ -257,16 +242,12 @@
       const me = this;
       const store = me.store;
 
-      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
-        return;
-      }
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined) return;
 
       const secondActiveCellRowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
       const nextRowIndex = store.getNextVisibleRowIndex(secondActiveCellRowIndex);
 
-      if(nextRowIndex === undefined){
-        return;
-      }
+      if (nextRowIndex === undefined) return;
 
       const itemId = store.getItemByRowIndex(nextRowIndex).id;
 
@@ -282,16 +263,12 @@
       const me = this;
       const store = me.store;
 
-      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
-        return;
-      }
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined) return;
 
       const columnIndex = me.getPrevVisibleColumnIndex(me.secondActiveCellColumnIndex);
       const rowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
 
-      if(columnIndex === undefined){
-        return;
-      }
+      if (columnIndex === undefined) return;
 
       me.secondActiveCellColumnIndex = columnIndex;
       me.secondActiveCell = me.getCell(rowIndex, columnIndex);
@@ -305,16 +282,12 @@
       const me = this;
       const store = me.store;
 
-      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined){
-        return;
-      }
+      if(!me.activeCell || me.activeCellColumnIndex === undefined || me.activeCellRowId === undefined) return;
 
       const columnIndex = me.getNextVisibleColumnIndex(me.secondActiveCellColumnIndex);
       const rowIndex = store.idRowIndexesMap.get(me.secondActiveCellRowId);
 
-      if(columnIndex === undefined){
-        return;
-      }
+      if (columnIndex === undefined) return;
 
       me.secondActiveCellColumnIndex = columnIndex;
       me.secondActiveCell = me.getCell(rowIndex, columnIndex);
@@ -486,9 +459,7 @@
       const row = me.activeCellRowEl;
       const rowIndex = Number(row.getAttribute('row-index'));
 
-      if(newColumnIndex === columnIndex || newColumnIndex === undefined){
-        return;
-      }
+      if(newColumnIndex === columnIndex || newColumnIndex === undefined) return;
 
       const cell = me.getCell(rowIndex, newColumnIndex);
       if(cell){
@@ -506,9 +477,7 @@
       const columnIndex = me.activeCellColumnIndex;
       const newColumnIndex = me.getNextVisibleColumnIndex(columnIndex);
 
-      if(newColumnIndex === columnIndex || newColumnIndex === undefined){
-        return false;
-      }
+      if(newColumnIndex === columnIndex || newColumnIndex === undefined) return false;
 
       const cell = me.getCell(rowIndex, newColumnIndex);
       if(cell){
@@ -560,14 +529,9 @@
       me.updateRowsAndCheckBoxes();
     },
     getSelection(){
-      const store = this.store;
       const items = [];
 
-      store.selectedItemsMap.forEach(item => {
-        if(!item.$isGroupRow){
-          items.push(item);
-        }
-      });
+      this.store.selectedItemsMap.forEach(item => !item.$isGroupRow && items.push(item));
 
       return items;
     },
@@ -615,29 +579,17 @@
         columns
       } = me.selectionCellsRange;
 
-      if(rows[0] < me.scroller.startRow){
-        rows[0] = me.scroller.startRow;
-      }
+      if(rows[0] < me.scroller.startRow) (rows[0] = me.scroller.startRow);
+      if(rows[1] > me.scroller.endRow) (rows[1] = me.scroller.endRow);
 
-      if(rows[1] > me.scroller.endRow){
-        rows[1] = me.scroller.endRow;
-      }
-
-      if(columns[0] < me.scroller.columnViewStart){
-        columns[0] = me.scroller.columnViewStart;
-      }
-
-      if(columns[1] > me.scroller.columnViewEnd){
-        columns[1] = me.scroller.columnViewEnd;
-      }
+      if(columns[0] < me.scroller.columnViewStart) (columns[0] = me.scroller.columnViewStart);
+      if(columns[1] > me.scroller.columnViewEnd) (columns[1] = me.scroller.columnViewEnd);
 
       for(let i = rows[0];i<=rows[1];i++){
         for(let j = columns[0];j<=columns[1];j++){
           const cell = me.bodyEl.querySelector(`div.${ROW}[row-index="${i}"] div.${CELL}[col-index="${j}"]`);
 
-          if(cell && !cell.classList.contains(CELL_SELECTED)) {
-            cell.classList.add(CELL_SELECTED);
-          }
+          if (cell && !cell.classList.contains(CELL_SELECTED)) cell.classList.add(CELL_SELECTED);
         }
       }
     },
@@ -646,9 +598,7 @@
       const columnIndex = Number(cell.getAttribute('col-index'));
       const row = cell.closest(`.${ROW}`);
 
-      if(!row){
-        return false;
-      }
+      if(!row) return false;
 
       const rowIndex = Number(row.getAttribute('row-index'));
       const {
@@ -707,9 +657,8 @@
 
       if(rows.length === 0 && me.activeCellEl){
         const row = me.activeCellEl.closest(`.${ROW}`);
-        if(!row){
-          return;
-        }
+        if (!row) return;
+
         const itemId = row.getAttribute('row-id');
         const item = me.store.idItemMap.get(itemId);
         const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
@@ -760,13 +709,8 @@
       const getRowsOffSet = (rowIndex, offset = 0) => {
         const row = me.bodyEl.querySelector(`div[row-index="${rowIndex + offset}"]`);
 
-        if(!row){
-          return offset;
-        }
-
-        if(row.classList.contains(ROW_GROUP)){
-          return getRowsOffSet(rowIndex, offset + 1);
-        }
+        if (!row) return offset;
+        if (row.classList.contains(ROW_GROUP)) return getRowsOffSet(rowIndex, offset + 1);
 
         return offset;
       };
@@ -794,9 +738,7 @@
           const rowIndex = activeRowIndex + itemRowIndex + rowOffset;
           const item = me.store.getItemByRowIndex(rowIndex);
 
-          if(!item){
-            return;
-          }
+          if(!item) return;
 
           const rowEl = me.bodyEl.querySelector(`.${ROW}[row-index="${rowIndex}"]`);
 
@@ -807,15 +749,11 @@
 
             const column = me.columns[columnIndex];
 
-            if(!column || !column.editable){
-              return;
-            }
+            if(!column || !column.editable) return;
 
             me.store.setById(item.id,column.index, value);
 
-            if(!rowEl || !column){
-              return;
-            }
+            if(!rowEl || !column) return;
 
             let cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 
@@ -851,9 +789,8 @@
 
       if(rows.length === 0 && me.activeCellEl){
         const rowEl = me.activeCellEl.closest(`.${ROW}`);
-        if(!rowEl){
-          return;
-        }
+        if(!rowEl) return;
+
         const rowIndex = rowEl.getAttribute('row-index');
         const itemId = rowEl.getAttribute('row-id');
         const item = store.idItemMap.get(itemId);
@@ -897,9 +834,7 @@
 
           store.setById(item.id ,column.index, value);
 
-          if(!rowEl || !column){
-            return;
-          }
+          if(!rowEl || !column) return;
 
           let cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 

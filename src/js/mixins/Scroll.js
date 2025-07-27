@@ -25,9 +25,7 @@
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
       }
 
-      if(changed){
-        event.preventDefault();
-      }
+      changed && event.preventDefault();
 
       cancelAnimationFrame(me.animationRenderId);
 
@@ -59,9 +57,7 @@
         me.bodyInnerEl.scrollLeft = me.scroller.scrollLeft;
       }
 
-      if(changed){
-        event.preventDefault?.();
-      }
+      changed && event.preventDefault?.();
 
       cancelAnimationFrame(me.animationRenderId);
 

@@ -70,9 +70,7 @@
       const groupedData = me.displayedData.slice();
 
       for (const group in me.expandedGroupsWithDataChildren) {
-        if (me.isParentCollapsed(group)) {
-          continue;
-        }
+        if (me.isParentCollapsed(group)) continue;
 
         const groupData = me.groupsChildren[group].slice();
         const groupDetails = me.groupDetails[group];
@@ -183,9 +181,7 @@
         }
 
         me.groupDetails[groupName] = groupDetails;
-        if (groupLevel !== 0) {
-          me.groupsChildren[parentGroup].push(groupDetails);
-        }
+        if (groupLevel !== 0) me.groupsChildren[parentGroup].push(groupDetails);
       });
 
       if (groupLevel !== 0) {
@@ -196,20 +192,15 @@
       for(let i = 0;i<groupNames.length;i++) {
         const groupName = groupNames[i];
         const groupDetails = me.groupDetails[groupName];
-        if(!groupDetails.$hasChildrenGroups) {
-          break;
-        }
+        if(!groupDetails.$hasChildrenGroups) break;
+
         const children = me.groupsChildren[groupName];
         const childrenSorted = children.sort((groupA, groupB) => {
           switch (me.defaultRowGroupSort) {
-            case 'asc-string':
-              return groupA.$rowDisplayGroupValue.localeCompare(groupB.$rowDisplayGroupValue);
-            case 'desc-string':
-              return groupB.$rowDisplayGroupValue.localeCompare(groupA.$rowDisplayGroupValue);
-            case 'asc-amount':
-              return groupA.amount - groupB.amount;
-            case 'desc-amount':
-              return groupB.amount - groupA.amount;
+            case 'asc-string': return groupA.$rowDisplayGroupValue.localeCompare(groupB.$rowDisplayGroupValue);
+            case 'desc-string': return groupB.$rowDisplayGroupValue.localeCompare(groupA.$rowDisplayGroupValue);
+            case 'asc-amount': return groupA.amount - groupB.amount;
+            case 'desc-amount': return groupB.amount - groupA.amount;
           }
         });
         me.groupsChildren[groupName] = childrenSorted;
@@ -254,9 +245,7 @@
         me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName] = me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName] || [];
         me.levelsWithGroupsForFiltering[groupLevel][0][parentGroupName].push(groupName);
 
-        if(!groupDetails){
-          console.error(`FG-Grid: groupDetails does not contain ${groupName}`);
-        }
+        if (!groupDetails) console.error(`FG-Grid: groupDetails does not contain ${groupName}`);
 
         const groupDetailsForFiltering = {
           $rowGroupValue: groupName,
@@ -291,9 +280,7 @@
         }
 
         me.groupDetailsForFiltering[groupName] = groupDetailsForFiltering;
-        if (groupLevel !== 0) {
-          me.groupsChildrenForFiltering[parentGroup].push(groupDetailsForFiltering);
-        }
+        if (groupLevel !== 0) me.groupsChildrenForFiltering[parentGroup].push(groupDetailsForFiltering);
       });
 
       if (groupLevel === 0) {
@@ -310,22 +297,15 @@
       delete me.levelsWithGroups;
       delete me.expandedGroupsWithDataChildren;
 
-      me.data.forEach(rowData => {
-        delete rowData.$rowGroupValue;
-      });
+      me.data.forEach(rowData => delete rowData.$rowGroupValue);
     },
     set$rowGroupValue(data) {
-      if(data === undefined){
-        data = this.data;
-      }
+      if (data === undefined) (data = this.data);
 
       data.forEach(rowData => {
         let $rowGroupValues = [];
 
-        this.rowGroups.forEach(group => {
-          $rowGroupValues.push(rowData[group]);
-        });
-
+        this.rowGroups.forEach(group => $rowGroupValues.push(rowData[group]));
         rowData.$rowGroupValue = $rowGroupValues.join('/');
       });
 
@@ -402,14 +382,10 @@
             const groupB = me.groupDetails[b];
 
             switch (me.defaultRowGroupSort) {
-              case 'asc-string':
-                return groupA.$rowDisplayGroupValue.localeCompare(groupB.$rowDisplayGroupValue);
-              case 'desc-string':
-                return groupB.$rowDisplayGroupValue.localeCompare(groupA.$rowDisplayGroupValue);
-              case 'asc-amount':
-                return groupA.amount - groupB.amount;
-              case 'desc-amount':
-                return groupB.amount - groupA.amount;
+              case 'asc-string': return groupA.$rowDisplayGroupValue.localeCompare(groupB.$rowDisplayGroupValue);
+              case 'desc-string': return groupB.$rowDisplayGroupValue.localeCompare(groupA.$rowDisplayGroupValue);
+              case 'asc-amount': return groupA.amount - groupB.amount;
+              case 'desc-amount': return groupB.amount - groupA.amount;
             }
           });
 
@@ -464,8 +440,7 @@
           const zeroLevelGroups = me.levelsWithGroups[0][0].root;
           recursiveDataExtraction(zeroLevelGroups);
           break;
-        default:
-          console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
+        default: console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
@@ -495,8 +470,7 @@
           const zeroLevelGroups = me.levelsWithGroupsForFiltering[0][0].root;
           recursiveDataExtraction(zeroLevelGroups);
           break;
-        default:
-          console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
+        default: console.error(`FG-Grid: Not supported defaultRowGroupSort value ${me.defaultRowGroupSort}`);
       }
 
       return displayedGroupsSorted;
@@ -595,9 +569,7 @@
 
       groupDetails.expanded = false;
       delete me.expandedGroups[group];
-      if (!groupDetails.$hasChildrenGroups) {
-        delete me.expandedGroupsWithDataChildren[group];
-      }
+      if (!groupDetails.$hasChildrenGroups) delete me.expandedGroupsWithDataChildren[group];
 
       me.displayedData.splice(rowIndex + 1, groupData.length);
 
@@ -695,13 +667,8 @@
           delete me.displayedData;
         } else {
           // Requires resort and re-filter because sorted and filtered data will be different for grouping.
-          if (filters.length) {
-            me.reFilter(false);
-          }
-
-          if (sorters.length) {
-            me.reSort();
-          }
+          if (filters.length) me.reFilter(false);
+          if (sorters.length) me.reSort();
         }
       } else {
         if (filters.length) {
@@ -722,9 +689,7 @@
       }
 
       //??? Maybe a bug, maybe it requires testing sorters.length
-      if (!filters.length || !rowGroups.length) {
-        me.setIndexAndItemsMaps();
-      }
+      if (!filters.length || !rowGroups.length) me.setIndexAndItemsMaps();
     },
     setRowGroups(rowGroups) {
       this.rowGroups = rowGroups;
@@ -734,9 +699,7 @@
       const sortedData = me.displayedData.slice();
 
       for (const group in me.expandedGroupsWithDataChildrenForFiltering) {
-        if (me.isParentCollapsed(group)) {
-          continue;
-        }
+        if (me.isParentCollapsed(group)) continue;
 
         const groupData = me.groupsChildrenForFiltering[group].slice();
         const groupDetails = me.groupDetailsForFiltering[group];
@@ -768,16 +731,13 @@
         const name = splitted.slice(0, splitted.length - i).join('/');
         const groupLevel = name.split('/').length - 1;
 
-        if(me.groupDetails[name]) {
-          break;
-        }
+        if(me.groupDetails[name]) break;
 
         const parentGroup = splitted.slice(0, splitted.length - i - 1).join('/');
 
         if(groupLevel === 0){
-          if(!me.levelsWithGroups[0][0].root.includes(name)){
-            me.levelsWithGroups[0][0].root.push(name);
-          }
+          const root = me.levelsWithGroups[0][0].root;
+          if(!root.includes(name)) root.push(name);
         }
         else{
           if(me.levelsWithGroups === undefined){
@@ -821,9 +781,7 @@
       addToGroupsChildren.forEach(group => {
         const splitted = group.split('/');
 
-        if(splitted.length === 1){
-          return;
-        }
+        if (splitted.length === 1) return;
 
         const parentGroup = splitted.slice(0, splitted.length - 1).join('/');
 
@@ -836,9 +794,7 @@
       const groupDetails = me.groupDetails[groupName];
 
       // group was removed
-      if(!groupDetails){
-        return;
-      }
+      if(!groupDetails) return;
 
       const groupAgValues = groupDetails.$agValues || {};
       const groupChildren = me.groupsChildren[groupName];
@@ -846,9 +802,7 @@
       me.aggregations?.forEach(aggregation => {
         const index = aggregation.index;
         items.forEach(item => {
-          if (item.$rowGroupValue.includes(groupName) === false){
-            return;
-          }
+          if (item.$rowGroupValue.includes(groupName) === false) return;
 
           // Fast update for parent aggregation value
           if (aggregation.fn === 'sum' && sign !== 'update'){
@@ -869,9 +823,7 @@
             const values = groupChildren.map(child => {
               let value = child.$agValues ? child.$agValues[index] : child[index];
               value = Number(value);
-              if(isNaN(value)){
-                value = 0;
-              }
+              if (isNaN(value)) (value = 0);
 
               return value;
             });
@@ -889,9 +841,7 @@
         const name = splitted.join('/');
         const expanded = this.expandedGroups[name];
 
-        if(!expanded){
-          return true;
-        }
+        if(!expanded) return true;
 
         splitted.pop();
       }
@@ -905,9 +855,7 @@
 
       for (let i = 0; i < iL; i++) {
         splitted.pop();
-        if (!me.expandedGroups[splitted.join('/')]) {
-          return true;
-        }
+        if (!me.expandedGroups[splitted.join('/')]) return true;
       }
 
       return false;

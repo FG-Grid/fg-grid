@@ -6,11 +6,9 @@
     removeFilter(column, sign, removePrevFilterColumn = true){
       const me = this;
 
-      if(sign){
+      if (sign) {
         me.filters = me.filters.filter(filter => {
-          if(filter.column.id === column.id && filter.sign === sign){
-            return false;
-          }
+          if (filter.column.id === column.id && filter.sign === sign) return false;
           return true;
         });
       } else if(column) {

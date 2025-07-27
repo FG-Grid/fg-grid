@@ -8,9 +8,7 @@
     setById(id, key, value){
       const item = this.idItemMap.get(id);
 
-      if(!item){
-        return false;
-      }
+      if (!item) return false;
 
       if(typeOf(key) === 'object'){
         for(let p in key){
@@ -43,9 +41,7 @@
       }
 
       items.forEach(item => {
-        if (!item.id) {
-          item.id = me.generateId();
-        }
+        if (!item.id) (item.id = me.generateId());
       });
 
       if(me.rowGroups.length){

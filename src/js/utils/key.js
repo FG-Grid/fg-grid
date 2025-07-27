@@ -114,22 +114,15 @@ Fancy.Key = {
       case key.NUM_SIX:
       case key.NUM_SEVEN:
       case key.NUM_EIGHT:
-      case key.NUM_NINE:
-        return true;
-      default:
-        return false;
+      case key.NUM_NINE: return true;
+      default: return false;
     }
   },
   isNumControl(c, e){
     const key = Fancy.key;
 
-    if( Fancy.Key.isNum(c) ){
-      return true;
-    }
-
-    if( e.shiftKey && c === 187){
-      return true;
-    }
+    if( Fancy.Key.isNum(c) ) return true;
+    if( e.shiftKey && c === 187) return true;
 
     switch(c){
       case key.NUM_PLUS:
@@ -152,10 +145,8 @@ Fancy.Key = {
       case key.RIGHT:
       case key.DOWN:
       case key.INSERT:
-      case key.DOT:
-        return true;
-      default:
-        return false;
+      case key.DOT: return true;
+      default: return false;
     }
   }
 };

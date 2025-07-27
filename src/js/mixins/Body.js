@@ -26,16 +26,11 @@
     SVG_CHEVRON_RIGHT
   } = Fancy.cls;
 
-  const {
-    div,
-    span,
-    input
-  } = Fancy;
+  const { div, span, input } = Fancy;
 
   /**
    * @mixin GridMixinBody
    */
-
   const GridMixinBody = {
     addColumnCells(columnIndexes = []) {
       const me = this;
@@ -46,12 +41,9 @@
         let i = startRow;
 
         me.appendHeaderCell(columnIndex);
-
         me.filterBar && me.appendFilterBarCell(columnIndex);
 
-        for (; i < endRow; i++) {
-          me.appendCell(i, columnIndex);
-        }
+        for (; i < endRow; i++) me.appendCell(i, columnIndex);
       });
     },
     appendCell(rowIndex, columnIndex) {
@@ -129,9 +121,7 @@
           cell.classList.add(...column.cellCls);
         } else if(typeof column.cellCls === 'function'){
           let cls = column.cellCls(params);
-          if(typeof cls === 'string'){
-            cls = [cls];
-          }
+          if(typeof cls === 'string') (cls = [cls]);
 
           cls && cell.classList.add(...cls);
         }
@@ -145,19 +135,10 @@
         }
       }
 
-      if(column.format){
-        value = column.format(params);
-      }
+      if(column.format) (value = column.format(params));
+      cellInner = column.render? cellInner = column.render(params): value;
 
-      if(column.render){
-        cellInner = column.render(params);
-      } else {
-        cellInner = value;
-      }
-
-      if(column.$isRowGroupColumn || column.rowGroupIndent){
-        cell.classList.add(ROW_GROUP_VALUE_CELL);
-      }
+      if(column.$isRowGroupColumn || column.rowGroupIndent) cell.classList.add(ROW_GROUP_VALUE_CELL);
 
       if(column.checkboxSelection){
         const wrapperEl = div(CELL_WRAPPER);
@@ -184,18 +165,14 @@
 
         const valueEl = span(CELL_VALUE);
 
-        if(cellInner === ''){
-          cellInner = '&nbsp;';
-        }
+        if(cellInner === '') (cellInner = '&nbsp;');
         valueEl.innerHTML = cellInner ?? '&nbsp;';
 
         wrapperEl.appendChild(valueEl);
 
         cell.appendChild(wrapperEl);
       } else if (cellInner !== undefined) {
-        if(cellInner === ''){
-          cellInner = '&nbsp;';
-        }
+        if(cellInner === '') (cellInner = '&nbsp;');
 
         cell.innerHTML = cellInner ?? '&nbsp;';
       }
@@ -267,9 +244,7 @@
         cell.setAttribute('col-index', columnIndex);
         cell.setAttribute('col-id', column.id);
 
-        if(cellInner !== undefined){
-          cell.innerHTML = cellInner;
-        }
+        if(cellInner !== undefined) (cell.innerHTML = cellInner);
 
         return cell;
       }
@@ -284,9 +259,7 @@
     generateSimpleValueEl(cellInner){
       const valueEl = span(CELL_VALUE);
 
-      if(cellInner === ''){
-        cellInner = '&nbsp;';
-      }
+      if(cellInner === '') (cellInner = '&nbsp;');
       valueEl.innerHTML = cellInner ?? '&nbsp;';
 
       return valueEl;
@@ -332,9 +305,7 @@
           rowIndex
         });
 
-        if(displayValue){
-          valueEl.innerHTML = displayValue;
-        }
+        if(displayValue) (valueEl.innerHTML = displayValue);
       } else {
         valueEl.innerHTML = displayGroupValue;
       }
@@ -357,9 +328,7 @@
       checkboxEl.setAttribute('type', 'checkbox');
       checkboxEl.checked = selected;
 
-      if(item.selectedStatus === 'partly'){
-        checkboxEl.indeterminate = true;
-      }
+      if(item.selectedStatus === 'partly') (checkboxEl.indeterminate = true);
 
       return checkboxEl;
     },
@@ -378,9 +347,7 @@
       columnIndexes.forEach((columnIndex) => {
         const headerCell = me.headerInnerContainerEl.querySelector(`[col-index="${columnIndex}"]`);
 
-        if(!headerCell){
-          return;
-        }
+        if(!headerCell) return;
 
         headerCell.remove?.();
 
@@ -391,9 +358,7 @@
         }
 
         me.renderedRowsIdMap.forEach(rowEl => {
-          if (rowEl.classList.contains(ROW_GROUP)) {
-            return;
-          }
+          if (rowEl.classList.contains(ROW_GROUP)) return;
 
           const cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 
@@ -466,9 +431,7 @@
         if(typeof me.rowCls === 'function'){
           let cls = me.rowCls(params) || [];
 
-          if(typeof cls === 'string'){
-            cls = [cls];
-          }
+          if(typeof cls === 'string') (cls = [cls]);
 
           rowEl.classList.add(...cls);
         }
@@ -568,9 +531,7 @@
       for (let i = columnStart; i <= columnEnd; i++) {
         const column = me.columns[i];
 
-        if (column.hidden) {
-          continue;
-        }
+        if (column.hidden) continue;
 
         const cell = me.createCell(index, i);
 
@@ -603,9 +564,7 @@
           }
         }
 
-        if (column.hidden) {
-          continue;
-        }
+        if (column.hidden) continue;
 
         !column.headerCellEl && me.appendHeaderCell(i);
 
@@ -757,9 +716,7 @@
     onRowMouseEnter(event) {
       const me = this;
 
-      if (me.columnResizing) {
-        return;
-      }
+      if (me.columnResizing) return;
 
       event.target.classList.add(ROW_HOVER);
 
@@ -773,9 +730,7 @@
     onRowGroupExpanderClick(event) {
       const me = this;
 
-      if(me.grouping){
-        return;
-      }
+      if (me.grouping) return;
 
       const cell = event.target.closest(`.${ROW_GROUP_CELL}`);
       const row = cell.closest(`.${ROW_GROUP}`);
@@ -849,9 +804,7 @@
         if(me.rowGroupType === 'column'){
           const cells = me.bodyEl.querySelectorAll(`.${ROW_GROUP_CELL}[col-index="${i}"]`);
 
-          if(cells.length){
-            cellsGroupMap[i] = cells;
-          }
+          if (cells.length) (cellsGroupMap[i] = cells);
         }
       }
 
@@ -859,19 +812,12 @@
         const oldIndex = oldOrders[j];
         const newIndex = from + j;
 
-        cellsMap[oldIndex].forEach(cell => {
-          cell.setAttribute('col-index', newIndex);
-        });
-
-        cellsGroupMap[oldIndex]?.forEach(cell => {
-          cell.setAttribute('col-index', newIndex);
-        });
+        cellsMap[oldIndex].forEach(cell => cell.setAttribute('col-index', newIndex));
+        cellsGroupMap[oldIndex]?.forEach(cell => cell.setAttribute('col-index', newIndex));
       }
     },
     getCell(rowIndex, columnIndex) {
-      const cell = this.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
-
-      return cell;
+      return this.bodyEl.querySelector(`div.${ROW}[row-index="${rowIndex}"] div.${CELL}[col-index="${columnIndex}"]`);
     },
     updateOrderColumn(){
       const me = this;
@@ -881,15 +827,11 @@
 
         cells.forEach(cell => {
           const row = cell.closest(`.${ROW}`);
-          if(!row){
-            return;
-          }
+          if (!row) return;
           const itemId = row.getAttribute('row-id');
           const item = me.store.idItemMap.get(itemId);
 
-          if(!item){
-            return;
-          }
+          if (!item) return;
 
           cell.innerHTML = item.rowIndex + 1;
         });

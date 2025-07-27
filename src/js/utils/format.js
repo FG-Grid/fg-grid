@@ -13,9 +13,7 @@ Fancy.format = {
     const currency = params.currency || 'USD';
     const region = params.region || Fancy.format.CURRENCY_REGIONS[params.currency] || 'en-US';
 
-    if (isNaN(value) || value === '' || value === null) {
-      return '';
-    }
+    if (isNaN(value) || value === '' || value === null) return '';
 
     return new Intl.NumberFormat(region, {
       style: 'currency',
@@ -24,4 +22,15 @@ Fancy.format = {
       maximumFractionDigits: maxDecimal
     }).format(value);
   }
+};
+
+Fancy.toCamelCase = (str) => {
+  return str
+    .split(' ')
+    .map((word, index) => {
+      if (index === 0) return word;
+
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join('');
 };

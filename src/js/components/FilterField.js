@@ -68,12 +68,10 @@
     defaultSign = '=';
     value = '';
     constructor(config) {
-      const me = this;
+      Object.assign(this, config);
 
-      Object.assign(me, config);
-
-      me.render();
-      me.ons();
+      this.render();
+      this.ons();
     }
     render() {
       const me = this;
@@ -98,9 +96,7 @@
 
       me.updateUI(FancySignText[me.sign || me.defaultSign]);
 
-      el.appendChild(elSign);
-      el.appendChild(elInput);
-      el.appendChild(elText);
+      el.append(elSign, elInput, elText);
 
       me.container.appendChild(el);
     }
@@ -142,10 +138,8 @@
       });
     }
     destroyComboList() {
-      const me = this;
-
-      me.elComboList?.remove();
-      delete me.elComboList;
+      this.elComboList?.remove();
+      delete this.elComboList;
     }
     showComboList() {
       const me = this;
@@ -199,7 +193,9 @@
             break;
         }
 
-        innerHTML.push(`<div class="${FILTER_FIELD_LIST_ITEM_TEXT}">${sign}</div>`);
+        const signText = me.lang.sign[Fancy.toCamelCase(sign.toLowerCase())];
+
+        innerHTML.push(`<div class="${FILTER_FIELD_LIST_ITEM_TEXT}">${signText}</div>`);
         innerHTML.push('</div>');
 
         return innerHTML.join('');
@@ -250,9 +246,7 @@
     clearValue(preventFire = false) {
       const me = this;
 
-      if(preventFire){
-        me.preventFire = true;
-      }
+      if(preventFire) (me.preventFire = true);
       me.input.value = '';
       me.setSign('Clear');
       delete me.preventFire;

@@ -14,33 +14,24 @@
     BACKSPACE
   } = Fancy.key;
 
-  const {
-    ROW
-  } = Fancy.cls;
+  const { ROW } = Fancy.cls;
 
   /**
    * @mixin GridMixinKeyNavigation
    */
-
   const GridMixinKeyNavigation = {
     initKeyNavigation(){
-      const me = this;
-
-      document.body.addEventListener('keydown', me.onKeyDown.bind(me));
+      document.body.addEventListener('keydown', this.onKeyDown.bind(this));
     },
     onKeyDown(event){
       const me = this;
 
       switch (event.keyCode){
         case C:
-          if(event.ctrlKey || event.metaKey){
-            me.copySelectedCells();
-          }
+          if (event.ctrlKey || event.metaKey) me.copySelectedCells();
           break;
         case V:
-          if(me.activeCell && me.activeCellEl && (event.ctrlKey || event.metaKey)){
-            me.insertCopiedCells();
-          }
+          if(me.activeCell && me.activeCellEl && (event.ctrlKey || event.metaKey)) me.insertCopiedCells();
           break;
         case ESC:
           !me.isEditing && me.destroyHeaderCellMenuList();
@@ -118,44 +109,28 @@
       const me = this;
 
       if(me.active && me.hasActiveCell()){
-        if(shift){
-          me.setShiftCellUp();
-        } else {
-          me.setActiveCellUp();
-        }
+        shift? me.setShiftCellUp():me.setActiveCellUp();
       }
     },
     onKeyDOWN(shift){
       const me = this;
 
       if(me.active && me.hasActiveCell()){
-        if(shift){
-          me.setShiftCellDown();
-        } else {
-          me.setActiveCellDown();
-        }
+        shift? me.setShiftCellDown():me.setActiveCellDown();
       }
     },
     onKeyLEFT(shift){
       const me = this;
 
       if(me.active && me.hasActiveCell()){
-        if(shift){
-          me.setShiftCellLeft();
-        } else {
-          me.setActiveCellLeft();
-        }
+        shift?me.setShiftCellLeft():me.setActiveCellLeft();
       }
     },
     onKeyRIGHT(shift){
       const me = this;
 
       if(me.active && me.hasActiveCell()){
-        if(shift){
-          me.setShiftCellRight();
-        } else {
-          me.setActiveCellRight();
-        }
+        shift?me.setShiftCellRight():me.setActiveCellRight();
       }
     },
     onKeyENTER(){
@@ -167,9 +142,8 @@
       }
 
       if(me.activeCellEl){
-        if(me.editingCell?.getAttribute('id') === me.activeCellEl.getAttribute('id')){
-          return;
-        }
+        if(me.editingCell?.getAttribute('id') === me.activeCellEl.getAttribute('id')) return;
+
         me.openEditorForCell(me.activeCellEl);
       }
     },
@@ -182,11 +156,7 @@
           const activeCell = shift? me.setActiveCellLeft() : me.setActiveCellRight();
           activeCell && me.openEditorForCell(me.activeCellEl);
         } else {
-          if(shift){
-            me.setActiveCellLeft();
-          } else {
-            me.setActiveCellRight();
-          }
+          shift? me.setActiveCellLeft():me.setActiveCellRight();
         }
       }
     }

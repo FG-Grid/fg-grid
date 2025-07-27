@@ -1,18 +1,7 @@
 (() => {
-  const {
-    FIELD,
-    FIELD_INPUT
-  } = Fancy.cls;
-
-  const {
-    ENTER,
-    ESC
-  } = Fancy.key;
-
-  const {
-    div,
-    input
-  } = Fancy;
+  const { FIELD, FIELD_INPUT } = Fancy.cls;
+  const { ENTER, ESC } = Fancy.key;
+  const { div, input } = Fancy;
 
   class Field {
     render() {
@@ -28,9 +17,7 @@
       me.container = me.renderTo;
 
       const elInput = input(FIELD_INPUT);
-      if(me.type === 'date'){
-        elInput.type = 'date';
-      }
+      if(me.type === 'date') (elInput.type = 'date');
       elInput.value = me.value;
       me.input = elInput;
 
@@ -48,47 +35,36 @@
       me.input.addEventListener('keydown', me.onKeyDown.bind(me));
     }
     onInput(event) {
-      const me = this;
       const value = event.target.value;
 
-      me.onChange?.(value, true);
+      this.onChange?.(value, true);
     }
     onKeyDown(event){
-      const me = this;
-
       switch (event.keyCode) {
         case ENTER:
           const value = event.target.value;
-          me.onEnter?.(value);
+          this.onEnter?.(value);
           break;
         case ESC:
-          me.onESC?.();
+          this.onESC?.();
           break;
       }
     }
     setValue(value) {
-      const me = this;
-
-      me.input.value = value;
-      me.onChange?.(value, false);
+      this.input.value = value;
+      this.onChange?.(value, false);
     }
     focus(){
-      const me = this;
-
-      me.input.focus();
+      this.input.focus();
     }
     hide(){
-      const me = this;
-
-      me.el.style.display = 'none';
+      this.el.style.display = 'none';
     }
     show(style){
-      const me = this;
-
-      me.el.style.display = '';
+      this.el.style.display = '';
 
       for(let p in style){
-        me.el.style[p] = style[p];
+        this.el.style[p] = style[p];
       }
     }
   }
