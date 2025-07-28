@@ -1,5 +1,7 @@
 /node_modules/
 .idea/
 .npmrc
+test-results
+playwright-report
 
 package-lock.json

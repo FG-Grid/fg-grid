@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fancy Grid - 100 rows</title>
+
+  <script src="http://localhost:3200/dist/fg-grid.js"></script>
+  <link href="http://localhost:3200/styles/fg-grid.css" rel="stylesheet">
+
+  <link href="flag.css" rel="stylesheet">
+
+  <style>
+    .flag-cell, .group-country-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .group-country-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+
+  <script src="data.js"></script>
+
+  <script>
+    const countries = {
+      "Australia": "au",
+      "Austria": "at",
+      "Belgium": "be",
+      "Canada": "ca",
+      "Denmark": "dk",
+      "Finland": "fi",
+      "France": "fr",
+      "Germany": "de",
+      "Hong Kong": "hk",
+      "Iceland": "",
+      "Ireland": "ie",
+      "Japan": "ja",
+      "Luxembourg": "lu",
+      "Netherlands": "nl",
+      "Norway": "no",
+      "San Marino": "",
+      "Singapore": "sg",
+      "South Korea": "kr",
+      "Sweden": "se",
+      "Switzerland": "ch",
+      "Taiwan": "",
+      "UK": "uk",
+      "USA": "us"
+    };
+
+	 let grid;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      grid = new Grid({
+        renderTo: 'container',
+        defaults: {
+          sortable: true,
+          editable: true,
+          draggable: true
+        },
+        columns: [{
+          type: 'order'
+        },{
+          index: 'brand',
+          type: 'string'
+        },{
+          index: 'model',
+          type: 'string'
+        },{
+          index: 'price',
+          filter: true,
+          agFn: 'sum',
+          type: 'currency'
+        },{
+          index: 'year',
+          filter: true,
+          type: 'number'
+        }, {
+          index: 'country',
+          type: 'string',
+          getter(params){
+            return params.item.country;
+          },
+          render(params){
+            const {
+              cell,
+              value
+            } = params;
+            const flagCls = 'flag-' + countries[value];
+            cell.classList.add('flag-cell');
+
+            const spanFlagEl = document.createElement('span');
+            spanFlagEl.classList.add('flag', flagCls);
+            spanFlagEl.innerHTML = '&nbsp;';
+            cell.appendChild(spanFlagEl);
+
+            const textEl = document.createElement('span');
+            textEl.classList.add('country-text');
+            textEl.innerHTML = ` ${value}`;
+
+            cell.appendChild(textEl);
+          }
+        },{
+          index: 'color',
+          filter: true,
+          type: 'string'
+        },{
+          index: 'fuelType',
+          filter: true,
+          type: 'string'
+        },{
+          index: 'transmission',
+          type: 'string'
+        },{
+          index: 'electric',
+          type: 'boolean'
+        }],
+        data: data,
+        width: 700,
+        height: 700
+      });
+    });
+  </script>
+</head>
+<body>
+<div style="margin: 10px auto 10px;width: 1000px;">
+  <div style="position:relative">
+    <div id="container" style="width: 1000px; height: 800px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

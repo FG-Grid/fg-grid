@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.8.6',
+  version: '0.8.7',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -144,7 +144,7 @@ const Fancy$1 = {
       this.dom.classList.remove(...classNames);
     }
     containCls(cls) {
-
+      this.dom.classList.contains(cls);
     }
   }
 
