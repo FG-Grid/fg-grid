@@ -3,10 +3,12 @@
     GRID,
     GRID_CELLS_RIGHT_BORDER,
     ROW_ANIMATION,
+    ROW_GROUPING,
     HEADER,
     HEADER_INNER,
     HEADER_ROW,
     HEADER_ROW_COLUMN_GROUP,
+    HEADER_CELL_ROW_GROUP,
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
@@ -90,6 +92,7 @@
       type: 'string',
       rowGroupIndent: true,
       editable: false,
+      extraCls: HEADER_CELL_ROW_GROUP,
       render(params){
         const {
           value
@@ -166,6 +169,7 @@
       me.rowAnimation && gridCls.push(ROW_ANIMATION);
       (me.cellsRightBorder || me.columnLines) && gridCls.push(GRID_CELLS_RIGHT_BORDER);
       Fancy.isTouchDevice && gridCls.push(TOUCH);
+      me.store.rowGroups?.length && gridCls.push(ROW_GROUPING);
       const gridEl = div(gridCls);
 
       gridEl.setAttribute('id', me.id);
@@ -368,8 +372,18 @@
           if(rowGroups.length && me.$rowGroupColumn){
             if(config.columns[0].type === 'order'){
               config.columns.splice(1, 0, rowGroupColumn);
+
             } else {
               config.columns.unshift(rowGroupColumn);
+            }
+
+            if(config.columnsLevel > 1){
+              config.columns2.unshift({
+                ignore: true
+              });
+
+              me.generateColumnId(config.columns2[0]);
+              config.columns[0].columnGroupSpanHeight = true;
             }
           }
         }

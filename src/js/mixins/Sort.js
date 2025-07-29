@@ -72,6 +72,20 @@
 
       me.store.clearSort($column, multi);
 
+      if (multi) {
+        let sorterOrdersMap = {};
+
+        me.store.sorters.forEach((sorter, index) => {
+          sorterOrdersMap[sorter.column.id] = index + 1;
+        });
+
+        me.columns.forEach(column => {
+          if (sorterOrdersMap[column.id]) {
+            column.sortOrder = sorterOrdersMap[column.id];
+          }
+        });
+      }
+
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();

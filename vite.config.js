@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import path from 'path';
 import { terser } from 'rollup-plugin-terser';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import fs from 'fs';
+import CleanCSS from 'clean-css';
 
 export default defineConfig({
   plugins: [
@@ -13,7 +15,21 @@ export default defineConfig({
           rename: 'fg-grid.css'
         }
       ]
-    })
+    }),
+    {
+      name: 'minify-css',
+      closeBundle() {
+        const cssPath = 'src/css/main.css';
+        const distDir = 'styles';
+        const outputPath = path.join(distDir, 'fg-grid.min.css');
+
+        const css = fs.readFileSync(cssPath, 'utf-8');
+        const minified = new CleanCSS().minify(css).styles;
+        fs.writeFileSync(outputPath, minified);
+
+        console.log('✅ CSS minified to ' + outputPath);
+      }
+    }
   ],
   build: {
     outDir: 'dist',

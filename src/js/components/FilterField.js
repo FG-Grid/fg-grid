@@ -105,6 +105,7 @@
 
       me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
       me.input.addEventListener('input', me.debouceInputFn);
+      me.input.addEventListener('focus', me.#onFocus.bind(this));
       me.elSign.addEventListener('click', me.signClick.bind(this));
     }
     signClick() {
@@ -123,6 +124,11 @@
       } else {
         me.destroyComboList();
       }
+    }
+    #onFocus(event){
+      const me = this;
+
+      me.onFocus?.();
     }
     onInput(event) {
       const me = this;
@@ -146,7 +152,7 @@
       const elSignRect = me.elSign.getBoundingClientRect();
       const top = elSignRect.top - 1 + elSignRect.height;
       const left = elSignRect.left;
-      const el = div(FILTER_FIELD_LIST, {
+      const el = div([FILTER_FIELD_LIST, 'fg-theme-' + me.theme], {
         top: `${top}px`,
         left: `${left}px`
       });

@@ -5,6 +5,7 @@
 .fg-theme-default {
   --grid-border-color: #bdc3c7;
   --grid-border-width: 1px;
+
   --grid-header-bottom-color: #bdc3c7;
   --grid-header-bottom-width: 1px;
   --grid-header-background-color: #F5F7F7;
@@ -12,6 +13,11 @@
   --grid-header-cell-font-weight: 600;
   --grid-header-cell-font-size: 12px;
   --grid-header-cell-resize-background-color: #dde1e3;
+  --grid-header-cell-after-height: 50%;
+  --grid-header-cell-after-top: calc(50% - 50%*0.5);
+  --grid-header-cell-column-group-child-border-top-color: rgb(189, 195, 199);
+
+  --grid-body-background-color: white;
   --grid-cell-line-height: 27px;
   --grid-row-background-color: rgb(255, 255, 255);
   --grid-row-border-bottom-width: 1px;
@@ -26,26 +32,40 @@
   --grid-group-level: 0;
   --grid-row-group-level-size: 17px;
   --grid-row-height: 28px;
+
   --grid-cell-color: #888888;
   --grid-cell-font-size: 12px;
   --grid-cell-active-background-color: #E0E5E9;
   --grid-cell-active-box-shadow-color: #B5B9C4;
   --grid-cell-selected-background-color: #f1f6ff;
-  --grid-header-cell-after-height: 50%;
-  --grid-header-cell-after-top: calc(50% - 50%*0.5);
+  --grid-cell-order-background-color: rgb(245, 247, 247);
+  --grid-cell-order-border-right-color: rgb(189, 195, 199);
 
   --filter-field-font-size: 12px;
   --filter-field-cell-color: #888888;
+  --filter-field-sign-border-color: #b7b7b7;
+  --filter-field-input-border-color: #b7b7b7;
+  --filter-field-background-color: white;
+  --filter-field-sign-hover-background-color: #E8E8E8;
+  --filter-field-list-background-color: #ffffff;
+  --filter-field-list-border-color: #b7b7b7;
+  --filter-field-list-item-color: rgba(0, 0, 0, 0.54);
+  --filter-field-list-item-background-color: #E8E8E8;
 
   --checkbox-color: #8E8E8E;
 
   --svg-text-color: #888888;
+  --svg-filter-sign-color: #888888;
+  --svg-menu-color: #888888;
+  --svg-sort-color: #888888;
+  --svg-header-filter-color: rgba(0, 0, 0, 0.54);
+  --svg-expander-color: #888888;
 }
 
 .fg-theme-air {
-  /*--grid-border-color: #c4c7cd;*/
   --grid-border-color: #d1d1d1;
   --grid-border-width: 1px;
+
   --grid-header-bottom-color: #dde1e3;
   --grid-header-bottom-width: 1px;
   --grid-header-background-color: #F5F7F7;
@@ -53,6 +73,11 @@
   --grid-header-cell-font-weight: 600;
   --grid-header-cell-font-size: 12px;
   --grid-header-cell-resize-background-color: #D9DDDF;
+  --grid-header-cell-after-height: 100%;
+  --grid-header-cell-after-top: 0px;
+  --grid-header-cell-column-group-child-border-top-color: #D9DDDF;
+
+  --grid-body-background-color: white;
   --grid-cell-line-height: 27px;
   --grid-row-background-color: rgb(255, 255, 255);
   --grid-row-border-bottom-width: 1px;
@@ -65,13 +90,128 @@
   --grid-cell-active-background-color: #E0E5E9;
   --grid-cell-active-box-shadow-color: #B5B9C4;
   --grid-cell-selected-background-color: #f1f6ff;
-  --grid-header-cell-after-height: 100%;
-  --grid-header-cell-after-top: 0px;
+  --grid-cell-order-background-color: rgb(245, 247, 247);
+  --grid-cell-order-border-right-color: rgb(189, 195, 199);
 
   --filter-field-font-size: 12px;
   --filter-field-cell-color: #888888;
+  --filter-field-sign-border-color: #b7b7b7;
+  --filter-field-input-border-color: #b7b7b7;
+  --filter-field-background-color: white;
+  --filter-field-sign-hover-background-color: #E8E8E8;
+  --filter-field-list-background-color: #ffffff;
+  --filter-field-list-border-color: #b7b7b7;
+  --filter-field-list-item-color: rgba(0, 0, 0, 0.54);
+  --filter-field-list-item-background-color: #E8E8E8;
 
   --checkbox-color: #8E8E8E;
+
+  --svg-text-color: #888888;
+  --svg-filter-sign-color: #888888;
+  --svg-menu-color: #888888;
+  --svg-sort-color: #888888;
+  --svg-header-filter-color: rgba(0, 0, 0, 0.54);
+  --svg-expander-color: #888888;
+}
+
+.fg-theme-dark {
+  --grid-border-color: #FFFFFF26;
+  --grid-border-width: 1px;
+
+  --grid-header-bottom-color: #FFFFFF26;
+  --grid-header-bottom-width: 1px;
+  --grid-header-background-color: #2E3744;
+  --grid-header-cell-color: #FFFFFF99;
+  --grid-header-cell-font-weight: 600;
+  --grid-header-cell-font-size: 12px;
+  --grid-header-cell-resize-background-color: #FFFFFF26;
+  --grid-header-cell-after-height: 50%;
+  --grid-header-cell-after-top: calc(50% - 50%*0.5);
+  --grid-header-cell-column-group-child-border-top-color: #FFFFFF26;
+
+  --grid-body-background-color: rgb(31, 40, 54);
+  --grid-cell-line-height: 27px;
+  --grid-row-background-color: #1F2836;
+  --grid-row-border-bottom-width: 1px;
+  --grid-row-border-bottom-color: #FFFFFF26;
+  --grid-row-odd-background-color: #1F2836;
+  --grid-row-hover-background-color: #203145;
+  --grid-row-selected-color: #1F354C;
+
+  --grid-row-group-expander-color: rgba(174, 183, 194, 0.12);
+  --grid-row-group-hover-expander-color: rgba(174, 183, 194, 0.25);
+  --grid-row-group-expander-hover-color: rgba(174, 183, 194, 0.35);
+  --grid-row-group-bar-logo-color: #888888;
+  --grid-group-level: 0;
+  --grid-row-group-level-size: 17px;
+  --grid-row-height: 28px;
+
+  --grid-cell-color: #FFFFFF99;
+  --grid-cell-font-size: 12px;
+  --grid-cell-active-background-color: #203E5C;
+  --grid-cell-active-box-shadow-color: #2196f3;
+  --grid-cell-selected-background-color: color-mix(in srgb, transparent, #2196f3 20%);
+  --grid-cell-order-background-color: #2F3744;
+  --grid-cell-order-border-right-color: rgba(255, 255, 255, 0.15);
+
+  --filter-field-font-size: 12px;
+  --filter-field-cell-color: #888888;
+  --filter-field-sign-border-color: #FFFFFF26;
+  --filter-field-input-border-color: #FFFFFF26;
+  --filter-field-background-color: #1F2836;
+  --filter-field-sign-hover-background-color: color-mix(in srgb, transparent, #FFF 10%);
+  --filter-field-list-background-color: color-mix(in srgb, #1F2836, #FFF 3%);
+  --filter-field-list-border-color: color-mix(in srgb, transparent, #FFF 20%);
+  --filter-field-list-item-color: #FFFFFF99;
+  --filter-field-list-item-background-color: color-mix(in srgb, transparent, #2196f3 8%);
+
+  --checkbox-color: #626972;
+  --svg-text-color: #626972;
+  --svg-filter-sign-color: #FFFFFF99;
+  --svg-menu-color: white;
+  --svg-sort-color: white;
+  --svg-header-filter-color: white;
+  --svg-expander-color: #FFFFFF99;
+
+  .fg-filter-field-input {
+    border-left: 1px solid transparent;
+    color: white;
+    &:focus {
+      border: 1px solid #2196f3;
+    }
+  }
+
+  .fg-editors-container {
+    .fg-field {
+      input {
+        background-color: #1F2836;
+        color: white;
+        border: 1px solid #2196f3;
+        border-radius: 2px;
+        &:focus {
+          border: 2px solid #2196f3;
+          background-color: #2F3744;
+        }
+      }
+    }
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #626972;
+    cursor: pointer;
+    position: relative;
+  }
+
+  input[type="checkbox"]:checked, input[type="checkbox"]:indeterminate {
+    appearance: auto;
+  }
+
+  color-scheme: dark;
 }
 
 .fg-grid {
@@ -90,6 +230,21 @@
 .fg-grid * {
   box-sizing: border-box;
   outline: none;
+}
+
+.fg-row-grouping {
+  .fg-cell-selection:not(.fg-row-group-value-cell):not(.fg-row-group-cell) {
+    .fg-input-checkbox {
+      display: none;
+    }
+  }
+  .fg-header-cell:not(.fg-header-row-group-cell) {
+    .fg-header-cell-selection {
+      .fg-input-checkbox {
+        display: none;
+      }
+    }
+  }
 }
 
 .fg-editors-container {
@@ -160,14 +315,14 @@
   width: 27px;
   max-width: 27px;
   min-width: 27px;
-  border: 1px solid #b7b7b7;
+  border: 1px solid var(--filter-field-sign-border-color);
   display: inline-flex;
   flex-flow: row;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   &:hover {
-    background: #E8E8E8;
+    background: var(--filter-field-sign-hover-background-color);
   }
 }
 
@@ -178,32 +333,36 @@
   box-sizing: border-box;
   margin: 0px;
   outline: 0px;
-  border: 1px solid #b7b7b7;
+  border: 1px solid var(--filter-field-input-border-color);
   border-width: 1px 1px 1px 0px;
   border-radius: 0px;
   font-size: var(--filter-field-font-size);
   color: var(--filter-field-cell-color);
+  background-color: var(--filter-field-background-color);
 }
 
 .fg-filter-field-list {
   position: absolute;
-  border: 1px solid #b7b7b7;
-  background: #ffffff;
+  border: 1px solid var(--filter-field-list-border-color);
+  background: var(--filter-field-list-background-color);
   width: 150px;
   min-height: 50px;
   max-height: 200px;
   overflow-y: scroll;
+  svg {
+    color: var(--svg-filter-sign-color);
+  }
 }
 
 .fg-filter-field-list-item {
   padding: 5px;
   cursor: pointer;
   display: flex;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--filter-field-list-item-color);
   font-weight: bold;
 
   &:hover {
-    background: #E8E8E8;
+    background: var(--filter-field-list-item-background-color);
   }
 }
 
@@ -253,7 +412,7 @@
 }
 
 .fg-header-cell-column-group-child {
-  border-top: 1px solid rgb(189, 195, 199);
+  border-top: 1px solid var(--grid-header-cell-column-group-child-border-top-color);
 }
 
 .fg-header-span-height {
@@ -343,6 +502,7 @@
   overflow: hidden;
   scroll-behavior: smooth;
   user-select: none;
+  background-color: var(--grid-body-background-color);
 }
 
 .fg-body-inner {
@@ -556,8 +716,8 @@
 }
 
 .fg-cell-order {
-  background-color: rgb(245, 247, 247);
-  border-right: 1px solid rgb(189, 195, 199);
+  background-color: var(--grid-cell-order-background-color);
+  border-right: 1px solid var(--grid-cell-order-border-right-color);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -627,6 +787,9 @@
 
 .fg-sort-asc, .fg-sort-desc {
   height: 16px;
+  svg {
+    color: var(--svg-sort-color);
+  }
 }
 
 .fg-header-cell-menu-el {}
@@ -636,7 +799,7 @@
     width: 18px;
     height: 18px;
     line-height: 18px;
-    color: rgba(0, 0, 0, 0.54);
+    color: var(--svg-header-filter-color);
     margin-left: 4px;
   }
 }
@@ -659,7 +822,8 @@
     width: 18px;
     height: 18px;
     line-height: 18px;
-    color: rgba(0, 0, 0, 0.54);
+    /*color: rgba(0, 0, 0, 0.54);*/
+    color: var(--svg-menu-color);
     margin-left: 4px;
   }
 }
@@ -852,11 +1016,12 @@
   min-width: 18px;
   min-height: 18px;
   border-radius: 2px;
-  color: var(--svg-text-color);
+  /*color: var(--svg-text-color);*/
   display: flex;
   align-items: center;
   justify-content: center;
   svg {
+    color: var(--svg-text-color);
     width: 16px;
     height: 16px;
   }
@@ -867,6 +1032,7 @@
   transition: background-color 0.2s linear;
   margin-left: calc(var(--grid-group-level) * var(--grid-row-group-level-size));
   svg {
+    color: var(--svg-expander-color);
     transition: transform 0.2s linear;
     transform: rotate(0deg);
   }

@@ -3,6 +3,7 @@ Fancy.cls = {
   GRID: 'fg-grid',
   TOUCH: 'fg-touch',
   EDITING: 'fg-editing',
+  ROW_GROUPING: 'fg-row-grouping',
 
   // Header
   HEADER: 'fg-header',
@@ -22,6 +23,7 @@ Fancy.cls = {
   HEADER_CELL_COLUMN_GROUP_CHILD: 'fg-header-cell-column-group-child',
   HEADER_CELL_SPAN_HEIGHT: 'fg-header-span-height',
   HEADER_CELL_STICKY: 'fg-header-cell-sticky',
+  HEADER_CELL_ROW_GROUP: 'fg-header-row-group-cell',
 
   // Body
   BODY: 'fg-body',

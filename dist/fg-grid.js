@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.8.7',
+  version: '0.8.8',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -232,6 +232,7 @@ Fancy.cls = {
   GRID: 'fg-grid',
   TOUCH: 'fg-touch',
   EDITING: 'fg-editing',
+  ROW_GROUPING: 'fg-row-grouping',
 
   // Header
   HEADER: 'fg-header',
@@ -251,6 +252,7 @@ Fancy.cls = {
   HEADER_CELL_COLUMN_GROUP_CHILD: 'fg-header-cell-column-group-child',
   HEADER_CELL_SPAN_HEIGHT: 'fg-header-span-height',
   HEADER_CELL_STICKY: 'fg-header-cell-sticky',
+  HEADER_CELL_ROW_GROUP: 'fg-header-row-group-cell',
 
   // Body
   BODY: 'fg-body',
@@ -3332,10 +3334,12 @@ Fancy.copyText = (text) => {
     GRID,
     GRID_CELLS_RIGHT_BORDER,
     ROW_ANIMATION,
+    ROW_GROUPING,
     HEADER,
     HEADER_INNER,
     HEADER_ROW,
     HEADER_ROW_COLUMN_GROUP,
+    HEADER_CELL_ROW_GROUP,
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
@@ -3419,6 +3423,7 @@ Fancy.copyText = (text) => {
       type: 'string',
       rowGroupIndent: true,
       editable: false,
+      extraCls: HEADER_CELL_ROW_GROUP,
       render(params){
         const {
           value
@@ -3495,6 +3500,7 @@ Fancy.copyText = (text) => {
       me.rowAnimation && gridCls.push(ROW_ANIMATION);
       (me.cellsRightBorder || me.columnLines) && gridCls.push(GRID_CELLS_RIGHT_BORDER);
       Fancy.isTouchDevice && gridCls.push(TOUCH);
+      me.store.rowGroups?.length && gridCls.push(ROW_GROUPING);
       const gridEl = div(gridCls);
 
       gridEl.setAttribute('id', me.id);
@@ -3697,8 +3703,18 @@ Fancy.copyText = (text) => {
           if(rowGroups.length && me.$rowGroupColumn){
             if(config.columns[0].type === 'order'){
               config.columns.splice(1, 0, rowGroupColumn);
+
             } else {
               config.columns.unshift(rowGroupColumn);
+            }
+
+            if(config.columnsLevel > 1){
+              config.columns2.unshift({
+                ignore: true
+              });
+
+              me.generateColumnId(config.columns2[0]);
+              config.columns[0].columnGroupSpanHeight = true;
             }
           }
         }
@@ -4741,6 +4757,7 @@ Fancy.copyText = (text) => {
       }
 
       column.sticky && cell.classList.add(HEADER_CELL_STICKY);
+      column.extraCls && cell.classList.add(column.extraCls);
 
       column.parent && cell.classList.add(HEADER_CELL_COLUMN_GROUP_CHILD);
       column.columnGroupSpanHeight && cell.classList.add(HEADER_CELL_SPAN_HEIGHT);
@@ -4992,15 +5009,15 @@ Fancy.copyText = (text) => {
                 indexToAddColumn = 1;
               } else {
                 me.columns.unshift(me.$rowGroupColumn);
+              }
 
-                if(me.columnsLevel > 1){
-                  me.columns2.unshift({
-                    ignore: true
-                  });
+              if(me.columnsLevel > 1){
+                me.columns2.unshift({
+                  ignore: true
+                });
 
-                  me.generateColumnId(me.columns2[0]);
-                  me.columns[0].columnGroupSpanHeight = true;
-                }
+                me.generateColumnId(me.columns2[0]);
+                me.columns[0].columnGroupSpanHeight = true;
               }
 
               setTimeout(() => {
@@ -6411,6 +6428,20 @@ Fancy.copyText = (text) => {
 
       me.store.clearSort($column, multi);
 
+      if (multi) {
+        let sorterOrdersMap = {};
+
+        me.store.sorters.forEach((sorter, index) => {
+          sorterOrdersMap[sorter.column.id] = index + 1;
+        });
+
+        me.columns.forEach(column => {
+          if (sorterOrdersMap[column.id]) {
+            column.sortOrder = sorterOrdersMap[column.id];
+          }
+        });
+      }
+
       me.renderVisibleRowsAfterSort();
       me.store.memorizePrevRowIndexesMap();
       me.updateHeaderCells();
@@ -6542,17 +6573,22 @@ Fancy.copyText = (text) => {
 
         column.filterField = new Fancy.FilterField({
           renderTo: cell,
+          theme: me.theme,
+          lang: me.lang,
           onChange: me.onFilterFieldChange.bind(this),
           column,
           sign,
           value,
-          lang: me.lang
+          onFocus: me.onFilterFieldFocus.bind(this)
         });
       }
 
       column.filterCellEl = cell;
 
       return cell;
+    },
+    onFilterFieldFocus(){
+      this.isEditing && this.hideActiveEditor();
     },
     onFilterFieldChange(value, sign, column, signWasChanged) {
       const me = this;
@@ -7033,6 +7069,7 @@ Fancy.copyText = (text) => {
 (() => {
   const {
     COLUMN_DRAGGING,
+    ROW_GROUPING,
     ROW_GROUP_BAR,
     ROW_GROUP_BAR_EMPTY_TEXT,
     ROW_GROUP_BAR_ITEM_CONTAINER,
@@ -7107,6 +7144,8 @@ Fancy.copyText = (text) => {
           me.$requiresReSetGroupColumn = true;
         }
       }
+
+      me.gridEl.classList.add(ROW_GROUPING);
 
       me.rowGroupBarEmptyTextEl.style.setProperty('display', 'none');
     },
@@ -7231,6 +7270,8 @@ Fancy.copyText = (text) => {
 
       if(!me.rowGroupBarItems || me.rowGroupBarItems?.length === 0){
         me.rowGroupBarEmptyTextEl.style.setProperty('display', '');
+
+        me.gridEl.classList.remove(ROW_GROUPING);
       }
     },
     onRowGroupBarItemRemoveClick(event){
@@ -7249,6 +7290,7 @@ Fancy.copyText = (text) => {
 
       if(!me.rowGroupBarItems || me.rowGroupBarItems?.length === 0){
         me.rowGroupBarEmptyTextEl.style.setProperty('display', '');
+        me.gridEl.classList.remove(ROW_GROUPING);
       }
 
       me.reSetRowGroupOrderIndex();
@@ -9156,6 +9198,7 @@ Fancy.copyText = (text) => {
 
       me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
       me.input.addEventListener('input', me.debouceInputFn);
+      me.input.addEventListener('focus', me.#onFocus.bind(this));
       me.elSign.addEventListener('click', me.signClick.bind(this));
     }
     signClick() {
@@ -9174,6 +9217,11 @@ Fancy.copyText = (text) => {
       } else {
         me.destroyComboList();
       }
+    }
+    #onFocus(event){
+      const me = this;
+
+      me.onFocus?.();
     }
     onInput(event) {
       const me = this;
@@ -9197,7 +9245,7 @@ Fancy.copyText = (text) => {
       const elSignRect = me.elSign.getBoundingClientRect();
       const top = elSignRect.top - 1 + elSignRect.height;
       const left = elSignRect.left;
-      const el = div(FILTER_FIELD_LIST, {
+      const el = div([FILTER_FIELD_LIST, 'fg-theme-' + me.theme], {
         top: `${top}px`,
         left: `${left}px`
       });

@@ -73,17 +73,22 @@
 
         column.filterField = new Fancy.FilterField({
           renderTo: cell,
+          theme: me.theme,
+          lang: me.lang,
           onChange: me.onFilterFieldChange.bind(this),
           column,
           sign,
           value,
-          lang: me.lang
+          onFocus: me.onFilterFieldFocus.bind(this)
         });
       }
 
       column.filterCellEl = cell;
 
       return cell;
+    },
+    onFilterFieldFocus(){
+      this.isEditing && this.hideActiveEditor();
     },
     onFilterFieldChange(value, sign, column, signWasChanged) {
       const me = this;

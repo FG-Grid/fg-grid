@@ -1,6 +1,7 @@
 (() => {
   const {
     COLUMN_DRAGGING,
+    ROW_GROUPING,
     ROW_GROUP_BAR,
     ROW_GROUP_BAR_EMPTY_TEXT,
     ROW_GROUP_BAR_ITEM_CONTAINER,
@@ -75,6 +76,8 @@
           me.$requiresReSetGroupColumn = true;
         }
       }
+
+      me.gridEl.classList.add(ROW_GROUPING);
 
       me.rowGroupBarEmptyTextEl.style.setProperty('display', 'none');
     },
@@ -199,6 +202,8 @@
 
       if(!me.rowGroupBarItems || me.rowGroupBarItems?.length === 0){
         me.rowGroupBarEmptyTextEl.style.setProperty('display', '');
+
+        me.gridEl.classList.remove(ROW_GROUPING);
       }
     },
     onRowGroupBarItemRemoveClick(event){
@@ -217,6 +222,7 @@
 
       if(!me.rowGroupBarItems || me.rowGroupBarItems?.length === 0){
         me.rowGroupBarEmptyTextEl.style.setProperty('display', '');
+        me.gridEl.classList.remove(ROW_GROUPING);
       }
 
       me.reSetRowGroupOrderIndex();

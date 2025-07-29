@@ -162,6 +162,7 @@
       }
 
       column.sticky && cell.classList.add(HEADER_CELL_STICKY);
+      column.extraCls && cell.classList.add(column.extraCls);
 
       column.parent && cell.classList.add(HEADER_CELL_COLUMN_GROUP_CHILD);
       column.columnGroupSpanHeight && cell.classList.add(HEADER_CELL_SPAN_HEIGHT);
@@ -413,15 +414,15 @@
                 indexToAddColumn = 1;
               } else {
                 me.columns.unshift(me.$rowGroupColumn);
+              }
 
-                if(me.columnsLevel > 1){
-                  me.columns2.unshift({
-                    ignore: true
-                  });
+              if(me.columnsLevel > 1){
+                me.columns2.unshift({
+                  ignore: true
+                });
 
-                  me.generateColumnId(me.columns2[0]);
-                  me.columns[0].columnGroupSpanHeight = true;
-                }
+                me.generateColumnId(me.columns2[0]);
+                me.columns[0].columnGroupSpanHeight = true;
               }
 
               setTimeout(() => {
