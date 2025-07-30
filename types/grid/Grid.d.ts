@@ -9,7 +9,7 @@ interface GridConfig<TData = any> {
   width?: number;
   height?: number;
   id?: string;
-  theme?: 'default' | 'string';
+  theme?: 'default' | 'air' | 'dark' | string;
   defaultColumnWidth?: number;
   headerRowHeight?: number;
   rowHeight?: number;

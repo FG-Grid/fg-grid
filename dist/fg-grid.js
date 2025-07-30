@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.8.8',
+  version: '0.8.9',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -699,8 +699,6 @@ Fancy.copyText = (text) => {
       }
       me.updateIndexes();
     }
-    // TODO: something wrong
-    // Serious bug
     updateIndexes() {
       const me = this;
       const data = me.displayedData || me.data;
@@ -723,25 +721,6 @@ Fancy.copyText = (text) => {
         item.rowIndex = index;
         item.originalRowIndex = index;
       });
-
-      /*
-      me.data.forEach((item, index) => {
-        me.idRowIndexesMap.set(item.id, index);
-        me.idItemMap.set(item.id, item);
-
-        item.originalRowIndex = index;
-        if(me.displayedData === undefined){
-          item.rowIndex = index;
-        }
-      });
-
-      me.displayedData?.forEach((item, index) => {
-        me.idRowIndexesMap.set(item.id, index);
-        me.idItemMap.set(item.id, item);
-
-        item.rowIndex = index;
-      });
-       */
     }
     setIds() {
       const me = this;
