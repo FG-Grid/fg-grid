@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.8.9',
+  version: '0.9.0',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -4217,7 +4217,13 @@ Fancy.copyText = (text) => {
       return this.columns.find(column => column.index === index);
     },
     getColumnById(id){
-      return this.columnIdsMap.get(id);
+      let column = this.columnIdsMap.get(id);
+
+      if(!column){
+        column = this.columnIdsMap.get(Number(id));
+      }
+
+      return column;
     },
     getNextVisibleColumnIndex(index){
       const columns = this.columns;
@@ -4249,8 +4255,8 @@ Fancy.copyText = (text) => {
     },
     generateColumnIds(columns, updateMaps = true){
       const me = this;
-      const columnIdsMap = me.columnIdsMap || new Map();
-      const columnIdsSeedMap = me.columnIdsSeedMap || new Map();
+      const columnIdsMap = updateMaps === false? new Map() : me.columnIdsMap || new Map();
+      const columnIdsSeedMap = updateMaps === false? new Map() : me.columnIdsSeedMap || new Map();
 
       columns.forEach(column => {
         const index = (column.index || column.title || '').toLocaleLowerCase();
@@ -4332,6 +4338,9 @@ Fancy.copyText = (text) => {
       me.animatingColumnsPosition = true;
       me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
 
+      delete me.columnIdSeed;
+      me.columnIdsSeedMap.clear();
+
       me.$setColumns(columns);
       me.reSetColumnsIdIndexMap();
 
@@ -4345,6 +4354,7 @@ Fancy.copyText = (text) => {
 
       me.renderMissedCells();
       me.updateCellPositions();
+      me.filterBar && me.renderVisibleFilterBarCells();
 
       setTimeout(() => {
         me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
@@ -4372,12 +4382,17 @@ Fancy.copyText = (text) => {
       const me = this;
       const cells = me.headerEl.querySelectorAll(`.${HEADER_CELL}`);
 
+      //debugger
+
       cells.forEach(cell => {
         const columnId = cell.getAttribute('col-id');
         const column = me.getColumnById(columnId);
         const isColumnVisible = me.scroller.isColumnVisible(column);
 
         if(!column || !isColumnVisible){
+          console.log(column, cell);
+          debugger
+
           cell.remove();
           column && column.filterCellEl?.remove();
 
@@ -4407,6 +4422,31 @@ Fancy.copyText = (text) => {
 
           if(typeof newColumn.width === 'number' && newColumn.width !== column.width){
             column.width = newColumn.width;
+          }
+
+          if(newColumn.hidden && !column.hidden){
+            me.hideColumn(column);
+          } else if(column.hidden && !newColumn.hidden){
+            me.showColumn(column);
+          }
+
+          if(column.filter && !newColumn.filter && column.filter){
+            delete column.filter;
+            column.filterField.destroy();
+            delete column.filterField;
+          } else if(!column.filter && newColumn.filter) {
+            column.filter = true;
+          }
+
+          for(let p in newColumn){
+            switch (p){
+              case 'id':
+              case 'filter':
+              case 'hidden':
+              case 'width':
+                continue;
+            }
+            column[p] = newColumn[p];
           }
         } else {
           columnsToRemoveIds.add(column.id);
@@ -4985,9 +5025,15 @@ Fancy.copyText = (text) => {
               me.$rowGroupColumn.hidden = true;
               if(me.columns[0].type === 'order'){
                 me.columns.splice(1, 0, me.$rowGroupColumn);
+                if(me.columnsLevel > 1){
+                  me.columns[1].columnGroupSpanHeight = true;
+                }
                 indexToAddColumn = 1;
               } else {
                 me.columns.unshift(me.$rowGroupColumn);
+                if(me.columnsLevel > 1){
+                  me.columns[0].columnGroupSpanHeight = true;
+                }
               }
 
               if(me.columnsLevel > 1){
@@ -6498,7 +6544,15 @@ Fancy.copyText = (text) => {
         columnEnd = me.scroller.columnViewEnd;
 
       for (let i = columnStart; i <= columnEnd; i++) {
-        if (me.columns[i].hidden) continue;
+        const column = me.columns[i];
+        if (column.hidden) continue;
+
+        if(column.filterCellEl && column.filter && !column.filterField){
+          column.filterCellEl.remove();
+          delete column.filterCellEl;
+        } else if(column.filterCellEl){
+          continue;
+        }
 
         const cell = me.createFilterBarCell(i);
 
@@ -6540,7 +6594,7 @@ Fancy.copyText = (text) => {
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
 
-      if (column.filter) {
+      if (column.filter && !column.filterField) {
         const filter = column.filters || {};
         let sign = '',
           value = '';
@@ -9169,6 +9223,7 @@ Fancy.copyText = (text) => {
       me.updateUI(FancySignText[me.sign || me.defaultSign]);
 
       el.append(elSign, elInput, elText);
+      me.el = el;
 
       me.container.appendChild(el);
     }
@@ -9179,6 +9234,20 @@ Fancy.copyText = (text) => {
       me.input.addEventListener('input', me.debouceInputFn);
       me.input.addEventListener('focus', me.#onFocus.bind(this));
       me.elSign.addEventListener('click', me.signClick.bind(this));
+    }
+    uns(){
+      const me = this;
+
+      me.input.removeEventListener('input', me.debouceInputFn);
+      me.input.removeEventListener('focus', me.#onFocus.bind(this));
+      me.elSign.removeEventListener('click', me.signClick.bind(this));
+    }
+    destroy() {
+      const me = this;
+
+      me.uns();
+      me.destroyComboList();
+      me.el.remove();
     }
     signClick() {
       const me = this;

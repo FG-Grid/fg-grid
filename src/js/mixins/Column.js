@@ -115,7 +115,13 @@
       return this.columns.find(column => column.index === index);
     },
     getColumnById(id){
-      return this.columnIdsMap.get(id);
+      let column = this.columnIdsMap.get(id);
+
+      if(!column){
+        column = this.columnIdsMap.get(Number(id));
+      }
+
+      return column;
     },
     getNextVisibleColumnIndex(index){
       const columns = this.columns;
@@ -147,8 +153,8 @@
     },
     generateColumnIds(columns, updateMaps = true){
       const me = this;
-      const columnIdsMap = me.columnIdsMap || new Map();
-      const columnIdsSeedMap = me.columnIdsSeedMap || new Map();
+      const columnIdsMap = updateMaps === false? new Map() : me.columnIdsMap || new Map();
+      const columnIdsSeedMap = updateMaps === false? new Map() : me.columnIdsSeedMap || new Map();
 
       columns.forEach(column => {
         const index = (column.index || column.title || '').toLocaleLowerCase();
@@ -230,6 +236,9 @@
       me.animatingColumnsPosition = true;
       me.gridEl.classList.add(ANIMATE_CELLS_POSITION);
 
+      delete me.columnIdSeed;
+      me.columnIdsSeedMap.clear();
+
       me.$setColumns(columns);
       me.reSetColumnsIdIndexMap();
 
@@ -243,6 +252,7 @@
 
       me.renderMissedCells();
       me.updateCellPositions();
+      me.filterBar && me.renderVisibleFilterBarCells();
 
       setTimeout(() => {
         me.gridEl.classList.remove(ANIMATE_CELLS_POSITION);
@@ -270,12 +280,17 @@
       const me = this;
       const cells = me.headerEl.querySelectorAll(`.${HEADER_CELL}`);
 
+      //debugger
+
       cells.forEach(cell => {
         const columnId = cell.getAttribute('col-id');
         const column = me.getColumnById(columnId);
         const isColumnVisible = me.scroller.isColumnVisible(column);
 
         if(!column || !isColumnVisible){
+          console.log(column, cell);
+          debugger
+
           cell.remove();
           column && column.filterCellEl?.remove();
 
@@ -305,6 +320,31 @@
 
           if(typeof newColumn.width === 'number' && newColumn.width !== column.width){
             column.width = newColumn.width;
+          }
+
+          if(newColumn.hidden && !column.hidden){
+            me.hideColumn(column);
+          } else if(column.hidden && !newColumn.hidden){
+            me.showColumn(column);
+          }
+
+          if(column.filter && !newColumn.filter && column.filter){
+            delete column.filter;
+            column.filterField.destroy();
+            delete column.filterField;
+          } else if(!column.filter && newColumn.filter) {
+            column.filter = true;
+          }
+
+          for(let p in newColumn){
+            switch (p){
+              case 'id':
+              case 'filter':
+              case 'hidden':
+              case 'width':
+                continue;
+            }
+            column[p] = newColumn[p];
           }
         } else {
           columnsToRemoveIds.add(column.id);

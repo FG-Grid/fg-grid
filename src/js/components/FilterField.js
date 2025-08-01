@@ -97,6 +97,7 @@
       me.updateUI(FancySignText[me.sign || me.defaultSign]);
 
       el.append(elSign, elInput, elText);
+      me.el = el;
 
       me.container.appendChild(el);
     }
@@ -107,6 +108,20 @@
       me.input.addEventListener('input', me.debouceInputFn);
       me.input.addEventListener('focus', me.#onFocus.bind(this));
       me.elSign.addEventListener('click', me.signClick.bind(this));
+    }
+    uns(){
+      const me = this;
+
+      me.input.removeEventListener('input', me.debouceInputFn);
+      me.input.removeEventListener('focus', me.#onFocus.bind(this));
+      me.elSign.removeEventListener('click', me.signClick.bind(this));
+    }
+    destroy() {
+      const me = this;
+
+      me.uns();
+      me.destroyComboList();
+      me.el.remove();
     }
     signClick() {
       const me = this;

@@ -411,9 +411,15 @@
               me.$rowGroupColumn.hidden = true;
               if(me.columns[0].type === 'order'){
                 me.columns.splice(1, 0, me.$rowGroupColumn);
+                if(me.columnsLevel > 1){
+                  me.columns[1].columnGroupSpanHeight = true;
+                }
                 indexToAddColumn = 1;
               } else {
                 me.columns.unshift(me.$rowGroupColumn);
+                if(me.columnsLevel > 1){
+                  me.columns[0].columnGroupSpanHeight = true;
+                }
               }
 
               if(me.columnsLevel > 1){

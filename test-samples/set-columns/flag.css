@@ -1,0 +1,145 @@
+.flag {
+    width: 22px;
+    min-width: 22px;
+    height: 18px;
+    background-position: 20px 0px;
+    position: relative;
+    background-repeat: no-repeat;
+    background-image: url(flagIcons.svg);
+    margin-top: 2px;
+}
+
+/*Austria*/
+.flag-at {
+    background-position: -165px -10px !important;
+}
+
+/*Australia*/
+.flag-au {
+    background-position: -196px -10px !important;
+}
+
+/*Belgium*/
+.flag-be {
+    background-position: -227px -10px !important;
+}
+
+/*Brazil*/
+.flag-br {
+    background-position: -351px -10px !important;
+}
+
+/*Canada*/
+.flag-ca {
+    background-position: -382px -10px !important;
+}
+
+/*Switzerland*/
+.flag-ch {
+    background-position: -475px -10px !important;
+}
+
+/*Germany*/
+.flag-de {
+    background-position: -134px -35px !important;
+}
+
+/*Denmark*/
+.flag-dk {
+    background-position: -196px -35px !important;
+}
+
+/*Spain*/
+.flag-es {
+    background-position: -320px -35px !important;
+}
+
+/*Ireland*/
+.flag-ie {
+    background-position: -196px -60px !important;
+}
+
+/*India*/
+.flag-in {
+    background-position: -258px -60px !important;
+}
+
+/*Italy*/
+.flag-it {
+    background-position: -351px -60px !important;
+}
+
+/*Hong Kong*/
+.flag-hk {
+    background-position: -41px -60px !important;
+}
+
+/*Finland*/
+.flag-fi {
+    background-position: -382px -35px !important;
+}
+
+/*France*/
+.flag-fr {
+    background-position: -413px -35px !important;
+}
+
+/*Japan*/
+.flag-ja {
+    background-position: -444px -60px !important;
+}
+
+/*Luxembourg*/
+.flag-lu {
+    background-position: -258px -85px !important;
+}
+
+/*Mexico*/
+.flag-mx {
+    background-position: -475px -85px !important;
+}
+
+/*Netherlands*/
+.flag-nl {
+    background-position: -103px -110px !important;
+}
+
+/*Norway*/
+.flag-no {
+    background-position: -134px -110px !important;
+}
+
+/*Portugal*/
+.flag-pt {
+    background-position: -413px -110px !important;
+}
+
+/*New Zealand*/
+.flag-nz {
+    background-position: -165px -110px !important;
+}
+
+/*South Korea*/
+.flag-kr {
+    background-position: -41px -85px !important;
+}
+
+/*Singapore*/
+.flag-sg {
+    background-position: -134px -135px !important;
+}
+
+/*Sweden*/
+.flag-se {
+    background-position: -103px -135px !important;
+}
+
+/*United Kingdom*/
+.flag-uk {
+    background-position: -475px -35px !important;
+}
+
+/*USA*/
+.flag-us {
+    background-position: -475px -135px !important;
+}

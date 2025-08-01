@@ -19,7 +19,15 @@
         columnEnd = me.scroller.columnViewEnd;
 
       for (let i = columnStart; i <= columnEnd; i++) {
-        if (me.columns[i].hidden) continue;
+        const column = me.columns[i];
+        if (column.hidden) continue;
+
+        if(column.filterCellEl && column.filter && !column.filterField){
+          column.filterCellEl.remove();
+          delete column.filterCellEl;
+        } else if(column.filterCellEl){
+          continue;
+        }
 
         const cell = me.createFilterBarCell(i);
 
@@ -61,7 +69,7 @@
       cell.setAttribute('col-index', columnIndex);
       cell.setAttribute('col-id', column.id);
 
-      if (column.filter) {
+      if (column.filter && !column.filterField) {
         const filter = column.filters || {};
         let sign = '',
           value = '';
