@@ -111,7 +111,16 @@ Fancy.cls = {
 
   // Field
   FIELD: 'fg-field',
+  FIELD_DISABLED: 'fg-field-disabled',
   FIELD_INPUT: 'fg-field-input',
+
+  FIELD_COMBO: 'fg-field-combo',
+  FIELD_COMBO_BUTTON: 'fg-field-combo-button',
+  FIELD_COMBO_LIST: 'fg-field-combo-list',
+  FIELD_COMBO_LIST_ITEM: 'fg-field-combo-list-item',
+  FIELD_COMBO_LIST_ITEM_ACTIVE: 'fg-field-combo-list-item-active',
+  FIELD_COMBO_LIST_ITEM_SELECTED: 'fg-field-combo-list-item-selected',
+  FIELD_COMBO_LIST_ITEM_TEXT: 'fg-field-combo-list-item-text',
 
   // String Field
   STRING_FIELD: 'fg-string-field',

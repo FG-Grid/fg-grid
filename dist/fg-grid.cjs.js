@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '0.9.0',
+  version: '0.9.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -324,7 +324,16 @@ Fancy.cls = {
 
   // Field
   FIELD: 'fg-field',
+  FIELD_DISABLED: 'fg-field-disabled',
   FIELD_INPUT: 'fg-field-input',
+
+  FIELD_COMBO: 'fg-field-combo',
+  FIELD_COMBO_BUTTON: 'fg-field-combo-button',
+  FIELD_COMBO_LIST: 'fg-field-combo-list',
+  FIELD_COMBO_LIST_ITEM: 'fg-field-combo-list-item',
+  FIELD_COMBO_LIST_ITEM_ACTIVE: 'fg-field-combo-list-item-active',
+  FIELD_COMBO_LIST_ITEM_SELECTED: 'fg-field-combo-list-item-selected',
+  FIELD_COMBO_LIST_ITEM_TEXT: 'fg-field-combo-list-item-text',
 
   // String Field
   STRING_FIELD: 'fg-string-field',
@@ -1232,6 +1241,10 @@ Fancy.copyText = (text) => {
       const me = this;
       let data;
       let totalReFilterRequired = false;
+
+      if(!column){
+        return;
+      }
 
       if (me.prevAction === 'sort' && me.sortedData) {
         data = me.sortedData.slice();
@@ -3327,7 +3340,9 @@ Fancy.copyText = (text) => {
       greaterThan: 'Greater Than',
       lessThan: 'Less Than',
       positive: 'Positive',
-      negative: 'Negative'
+      negative: 'Negative',
+      t: 'True',
+      f: 'False'
     }
   };
 
@@ -4366,17 +4381,12 @@ Fancy.copyText = (text) => {
       const me = this;
       const cells = me.headerEl.querySelectorAll(`.${HEADER_CELL}`);
 
-      //debugger
-
       cells.forEach(cell => {
         const columnId = cell.getAttribute('col-id');
         const column = me.getColumnById(columnId);
         const isColumnVisible = me.scroller.isColumnVisible(column);
 
         if(!column || !isColumnVisible){
-          console.log(column, cell);
-          debugger
-
           cell.remove();
           column && column.filterCellEl?.remove();
 
@@ -4506,7 +4516,8 @@ Fancy.copyText = (text) => {
             width: column.width || 45,
             menu: false,
             draggable: false,
-            filter: false
+            filter: false,
+            editable: false
           });
           me.columnOrder = column;
 
@@ -4815,10 +4826,29 @@ Fancy.copyText = (text) => {
 
       label.append(cellText, filterContainer, sortContainer);
 
-      const elMenu = div(HEADER_CELL_MENU);
+      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice ? {} : {
+        display: 'none'
+      });
       elMenu.innerHTML = Fancy.svg.menu;
 
       column.elMenu = elMenu;
+
+      if(!Fancy.isTouchDevice && column.menu !== false) {
+        cell.addEventListener('mouseenter', () => {
+          elMenu.style.opacity = '0';
+          elMenu.style.display = '';
+          setTimeout(() => {
+            elMenu.style.opacity = '1';
+          });
+        });
+
+        cell.addEventListener('mouseleave', () => {
+          elMenu.style.opacity = '0';
+          setTimeout(() => {
+            elMenu.style.display = 'none';
+          }, 200);
+        });
+      }
 
       if(column.headerCheckboxSelection && column.checkboxSelection){
         const elSelection = div(HEADER_CELL_SELECTION);
@@ -5489,7 +5519,7 @@ Fancy.copyText = (text) => {
       const item = me.store.getItemByRowIndex(rowIndex);
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
-      if(rowEl.classList.contains(ROW_GROUP)){
+      if(rowEl?.classList.contains(ROW_GROUP)){
         const column = me.columns[columnIndex];
         if(me.rowGroupType === 'column' && column.$isRowGroupColumn){
           const cell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
@@ -5500,7 +5530,7 @@ Fancy.copyText = (text) => {
 
       const cell = me.createCell(rowIndex, columnIndex);
 
-      rowEl.appendChild(cell);
+      rowEl?.appendChild(cell);
     },
     createCell(rowIndex, columnIndex, allowActiveCellSet = true) {
       const me = this;
@@ -5783,6 +5813,7 @@ Fancy.copyText = (text) => {
       const me = this;
 
       columnIndexes.forEach((columnIndex) => {
+        const column = me.columns[columnIndex];
         const headerCell = me.headerInnerContainerEl.querySelector(`[col-index="${columnIndex}"]`);
 
         if(!headerCell) return;
@@ -5791,6 +5822,11 @@ Fancy.copyText = (text) => {
 
         if (me.filterBar) {
           const filterCell = me.filterBarEl.querySelector(`[col-index="${columnIndex}"]`);
+
+          if(column.filterField){
+            column.filterField.destroy();
+            delete column.filterField;
+          }
 
           filterCell.remove?.();
         }
@@ -6592,6 +6628,7 @@ Fancy.copyText = (text) => {
           renderTo: cell,
           theme: me.theme,
           lang: me.lang,
+          disabled: column.type === 'boolean',
           onChange: me.onFilterFieldChange.bind(this),
           column,
           sign,
@@ -7332,7 +7369,6 @@ Fancy.copyText = (text) => {
         rightY: barRect.y + barRect.height
       };
     },
-
     getRowGroupBarItemsRect(){
       const itemsRect = [];
 
@@ -7349,7 +7385,6 @@ Fancy.copyText = (text) => {
 
       return itemsRect;
     },
-
     changeRowGroupBarItemOrder(from, to){
       const me = this;
       const fromEl = me.rowGroupBarItems[from];
@@ -8174,21 +8209,24 @@ Fancy.copyText = (text) => {
         const item = store.idItemMap.get(itemId);
         const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
         const column = me.columns[columnIndex];
-        const value = getCellSetterValue({
-          item,
-          column,
-          rowIndex,
-          columnIndex,
-          value: ''
-        });
 
-        store.setById(itemId ,column.index, value);
+        if(column.editable) {
+          const value = getCellSetterValue({
+            item,
+            column,
+            rowIndex,
+            columnIndex,
+            value: ''
+          });
 
-        me.activeCellEl.remove();
+          store.setById(itemId, column.index, value);
 
-        const cell = me.createCell(rowIndex, columnIndex);
-        rowEl.appendChild(cell);
-        me.activeCellEl = cell;
+          me.activeCellEl.remove();
+
+          const cell = me.createCell(rowIndex, columnIndex);
+          rowEl.appendChild(cell);
+          me.activeCellEl = cell;
+        }
 
         return;
       }
@@ -8856,7 +8894,29 @@ Fancy.copyText = (text) => {
           case 'number':
           case 'date':
             me.setStatusEditing(true);
-            column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${type}Field`)]({
+
+            let editorName = Fancy.capitalizeFirstLetter(`${type}Field`);
+            const editorType = column.editor?.type;
+            let editorParams = {};
+
+            if(editorType){
+              let $editorName = Fancy.capitalizeFirstLetter(`${editorType}Field`);
+
+              if(!Fancy[$editorName]){
+                console.error(`FG-Grid: Could not find editor for ${editorType}`);
+              } else {
+                editorName = $editorName;
+                const editor = {
+                  ...column.editor
+                };
+
+                delete editor.type;
+                editorParams = editor || {};
+              }
+            }
+
+            column.editorField = new Fancy[editorName]({
+              theme: me.theme,
               renderTo: me.editorsContainerEl,
               valueBeforeEdit,
               value,
@@ -8867,12 +8927,16 @@ Fancy.copyText = (text) => {
                 transform: `translateY(${rowTop - 1}px)`,
                 height: `${me.rowHeight + 1}px`
               },
+              ...editorParams,
               onChange(value, fromTyping){
                 if(fromTyping === false) return;
 
                 memorizeChange(value);
               },
-              onEnter(){
+              onEnter(value){
+                if(value !== undefined){
+                  memorizeChange(value);
+                }
                 me.hideActiveEditor();
                 let activeCell = false;
                 switch (me.editorEnterAction){
@@ -9110,6 +9174,7 @@ Fancy.copyText = (text) => {
 
 (() => {
   const {
+    FIELD_DISABLED,
     FILTER_FIELD,
     FILTER_FIELD_INPUT,
     FILTER_FIELD_SIGN,
@@ -9148,7 +9213,9 @@ Fancy.copyText = (text) => {
     'Greater Than': '>',
     'Less Than': '<',
     'Positive': '+',
-    'Negative': '-'
+    'Negative': '-',
+    'True': 'T',
+    'False': 'F'
   };
 
   const FancySignText = {
@@ -9165,18 +9232,18 @@ Fancy.copyText = (text) => {
     '>': 'Greater Than',
     '<': 'Less Than',
     '+': 'Positive',
-    '-': 'Negative'
+    '-': 'Negative',
+    'T': 'True',
+    'F': 'False'
   };
 
-  const {
-    div,
-    input
-  } = Fancy;
+  const { div, input } = Fancy;
 
   class FilterField {
     sign = '=';
     defaultSign = '=';
     value = '';
+    disabled = false;
     constructor(config) {
       Object.assign(this, config);
 
@@ -9185,7 +9252,11 @@ Fancy.copyText = (text) => {
     }
     render() {
       const me = this;
-      const el = div(FILTER_FIELD);
+      const cls = [FILTER_FIELD];
+
+      me.disabled && cls.push(FIELD_DISABLED);
+
+      const el = div(cls);
 
       me.container = me.renderTo;
 
@@ -9198,8 +9269,25 @@ Fancy.copyText = (text) => {
       me.elSign = elSign;
 
       const elInput = input(FILTER_FIELD_INPUT);
-      elInput.value = me.value;
+      if(me.column.type === 'boolean' && (me.value === true || me.value === false)){
+        switch (me.value) {
+          case true:
+            me.$replacedSign = 'T';
+            elInput.value = me.lang.sign.t;
+            break;
+          case false:
+            me.$replacedSign = 'F';
+            elInput.value = me.lang.sign.f;
+            break;
+        }
+      } else {
+        elInput.value = me.value;
+      }
       me.input = elInput;
+
+      if(me.disabled){
+        me.input.disabled = true;
+      }
 
       const elText = div(FILTER_FIELD_TEXT);
       me.elText = elText;
@@ -9214,17 +9302,16 @@ Fancy.copyText = (text) => {
     ons() {
       const me = this;
 
+      me.abortController = new AbortController();
+      const { signal } = me.abortController;
+
       me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
-      me.input.addEventListener('input', me.debouceInputFn);
-      me.input.addEventListener('focus', me.#onFocus.bind(this));
-      me.elSign.addEventListener('click', me.signClick.bind(this));
+      me.input.addEventListener('input', me.debouceInputFn, { signal });
+      me.input.addEventListener('focus', me.#onFocus.bind(this), { signal });
+      me.elSign.addEventListener('click', me.signClick.bind(this), { signal });
     }
     uns(){
-      const me = this;
-
-      me.input.removeEventListener('input', me.debouceInputFn);
-      me.input.removeEventListener('focus', me.#onFocus.bind(this));
-      me.elSign.removeEventListener('click', me.signClick.bind(this));
+      this.abortController.abort();
     }
     destroy() {
       const me = this;
@@ -9291,6 +9378,9 @@ Fancy.copyText = (text) => {
         case 'number':
           signs = ['Clear', 'Contains', 'Not Contains', 'Equals', 'Not Equals', 'Empty', 'Not Empty', 'Greater Than', 'Less Than', 'Positive', 'Negative'];
           break;
+        case 'boolean':
+          signs = ['Clear', 'T', 'F'];
+          break;
       }
 
       el.innerHTML = signs.map(sign => {
@@ -9322,6 +9412,14 @@ Fancy.copyText = (text) => {
             innerHTML.pop();
             innerHTML.push('&lt;0');
             break;
+          case 'T':
+            innerHTML.pop();
+            innerHTML.push('&nbsp;T&nbsp;');
+            break;
+          case 'F':
+            innerHTML.pop();
+            innerHTML.push('&nbsp;F&nbsp;');
+            break;
         }
 
         const signText = me.lang.sign[Fancy.toCamelCase(sign.toLowerCase())];
@@ -9350,15 +9448,32 @@ Fancy.copyText = (text) => {
     onListClick(e) {
       const me = this;
       const itemEl = e.target.closest(`.${FILTER_FIELD_LIST_ITEM}`);
-      const sign = itemEl.getAttribute('sign');
+      let sign = itemEl.getAttribute('sign');
 
       me.destroyComboList();
-      me.setSign(sign);
-      me.setValue('');
+
+      switch(sign) {
+        case 'T':
+          sign = 'Contains';
+          me.$replacedSign = 'T';
+          me.setSign(sign);
+          me.setValue(true);
+          break;
+        case 'F':
+          sign = 'Contains';
+          me.$replacedSign = 'F';
+          me.setSign(sign);
+          me.setValue(false);
+          break;
+        default:
+          delete me.$replacedSign;
+          me.setSign(sign);
+          me.setValue('');
+      }
     }
     setValue(value, fire = true) {
       const me = this;
-      const sign = me.sign || me.defaultSign;
+      let sign = me.sign || me.defaultSign;
 
       switch (sign) {
         case 'empty':
@@ -9368,7 +9483,9 @@ Fancy.copyText = (text) => {
           value = sign;
           break;
         default:
-          me.input.value = value;
+          if(!me.$replacedSign) {
+            me.input.value = value;
+          }
       }
 
       fire && me.onChange?.(value, sign, me.column, me.signWasChanged);
@@ -9398,6 +9515,10 @@ Fancy.copyText = (text) => {
     }
     updateUI(sign) {
       const me = this;
+
+      if(me.$replacedSign){
+        sign = me.$replacedSign;
+      }
 
       switch (sign) {
         case 'Clear':
@@ -9431,6 +9552,12 @@ Fancy.copyText = (text) => {
         case 'Negative':
           me.elSign.innerHTML = '&lt;0';
           break;
+        case 'T':
+          me.elSign.innerHTML = '&nbsp;T&nbsp;';
+          break;
+        case 'F':
+          me.elSign.innerHTML = '&nbsp;F&nbsp;';
+          break;
       }
 
       switch (sign) {
@@ -9441,6 +9568,12 @@ Fancy.copyText = (text) => {
           me.input.style.display = 'none';
           me.elText.innerHTML = sign;
           me.elText.style.display = 'block';
+          break;
+        case 'T':
+          me.input.value = me.lang.sign.t;
+          break;
+        case 'F':
+          me.input.value = me.lang.sign.f;
           break;
         default:
           me.input.style.display = '';

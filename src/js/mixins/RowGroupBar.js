@@ -247,7 +247,6 @@
         rightY: barRect.y + barRect.height
       };
     },
-
     getRowGroupBarItemsRect(){
       const itemsRect = [];
 
@@ -264,7 +263,6 @@
 
       return itemsRect;
     },
-
     changeRowGroupBarItemOrder(from, to){
       const me = this;
       const fromEl = me.rowGroupBarItems[from];

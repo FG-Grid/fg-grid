@@ -217,10 +217,29 @@
 
       label.append(cellText, filterContainer, sortContainer);
 
-      const elMenu = div(HEADER_CELL_MENU);
+      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice ? {} : {
+        display: 'none'
+      });
       elMenu.innerHTML = Fancy.svg.menu;
 
       column.elMenu = elMenu;
+
+      if(!Fancy.isTouchDevice && column.menu !== false) {
+        cell.addEventListener('mouseenter', () => {
+          elMenu.style.opacity = '0';
+          elMenu.style.display = '';
+          setTimeout(() => {
+            elMenu.style.opacity = '1';
+          });
+        });
+
+        cell.addEventListener('mouseleave', () => {
+          elMenu.style.opacity = '0';
+          setTimeout(() => {
+            elMenu.style.display = 'none';
+          }, 200);
+        });
+      }
 
       if(column.headerCheckboxSelection && column.checkboxSelection){
         const elSelection = div(HEADER_CELL_SELECTION);

@@ -125,7 +125,29 @@
           case 'number':
           case 'date':
             me.setStatusEditing(true);
-            column.editorField = new Fancy[Fancy.capitalizeFirstLetter(`${type}Field`)]({
+
+            let editorName = Fancy.capitalizeFirstLetter(`${type}Field`);
+            const editorType = column.editor?.type;
+            let editorParams = {};
+
+            if(editorType){
+              let $editorName = Fancy.capitalizeFirstLetter(`${editorType}Field`);
+
+              if(!Fancy[$editorName]){
+                console.error(`FG-Grid: Could not find editor for ${editorType}`);
+              } else {
+                editorName = $editorName;
+                const editor = {
+                  ...column.editor
+                };
+
+                delete editor.type;
+                editorParams = editor || {};
+              }
+            }
+
+            column.editorField = new Fancy[editorName]({
+              theme: me.theme,
               renderTo: me.editorsContainerEl,
               valueBeforeEdit,
               value,
@@ -136,12 +158,16 @@
                 transform: `translateY(${rowTop - 1}px)`,
                 height: `${me.rowHeight + 1}px`
               },
+              ...editorParams,
               onChange(value, fromTyping){
                 if(fromTyping === false) return;
 
                 memorizeChange(value);
               },
-              onEnter(){
+              onEnter(value){
+                if(value !== undefined){
+                  memorizeChange(value);
+                }
                 me.hideActiveEditor();
                 let activeCell = false;
                 switch (me.editorEnterAction){

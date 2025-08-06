@@ -280,17 +280,12 @@
       const me = this;
       const cells = me.headerEl.querySelectorAll(`.${HEADER_CELL}`);
 
-      //debugger
-
       cells.forEach(cell => {
         const columnId = cell.getAttribute('col-id');
         const column = me.getColumnById(columnId);
         const isColumnVisible = me.scroller.isColumnVisible(column);
 
         if(!column || !isColumnVisible){
-          console.log(column, cell);
-          debugger
-
           cell.remove();
           column && column.filterCellEl?.remove();
 
@@ -420,7 +415,8 @@
             width: column.width || 45,
             menu: false,
             draggable: false,
-            filter: false
+            filter: false,
+            editable: false
           });
           me.columnOrder = column;
 

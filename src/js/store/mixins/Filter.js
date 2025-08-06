@@ -83,6 +83,10 @@
       let data;
       let totalReFilterRequired = false;
 
+      if(!column){
+        return;
+      }
+
       if (me.prevAction === 'sort' && me.sortedData) {
         data = me.sortedData.slice();
       } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && me.filteredData) {

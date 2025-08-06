@@ -7,6 +7,9 @@ test.describe('Column menu', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
+		const column = await page.locator('.fg-header-cell[col-id="model"]').boundingBox();
+		await page.mouse.move(column.x + column.width / 2, column.y + column.height / 2);
+
 		const menu = await page.locator('.fg-header-cell[col-id="model"] .fg-header-cell-menu').boundingBox();
 
 		await page.mouse.move(menu.x + menu.width / 2, menu.y + menu.height / 2);
@@ -39,6 +42,9 @@ test.describe('Column menu', () => {
 
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
+
+		const column = await page.locator('.fg-header-cell[col-id="model"]').boundingBox();
+		await page.mouse.move(column.x + column.width / 2, column.y + column.height / 2);
 
 		const menu = await page.locator('.fg-header-cell[col-id="model"] .fg-header-cell-menu').boundingBox();
 

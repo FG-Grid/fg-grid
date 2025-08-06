@@ -83,6 +83,7 @@
           renderTo: cell,
           theme: me.theme,
           lang: me.lang,
+          disabled: column.type === 'boolean',
           onChange: me.onFilterFieldChange.bind(this),
           column,
           sign,

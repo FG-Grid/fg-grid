@@ -1,5 +1,6 @@
 (() => {
   const {
+    FIELD_DISABLED,
     FILTER_FIELD,
     FILTER_FIELD_INPUT,
     FILTER_FIELD_SIGN,
@@ -38,7 +39,9 @@
     'Greater Than': '>',
     'Less Than': '<',
     'Positive': '+',
-    'Negative': '-'
+    'Negative': '-',
+    'True': 'T',
+    'False': 'F'
   };
 
   const FancySignText = {
@@ -55,18 +58,18 @@
     '>': 'Greater Than',
     '<': 'Less Than',
     '+': 'Positive',
-    '-': 'Negative'
+    '-': 'Negative',
+    'T': 'True',
+    'F': 'False'
   };
 
-  const {
-    div,
-    input
-  } = Fancy;
+  const { div, input } = Fancy;
 
   class FilterField {
     sign = '=';
     defaultSign = '=';
     value = '';
+    disabled = false;
     constructor(config) {
       Object.assign(this, config);
 
@@ -75,7 +78,11 @@
     }
     render() {
       const me = this;
-      const el = div(FILTER_FIELD);
+      const cls = [FILTER_FIELD];
+
+      me.disabled && cls.push(FIELD_DISABLED);
+
+      const el = div(cls);
 
       me.container = me.renderTo;
 
@@ -88,8 +95,25 @@
       me.elSign = elSign;
 
       const elInput = input(FILTER_FIELD_INPUT);
-      elInput.value = me.value;
+      if(me.column.type === 'boolean' && (me.value === true || me.value === false)){
+        switch (me.value) {
+          case true:
+            me.$replacedSign = 'T';
+            elInput.value = me.lang.sign.t;
+            break;
+          case false:
+            me.$replacedSign = 'F';
+            elInput.value = me.lang.sign.f;
+            break;
+        }
+      } else {
+        elInput.value = me.value;
+      }
       me.input = elInput;
+
+      if(me.disabled){
+        me.input.disabled = true;
+      }
 
       const elText = div(FILTER_FIELD_TEXT);
       me.elText = elText;
@@ -104,17 +128,16 @@
     ons() {
       const me = this;
 
+      me.abortController = new AbortController();
+      const { signal } = me.abortController;
+
       me.debouceInputFn = Fancy.debounce(me.onInput.bind(this), 300);
-      me.input.addEventListener('input', me.debouceInputFn);
-      me.input.addEventListener('focus', me.#onFocus.bind(this));
-      me.elSign.addEventListener('click', me.signClick.bind(this));
+      me.input.addEventListener('input', me.debouceInputFn, { signal });
+      me.input.addEventListener('focus', me.#onFocus.bind(this), { signal });
+      me.elSign.addEventListener('click', me.signClick.bind(this), { signal });
     }
     uns(){
-      const me = this;
-
-      me.input.removeEventListener('input', me.debouceInputFn);
-      me.input.removeEventListener('focus', me.#onFocus.bind(this));
-      me.elSign.removeEventListener('click', me.signClick.bind(this));
+      this.abortController.abort();
     }
     destroy() {
       const me = this;
@@ -181,6 +204,9 @@
         case 'number':
           signs = ['Clear', 'Contains', 'Not Contains', 'Equals', 'Not Equals', 'Empty', 'Not Empty', 'Greater Than', 'Less Than', 'Positive', 'Negative'];
           break;
+        case 'boolean':
+          signs = ['Clear', 'T', 'F'];
+          break;
       }
 
       el.innerHTML = signs.map(sign => {
@@ -212,6 +238,14 @@
             innerHTML.pop();
             innerHTML.push('&lt;0');
             break;
+          case 'T':
+            innerHTML.pop();
+            innerHTML.push('&nbsp;T&nbsp;');
+            break;
+          case 'F':
+            innerHTML.pop();
+            innerHTML.push('&nbsp;F&nbsp;');
+            break;
         }
 
         const signText = me.lang.sign[Fancy.toCamelCase(sign.toLowerCase())];
@@ -240,15 +274,32 @@
     onListClick(e) {
       const me = this;
       const itemEl = e.target.closest(`.${FILTER_FIELD_LIST_ITEM}`);
-      const sign = itemEl.getAttribute('sign');
+      let sign = itemEl.getAttribute('sign');
 
       me.destroyComboList();
-      me.setSign(sign);
-      me.setValue('');
+
+      switch(sign) {
+        case 'T':
+          sign = 'Contains';
+          me.$replacedSign = 'T';
+          me.setSign(sign);
+          me.setValue(true);
+          break;
+        case 'F':
+          sign = 'Contains';
+          me.$replacedSign = 'F';
+          me.setSign(sign);
+          me.setValue(false);
+          break;
+        default:
+          delete me.$replacedSign;
+          me.setSign(sign);
+          me.setValue('');
+      }
     }
     setValue(value, fire = true) {
       const me = this;
-      const sign = me.sign || me.defaultSign;
+      let sign = me.sign || me.defaultSign;
 
       switch (sign) {
         case 'empty':
@@ -258,7 +309,9 @@
           value = sign;
           break;
         default:
-          me.input.value = value;
+          if(!me.$replacedSign) {
+            me.input.value = value;
+          }
       }
 
       fire && me.onChange?.(value, sign, me.column, me.signWasChanged);
@@ -288,6 +341,10 @@
     }
     updateUI(sign) {
       const me = this;
+
+      if(me.$replacedSign){
+        sign = me.$replacedSign;
+      }
 
       switch (sign) {
         case 'Clear':
@@ -321,6 +378,12 @@
         case 'Negative':
           me.elSign.innerHTML = '&lt;0';
           break;
+        case 'T':
+          me.elSign.innerHTML = '&nbsp;T&nbsp;';
+          break;
+        case 'F':
+          me.elSign.innerHTML = '&nbsp;F&nbsp;';
+          break;
       }
 
       switch (sign) {
@@ -331,6 +394,12 @@
           me.input.style.display = 'none';
           me.elText.innerHTML = sign;
           me.elText.style.display = 'block';
+          break;
+        case 'T':
+          me.input.value = me.lang.sign.t;
+          break;
+        case 'F':
+          me.input.value = me.lang.sign.f;
           break;
         default:
           me.input.style.display = '';

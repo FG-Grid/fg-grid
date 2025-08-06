@@ -33,7 +33,9 @@
       greaterThan: 'Greater Than',
       lessThan: 'Less Than',
       positive: 'Positive',
-      negative: 'Negative'
+      negative: 'Negative',
+      t: 'True',
+      f: 'False'
     }
   };
 
