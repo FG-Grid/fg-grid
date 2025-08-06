@@ -69,6 +69,7 @@
       me.el = el;
 
       me.container.appendChild(el);
+      me.showComboList();
     }
     ons() {
       const me = this;
@@ -116,7 +117,7 @@
       me.onChange?.(value, true);
       if(me.filtering){
         if(!me.elComboList){
-          me.showComboList();
+          me.showComboList(true);
         } else {
           me.filterItems();
         }
@@ -159,15 +160,20 @@
       super.hide();
       this.destroyComboList();
     }
+    show(style){
+      super.show(style);
+      this.showComboList();
+    }
     destroyComboList() {
       this.elComboList?.remove();
       delete this.elComboList;
     }
-    showComboList() {
+    showComboList(filtering = false) {
       const me = this;
       const elRect = me.el.getBoundingClientRect();
-      const top = elRect.top - 1 + elRect.height;
-      const left = elRect.left;
+      const top = elRect.top + window.scrollY - 1 + elRect.height;
+      const left = elRect.left + window.scrollX;
+
       const el = div([FIELD_COMBO_LIST, 'fg-theme-' + me.theme], {
         top: `${top}px`,
         left: `${left}px`
@@ -175,7 +181,7 @@
 
       el.innerHTML = me.items.map(item => {
         let hidden = false;
-        if(me.filtering){
+        if(me.filtering && filtering){
           hidden = !me.filterItem(item);
         }
 
@@ -204,11 +210,18 @@
       me.onDocMouseDownFn = me.onDocMouseDown.bind(this);
 
       document.addEventListener('mousedown', me.onDocMouseDownFn);
+
+      me.scrollToSelected();
+      me.input.focus();
     }
     onDocMouseDown(e) {
       const me = this;
+      const target = e.target;
 
-      if (!e.target.closest(`.${FIELD_COMBO_LIST}`) && !e.target.closest(`.${FIELD_COMBO_BUTTON}`)) {
+      if (!target.closest(`.${FIELD_COMBO_LIST}`)
+        && !target.closest(`.${FIELD_COMBO_BUTTON}`)
+        && !target.closest(`.${FIELD_COMBO}`)
+      ) {
         document.removeEventListener('mousedown', me.onDocMouseDownFn);
         me.destroyComboList();
       }
@@ -266,9 +279,11 @@
 
       const me = this;
       let list = me.elComboList;
+      let openedList = false;
       if(!list){
         me.showComboList();
         list = me.elComboList;
+        openedList = true;
       }
 
       const ACTIVE = FIELD_COMBO_LIST_ITEM_ACTIVE;
@@ -291,15 +306,28 @@
           block: 'nearest'
         });
       }
+
+      openedList && me.setActiveItem();
+    }
+    scrollToSelected(){
+      const me = this;
+      const selectedItem = me.elComboList.querySelector(`.${FIELD_COMBO_LIST_ITEM_SELECTED}`);
+
+      if(selectedItem){
+        selectedItem.scrollIntoView();
+        me.setActiveItem(selectedItem);
+      }
     }
     onDOWN(event){
       event.preventDefault();
 
       const me = this;
       let list = me.elComboList;
+      let openedList = false;
       if(!list){
         me.showComboList();
         list = me.elComboList;
+        openedList = true;
       }
 
       const ACTIVE = FIELD_COMBO_LIST_ITEM_ACTIVE;
@@ -313,18 +341,19 @@
           block: 'nearest'
         });
       }
+
+      openedList && me.setActiveItem();
     }
-    setActiveItem(index){
+    setActiveItem(item){
       const me = this;
       const ACTIVE = FIELD_COMBO_LIST_ITEM_ACTIVE;
       const list = me.elComboList;
-      if(index === undefined){
-        const oldActiveItem = list.querySelector(`.${ACTIVE}`);
-        oldActiveItem?.classList.remove(ACTIVE);
 
-        const item = this.elComboList.querySelector(`.${FIELD_COMBO_LIST_ITEM}:not(.${HIDDEN})`);
-        item?.classList.add(ACTIVE);
-      }
+      const oldActiveItem = list.querySelector(`.${ACTIVE}`);
+      oldActiveItem?.classList.remove(ACTIVE);
+
+      item = item || me.elComboList.querySelector(`.${FIELD_COMBO_LIST_ITEM}:not(.${HIDDEN})`);
+      item?.classList.add(ACTIVE);
     }
   }
 

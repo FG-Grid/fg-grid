@@ -164,6 +164,8 @@
       const me = this;
       const store = me.store;
 
+      me.hideActiveEditor();
+
       switch (value){
         case '=':
         case '<':

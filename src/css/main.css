@@ -444,6 +444,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  user-select: none;
   &:hover {
     background: var(--filter-field-sign-hover-bg-color);
   }
@@ -483,6 +484,7 @@
   display: flex;
   color: var(--filter-field-list-item-color);
   font-weight: bold;
+  line-height: 18px;
 
   &:hover {
     background: var(--field-list-item-hover-bg-color);

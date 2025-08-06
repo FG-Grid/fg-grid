@@ -49,6 +49,8 @@ interface GridConfig<TData = any> {
       lessThan?: string;
       positive?: string;
       negative?: string;
+      t?: string;
+      f?: string;
     }
   }
 }

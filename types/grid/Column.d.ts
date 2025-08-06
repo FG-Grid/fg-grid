@@ -86,4 +86,20 @@ export interface Column<TData = any> {
   setter?(params: SetterParams<TData>): string|number|undefined|null|object;
 
   agFn?: 'sum' | 'avg' | 'min' | 'max' | ((params: unknown) => number | string);
+
+  editor?: {
+    type: 'combo' | string;
+    disabled?: boolean;
+    typing?: boolean;
+    leftListRender?: (params: {
+      item: {
+        value: string;
+        text: string;
+      }
+    }) => string
+    items: {
+      value: string;
+      text: string;
+    }[];
+  }
 }

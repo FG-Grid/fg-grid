@@ -35,3 +35,5 @@ import './components/Field.js';
 import './components/FilterField.js';
 import './components/StringField.js';
 import './components/NumberField.js';
+import './components/DateField.js';
+import './components/Combo.js';
