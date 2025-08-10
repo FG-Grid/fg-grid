@@ -54,7 +54,14 @@ export interface Column<TData = any> {
   hidden?: boolean;
   index?: keyof TData;
   id?: string;
-  filter?: boolean;
+  filter?: boolean | {
+    defaultFilter?: 'list' | string;
+    list?: boolean;
+    items?: {
+      value: string;
+      text: string;
+    }[];
+  };
   menu?: boolean;
   type?: 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'order';
   title?: string;

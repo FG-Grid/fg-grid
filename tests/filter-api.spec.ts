@@ -215,4 +215,98 @@ test.describe('Filter API', () => {
 
 		await expect(await gridEl.screenshot()).toMatchSnapshot('filter-sort.png');
 	});
+
+	test('Brand contains BMW and Toyota', async ({ page }) => {
+		await page.goto('http://localhost:3200/test-samples/100-rows-filter-empty/');
+
+		const gridEl = page.locator('.fg-grid');
+		await expect(gridEl).toBeVisible();
+
+		await page.evaluate(() => {
+			const column = grid.getColumn('brand');
+			grid.filter(column, ['BMW', 'Toyota'], '=');
+		});
+
+		await page.waitForTimeout(500);
+
+		await expect(await gridEl.screenshot()).toMatchSnapshot('brand-toyota-bmw.png');
+	});
+
+	test('Brand contains BMW and Toyota, Country is germany', async ({ page }) => {
+		await page.goto('http://localhost:3200/test-samples/100-rows-filter-empty/');
+
+		const gridEl = page.locator('.fg-grid');
+		await expect(gridEl).toBeVisible();
+
+		await page.evaluate(() => {
+			const column = grid.getColumn('brand');
+			grid.filter(column, ['BMW', 'Toyota'], '=');
+		});
+
+		await page.waitForTimeout(500);
+
+		await page.evaluate(() => {
+			const column = grid.getColumn('country');
+			grid.filter(column, ['Germany'], '=');
+		});
+
+		await page.waitForTimeout(500);
+
+		await expect(await gridEl.screenshot()).toMatchSnapshot('brand-toyota-bmw-country-germany.png');
+	});
+
+	test('Brand contains BMW and Toyota, navigate', async ({ page }) => {
+		await page.goto('http://localhost:3200/test-samples/100-rows-filter-empty/');
+
+		const gridEl = page.locator('.fg-grid');
+		await expect(gridEl).toBeVisible();
+
+		await page.evaluate(() => {
+			const column = grid.getColumn('brand');
+			grid.filter(column, ['BMW', 'Toyota'], '=');
+		});
+
+		await page.waitForTimeout(500);
+
+		await page.locator('[row-id="id-2"] [col-id="brand"]').click();
+		await page.waitForTimeout(700);
+
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowRight');
+		await page.waitForTimeout(100);
+
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+		await page.keyboard.press('ArrowLeft');
+		await page.waitForTimeout(100);
+
+		await expect(await gridEl.screenshot()).toMatchSnapshot('brand-toyota-bmw-navigate.png');
+	});
 });

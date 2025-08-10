@@ -151,6 +151,8 @@
               renderTo: me.editorsContainerEl,
               valueBeforeEdit,
               value,
+              grid: me,
+              column,
               style: {
                 position: 'absolute',
                 width: `${column.width}px`,

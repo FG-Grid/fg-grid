@@ -19,8 +19,11 @@
   const lang = {
     group: 'Group',
     groupBarDragEmpty: 'Drag columns here to generate row groups',
+    search: 'Search...',
+    reset: 'Reset',
     sign: {
       clear: 'Clear',
+      list: 'List',
       contains: 'Contains',
       notContains: 'Not Contains',
       equals: 'Equals',
@@ -345,6 +348,19 @@
               newRowGroupsOrder = newRowGroupsOrder || [];
               newRowGroupsOrder[column.rowGroupOrder] = column.index;
             }
+          }
+
+          if(column.filter?.defaultFilter){
+            switch (column.filter?.defaultFilter?.toLowerCase()){
+              case 'list':
+              case 'in':
+                column.filters = {
+                  sign: 'in',
+                  value: ''
+                };
+                break;
+            }
+            delete column.filter?.defaultFilter;
           }
         });
 
@@ -785,6 +801,28 @@
     }
     getItemById(id) {
       return this.store.idItemMap.get(id);
+    }
+    getColumnData(column){
+      const me = this;
+      const columnData = [];
+
+      if(!column.index){
+        return false;
+      }
+
+      me.store.data.forEach(item => {
+        columnData.push(item[column.index]);
+      });
+
+      return columnData;
+    }
+    getUniqueColumnData(column){
+      const me = this;
+      const columnData = me.getColumnData(column);
+      const dataSet = new Set(columnData);
+      const uniqueData = Array.from(dataSet).sort();
+
+      return uniqueData;
     }
   }
 

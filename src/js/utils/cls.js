@@ -90,6 +90,14 @@ Fancy.cls = {
   FILTER_FIELD_LIST: 'fg-filter-field-list',
   FILTER_FIELD_LIST_ITEM: 'fg-filter-field-list-item',
   FILTER_FIELD_LIST_ITEM_TEXT: 'fg-filter-field-list-item-text',
+  FILTER_FIELD_LIST_ITEM_IN: 'fg-filter-field-list-item-in',
+  FILTER_FIELD_COMBO_CONTAINER: 'fg-field-combo-container',
+
+  // Bars
+  BBAR: 'fg-bbar',
+
+  // Button
+  BUTTON: 'fg-button',
 
   // Sort
   SORT_ORDER: 'fg-sort-order',

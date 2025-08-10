@@ -177,9 +177,12 @@
       const filterContainer = span(FILTER_INDICATOR_CONTAINER);
 
       const elFilter = span(HEADER_FILTER_EL);
-      if(!Object.entries(column.filters || {}).length){
+      if (Object.entries(column.filters || {}).length && column.filters.value !== '') {
+        elFilter.classList.remove(HIDDEN);
+      } else {
         elFilter.classList.add(HIDDEN);
       }
+
       elFilter.innerHTML = Fancy.svg.filter;
       filterContainer.appendChild(elFilter);
       column.elFilter = elFilter;
@@ -600,7 +603,7 @@
           continue;
         }
 
-        if (Object.entries(column.filters || {}).length) {
+        if (Object.entries(column.filters || {}).length && column.filters.value !== '') {
           column.elFilter.classList.remove(HIDDEN);
         } else {
           column.elFilter.classList.add(HIDDEN);

@@ -85,10 +85,13 @@
           lang: me.lang,
           disabled: column.type === 'boolean',
           onChange: me.onFilterFieldChange.bind(this),
+          onChangeValues: me.onFilterFieldValuesChange.bind(this),
           column,
           sign,
           value,
-          onFocus: me.onFilterFieldFocus.bind(this)
+          items: column.filter.items,
+          onFocus: me.onFilterFieldFocus.bind(this),
+          grid: me
         });
       }
 
@@ -98,6 +101,20 @@
     },
     onFilterFieldFocus(){
       this.isEditing && this.hideActiveEditor();
+    },
+    onFilterFieldValuesChange(value, sign, column){
+      const me = this;
+
+      column.filters = {
+        sign,
+        value
+      };
+
+      if (value.length === 0) {
+        me.clearFilter(column, sign);
+      } else {
+        me.filter(column, value, sign);
+      }
     },
     onFilterFieldChange(value, sign, column, signWasChanged) {
       const me = this;
@@ -292,7 +309,19 @@
           const filterField = column.filterField;
           const filter = column.filters;
 
-          if(filterField.sign !== filter.sign){
+          if(filterField && filterField.sign !== filter.sign){
+            if(Array.isArray(filter.value)){
+              filterField.updateUI('List');
+              const keysAsString = filter.value.join(',');
+
+              if(filter.value.length === 0) {
+                filterField.input.value = '';
+              } else {
+                filterField.input.value = `(${filter.value.length}) ${keysAsString}`;
+              }
+              continue;
+            }
+
             if (!(filter.sign === '=' && filterField.sign === '')) filterField.setSign(filter.sign);
             filterField.setValue(filter.value, false);
           }

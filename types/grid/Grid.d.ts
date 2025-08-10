@@ -34,8 +34,11 @@ interface GridConfig<TData = any> {
   lang?: {
     group?: string;
     groupBarDragEmpty?: string;
+    search?: string;
+    reset?: string;
     sign?: {
       clear?: string;
+      list?: string;
       contains?: string;
       notContains?: string;
       equals?: string;

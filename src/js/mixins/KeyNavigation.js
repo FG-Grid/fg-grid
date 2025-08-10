@@ -37,8 +37,8 @@
           !me.isEditing && me.destroyHeaderCellMenuList();
           break;
         case SPACE:
-          event.preventDefault();
-          if(me.activeCell && me.activeCellEl){
+          if(me.activeCell && me.activeCellEl && !me.activeEditor){
+            event.preventDefault();
             const cell = me.activeCellEl;
             const columnIndex = Number(cell.getAttribute('col-index'));
             const column = me.columns[columnIndex];

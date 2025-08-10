@@ -27,6 +27,7 @@
     filtering = true;
     filterType = 'matchAny'; // 'match' || 'matchAny'
     caseSensitive = false;
+    minListWidth = 120;
     constructor(config) {
       super(config);
       Object.assign(this, config);
@@ -171,13 +172,23 @@
     showComboList(filtering = false) {
       const me = this;
       const elRect = me.el.getBoundingClientRect();
-      const top = elRect.top + window.scrollY - 1 + elRect.height;
-      const left = elRect.left + window.scrollX;
+      let top = elRect.top + window.scrollY - 1 + elRect.height;
+      let left = elRect.left + window.scrollX;
+      let width = elRect.width;
+
+      if(width < me.minListWidth){
+        width = me.minListWidth;
+      }
 
       const el = div([FIELD_COMBO_LIST, 'fg-theme-' + me.theme], {
         top: `${top}px`,
-        left: `${left}px`
+        left: `${left}px`,
+        width: `${width}px`
       });
+
+      if(me.items === undefined){
+        me.generateItems();
+      }
 
       el.innerHTML = me.items.map(item => {
         let hidden = false;
@@ -208,6 +219,16 @@
       document.body.appendChild(el);
       me.elComboList = el;
       me.onDocMouseDownFn = me.onDocMouseDown.bind(this);
+
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - elRect.bottom;
+      const spaceAbove = elRect.top;
+      const listHeight = el.getBoundingClientRect().height;
+
+      if (spaceBelow < listHeight && spaceAbove > spaceBelow) { // Render up
+        top = elRect.top + window.scrollY - listHeight;
+        el.style.top = top + 'px';
+      }
 
       document.addEventListener('mousedown', me.onDocMouseDownFn);
 
@@ -354,6 +375,17 @@
 
       item = item || me.elComboList.querySelector(`.${FIELD_COMBO_LIST_ITEM}:not(.${HIDDEN})`);
       item?.classList.add(ACTIVE);
+    }
+    generateItems(){
+      const me = this;
+      const data = me.grid.getUniqueColumnData(me.column).map(value => {
+        return {
+          value,
+          text: value
+        };
+      });
+
+      me.items = data;
     }
   }
 
