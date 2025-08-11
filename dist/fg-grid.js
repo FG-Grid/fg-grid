@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '0.9.3',
+  version: '0.9.4',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -2304,12 +2304,15 @@ Fancy.copyText = (text) => {
     agGroupUpdateData(groupName, items, sign = '-'){
       const me = this;
       const groupDetails = me.groupDetails[groupName];
+      const groupDetailsForFiltering = me.groupDetailsForFiltering?.[groupName];
 
       // group was removed
       if(!groupDetails) return;
 
       const groupAgValues = groupDetails.$agValues || {};
+      const groupAgFilterValues = groupDetailsForFiltering?.$agValues || {};
       const groupChildren = me.groupsChildren[groupName];
+      const groupsChildrenForFiltering = me.groupsChildrenForFiltering?.[groupName] || [];
 
       me.aggregations?.forEach(aggregation => {
         const index = aggregation.index;
@@ -2322,12 +2325,18 @@ Fancy.copyText = (text) => {
               groupAgValues[index] = 0;
             }
 
+            if(groupAgFilterValues[index] === undefined){
+              groupAgFilterValues[index] = 0;
+            }
+
             switch (sign) {
               case '-':
                 groupAgValues[index] -= item[index];
+                groupAgFilterValues[index] -= item[index];
                 break;
               case '+':
                 groupAgValues[index] += item[index];
+                groupAgFilterValues[index] += item[index];
                 break;
             }
           }
@@ -2340,6 +2349,15 @@ Fancy.copyText = (text) => {
               return value;
             });
             groupAgValues[index] = me.getAggregationResult(aggregation, values);
+
+            const valuesForFilter = groupsChildrenForFiltering.map(child => {
+              let value = child.$agValues ? child.$agValues[index] : child[index];
+              value = Number(value);
+              if (isNaN(value)) (value = 0);
+
+              return value;
+            });
+            groupAgFilterValues[index] = me.getAggregationResult(aggregation, valuesForFilter);
           }
         });
       });
@@ -5601,8 +5619,7 @@ Fancy.copyText = (text) => {
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if(rowEl?.classList.contains(ROW_GROUP)){
-        const column = me.columns[columnIndex];
-        if(me.rowGroupType === 'column' && column.$isRowGroupColumn){
+        if(me.rowGroupType === 'column'){
           const cell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
           rowEl.appendChild(cell);
         }
@@ -5913,7 +5930,7 @@ Fancy.copyText = (text) => {
         }
 
         me.renderedRowsIdMap.forEach(rowEl => {
-          if (rowEl.classList.contains(ROW_GROUP)) return;
+          if (rowEl.classList.contains(ROW_GROUP) && me.rowGroupType !== 'column') return;
 
           const cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 
@@ -6796,6 +6813,7 @@ Fancy.copyText = (text) => {
         me.afterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
+        store.aggregations?.length && me.updateRowGroupAggregations();
         return;
       }
 
@@ -6835,6 +6853,7 @@ Fancy.copyText = (text) => {
         me.updateRowGroupAmount();
         me.updateHeaderCells();
         me.filterBar && me.updateFilterBarCells();
+        store.aggregations?.length && me.updateRowGroupAggregations();
         return;
       }
 
@@ -7179,13 +7198,11 @@ Fancy.copyText = (text) => {
           // Group was removed because all children were removed
           if(!groupDetail) return;
 
-          const item = me.getItemById(groupDetail.id);
-
           const oldCell = row.querySelector(`div[col-id="${ag.index}"]`);
           const columnIndex = Number(oldCell.getAttribute('col-index'));
           const rowIndex = row?.getAttribute('row-index');
 
-          const newCell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
+          const newCell = me.createCellGroupTypeColumn(rowIndex, groupDetail, columnIndex);
           if(oldCell.innerHTML != newCell.innerHTML){
             oldCell.remove();
             row.appendChild(newCell);
@@ -8971,8 +8988,8 @@ Fancy.copyText = (text) => {
             const groupName = splitted.slice(0, splitted.length - i).join('/');
 
             me.store.agGroupUpdateData(groupName, [item], 'update');
-            me.updateRowGroupAggregations();
           }
+          me.updateRowGroupAggregations();
         }
       };
 
@@ -9047,6 +9064,10 @@ Fancy.copyText = (text) => {
               ...editorParams,
               onChange(value, fromTyping){
                 if(fromTyping === false) return;
+
+                if(type === 'number' && value !== ''){
+                  value = Number(value);
+                }
 
                 memorizeChange(value);
               },

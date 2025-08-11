@@ -170,6 +170,7 @@
         me.afterGrouping();
         me.updateRowGroupAmount();
         me.updateHeaderCells();
+        store.aggregations?.length && me.updateRowGroupAggregations();
         return;
       }
 
@@ -209,6 +210,7 @@
         me.updateRowGroupAmount();
         me.updateHeaderCells();
         me.filterBar && me.updateFilterBarCells();
+        store.aggregations?.length && me.updateRowGroupAggregations();
         return;
       }
 

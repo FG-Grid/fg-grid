@@ -792,12 +792,15 @@
     agGroupUpdateData(groupName, items, sign = '-'){
       const me = this;
       const groupDetails = me.groupDetails[groupName];
+      const groupDetailsForFiltering = me.groupDetailsForFiltering?.[groupName];
 
       // group was removed
       if(!groupDetails) return;
 
       const groupAgValues = groupDetails.$agValues || {};
+      const groupAgFilterValues = groupDetailsForFiltering?.$agValues || {};
       const groupChildren = me.groupsChildren[groupName];
+      const groupsChildrenForFiltering = me.groupsChildrenForFiltering?.[groupName] || [];
 
       me.aggregations?.forEach(aggregation => {
         const index = aggregation.index;
@@ -810,12 +813,18 @@
               groupAgValues[index] = 0;
             }
 
+            if(groupAgFilterValues[index] === undefined){
+              groupAgFilterValues[index] = 0;
+            }
+
             switch (sign) {
               case '-':
                 groupAgValues[index] -= item[index];
+                groupAgFilterValues[index] -= item[index];
                 break;
               case '+':
                 groupAgValues[index] += item[index];
+                groupAgFilterValues[index] += item[index];
                 break;
             }
           }
@@ -828,6 +837,15 @@
               return value;
             });
             groupAgValues[index] = me.getAggregationResult(aggregation, values);
+
+            const valuesForFilter = groupsChildrenForFiltering.map(child => {
+              let value = child.$agValues ? child.$agValues[index] : child[index];
+              value = Number(value);
+              if (isNaN(value)) (value = 0);
+
+              return value;
+            });
+            groupAgFilterValues[index] = me.getAggregationResult(aggregation, valuesForFilter);
           }
         });
       });

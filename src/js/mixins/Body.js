@@ -52,8 +52,7 @@
       const rowEl = me.renderedRowsIdMap.get(item.id);
 
       if(rowEl?.classList.contains(ROW_GROUP)){
-        const column = me.columns[columnIndex];
-        if(me.rowGroupType === 'column' && column.$isRowGroupColumn){
+        if(me.rowGroupType === 'column'){
           const cell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
           rowEl.appendChild(cell);
         }
@@ -364,7 +363,7 @@
         }
 
         me.renderedRowsIdMap.forEach(rowEl => {
-          if (rowEl.classList.contains(ROW_GROUP)) return;
+          if (rowEl.classList.contains(ROW_GROUP) && me.rowGroupType !== 'column') return;
 
           const cell = rowEl.querySelector(`[col-index="${columnIndex}"]`);
 

@@ -87,8 +87,8 @@
             const groupName = splitted.slice(0, splitted.length - i).join('/');
 
             me.store.agGroupUpdateData(groupName, [item], 'update');
-            me.updateRowGroupAggregations();
           }
+          me.updateRowGroupAggregations();
         }
       };
 
@@ -163,6 +163,10 @@
               ...editorParams,
               onChange(value, fromTyping){
                 if(fromTyping === false) return;
+
+                if(type === 'number' && value !== ''){
+                  value = Number(value);
+                }
 
                 memorizeChange(value);
               },

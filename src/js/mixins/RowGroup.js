@@ -218,13 +218,11 @@
           // Group was removed because all children were removed
           if(!groupDetail) return;
 
-          const item = me.getItemById(groupDetail.id);
-
           const oldCell = row.querySelector(`div[col-id="${ag.index}"]`);
           const columnIndex = Number(oldCell.getAttribute('col-index'));
           const rowIndex = row?.getAttribute('row-index');
 
-          const newCell = me.createCellGroupTypeColumn(rowIndex, item, columnIndex);
+          const newCell = me.createCellGroupTypeColumn(rowIndex, groupDetail, columnIndex);
           if(oldCell.innerHTML != newCell.innerHTML){
             oldCell.remove();
             row.appendChild(newCell);
