@@ -104,7 +104,7 @@ export interface Column<TData = any> {
         text: string;
       }
     }) => string
-    items: {
+    items?: {
       value: string;
       text: string;
     }[];

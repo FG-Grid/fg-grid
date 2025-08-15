@@ -10,17 +10,18 @@
   --base-color-5: #e0e5e9;
   --base-color-6: #f5f7f7;
   --base-color-7: #b7b7b7;
+  --base-color-8: #dde1e3;
 
   --grid-border-color: var(--base-color-1);
   --grid-border-width: 1px;
 
   --grid-header-bottom-color: var(--base-color-1);
   --grid-header-bottom-width: 1px;
-  --grid-header-bg: #F5F7F7;
+  --grid-header-bg: var(--base-color-6);
   --grid-header-cell-color: var(--base-color-2);
   --grid-header-cell-font-weight: 600;
   --grid-header-cell-font-size: 12px;
-  --grid-header-cell-resize-bg: #dde1e3;
+  --grid-header-cell-resize-bg: var(--base-color-8);
   --grid-header-cell-after-height: 50%;
   --grid-header-cell-after-top: calc(50% - 50%*0.5);
   --grid-header-cell-column-group-child-border-top-color: var(--base-color-1);
@@ -483,7 +484,7 @@
   position: absolute;
   border: 1px solid var(--field-list-border-color);
   background: var(--field-list-bg);
-  width: 180px;
+  box-sizing: border-box;
   .fg-field-combo-list {
     width: 100%;
     border-width: 1px 0 0 0;
@@ -494,7 +495,7 @@
   .fg-filter-field-input {
     height: 28px;
     margin: 10px;
-    width: auto;
+    width: calc(100% - 20px);
     border-left-width: 1px;
     border-radius: 2px;
   }

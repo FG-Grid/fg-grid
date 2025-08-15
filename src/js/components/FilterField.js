@@ -209,10 +209,18 @@
       const elRect = me.el.getBoundingClientRect();
       let top = elRect.top + window.scrollY - 1 + elRect.height;
       let left = elRect.left + window.scrollX;
+      let width = elRect.width;
+
+      console.log(me.el)
+
+      if(width < me.minListWidth){
+        width = me.minListWidth;
+      }
 
       const containerEl = div([FILTER_FIELD_COMBO_CONTAINER, 'fg-theme-' + me.theme], {
         top: `${top}px`,
-        left: `${left}px`
+        left: `${left}px`,
+        width: `${width}px`
       });
 
       const comboEl = div(FIELD_COMBO_LIST, {
@@ -302,10 +310,11 @@
     }
     showComboList() {
       const me = this;
+      const elRect = me.el.getBoundingClientRect();
       const elSignRect = me.elSign.getBoundingClientRect();
       const top = elSignRect.top + window.scrollY - 1 + elSignRect.height;
       const left = elSignRect.left;
-      let width = me.column.width;
+      let width = elRect.width;
 
       if(width < me.minListWidth){
         width = me.minListWidth;
