@@ -45,7 +45,7 @@ test.describe('Drag columns', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
-		await page.locator('[row-id="id-1"] [col-id="brand"]').click();
+		await page.locator('[row-id="1"] [col-id="brand"]').click();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('ArrowRight');
@@ -84,7 +84,7 @@ test.describe('Drag columns', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
-		await page.locator('[row-id="id-1"] [col-id="brand"]').click();
+		await page.locator('[row-id="1"] [col-id="brand"]').click();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('ArrowRight');

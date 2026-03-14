@@ -61,6 +61,7 @@ export interface Column<TData = any> {
   draggable?: boolean;
   hidden?: boolean;
   index?: keyof TData;
+  dataIndex?: boolean;
   id?: string;
   filter?: boolean | {
     defaultFilter?: 'list' | string;

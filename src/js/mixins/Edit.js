@@ -1,5 +1,5 @@
 (() => {
-  const { CELL, ROW, EDITING } = Fancy.cls;
+  const { CELL, ACTIVE_CELL, ROW, EDITING } = Fancy.cls;
 
   /**
    * @mixin GridMixinEdit
@@ -17,7 +17,7 @@
       let row = cell.closest(`.${ROW}`);
       let itemId = row.getAttribute('row-id');
       let rowIndex = row.getAttribute('row-index');
-      let item = me.store.idItemMap.get(itemId);
+      let item = me.store.idItemMap[itemId];
       const rowTop = Fancy.getTranslateY(row);
       let value = item[column.index];
       let valueBeforeEdit = value;
@@ -50,7 +50,7 @@
           column = me.columns[columnIndex];
           rowIndex = row.getAttribute('row-index');
           itemId = row.getAttribute('row-id');
-          item = me.store.idItemMap.get(itemId);
+          item = me.store.idItemMap[itemId];
         }
 
         if(column.setter){
@@ -71,6 +71,7 @@
         cell?.remove();
 
         cell = me.createCell(rowIndex, columnIndex);
+        cell.classList.add(ACTIVE_CELL);
         me.activeCellEl = cell;
         row.appendChild(cell);
 
@@ -213,6 +214,7 @@
 
       if(me.activeEditor){
         me.activeEditor.hide();
+        delete me.activeEditor.column.editorField;
         delete me.activeEditor;
         me.setStatusEditing(false);
       }
@@ -301,7 +303,7 @@
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           me.renderedRowsIdMap.forEach((rowEl, id) => {
-            const item = me.store.idItemMap.get(id);
+            const item = me.store.idItemMap[id];
 
             me.actualRowsIdSet.has(item.id) && me.updateRowPosition(item);
           });
@@ -310,21 +312,26 @@
     },
 
     $processRowsToRemove(rows){
+      const me = this;
+
       switch (Fancy.typeOf(rows)){
         case 'string':
-          rows = [{
-            id: rows
-          }];
+        case 'number':
+          rows = [me.getItemById(rows)];
           break;
         case 'object':
+          if(typeof rows.id === 'number'){
+            rows.id = String(rows.id);
+          }
+
           rows = [rows];
           break;
         case 'array':
           rows = rows.map((value) => {
-            if(typeof value === 'string'){
-              return {
-                id: value
-              };
+            switch (typeof value){
+              case 'string':
+              case 'number':
+                return me.getItemById(value);
             }
 
             return value;

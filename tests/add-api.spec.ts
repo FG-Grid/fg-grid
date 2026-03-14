@@ -184,7 +184,7 @@ test.describe('Add api', () => {
 		await page.waitForTimeout(700);
 
 		await page.evaluate(() => {
-			const item = grid.getItemById('id-1');
+			const item = grid.getItemById(1);
 
 			grid.add([{
 				brand: 'BMW',

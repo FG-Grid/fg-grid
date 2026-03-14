@@ -44,8 +44,8 @@ test.describe('Remove api', () => {
 		await page.waitForTimeout(700);
 
 		await page.evaluate(() => {
-			const item1 = grid.getItemById('id-1');
-			const item2 = grid.getItemById('id-2');
+			const item1 = grid.getItemById(1);
+			const item2 = grid.getItemById(2);
 
 			grid.remove([item1, item2]);
 		});
@@ -98,7 +98,7 @@ test.describe('Remove api', () => {
 		await page.waitForTimeout(700);
 
 		await page.evaluate(() => {
-			const item1 = grid.getItemById('id-1');
+			const item1 = grid.getItemById(1);
 
 			grid.remove(item1);
 		});
@@ -151,7 +151,7 @@ test.describe('Remove api', () => {
 		await page.waitForTimeout(700);
 
 		await page.evaluate(() => {
-			grid.remove('id-1');
+			grid.remove('1');
 		});
 
 		await page.waitForTimeout(700);

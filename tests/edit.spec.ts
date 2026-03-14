@@ -7,7 +7,7 @@ test.describe('Edit', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
-		await page.locator('[row-id="id-1"] [col-id="price"]').dblclick();
+		await page.locator('[row-id="1"] [col-id="price"]').dblclick();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('Backspace');
@@ -31,7 +31,7 @@ test.describe('Edit', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
-		await page.locator('[row-id="id-1"] [col-id="brand"]').dblclick();
+		await page.locator('[row-id="1"] [col-id="brand"]').dblclick();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('Backspace');
@@ -55,7 +55,7 @@ test.describe('Edit', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
-		await page.locator('[row-id="id-2"] [col-id="country"]').dblclick();
+		await page.locator('[row-id="2"] [col-id="country"]').dblclick();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('Backspace');
@@ -82,7 +82,7 @@ test.describe('Edit', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
-		await page.locator('[row-id="id-1"] [col-id="year"]').dblclick();
+		await page.locator('[row-id="1"] [col-id="year"]').dblclick();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('Backspace');
@@ -113,7 +113,7 @@ test.describe('Edit', () => {
 		const gridEl = page.locator('.fg-grid');
 		await expect(gridEl).toBeVisible();
 
-		await page.locator('[row-id="id-1"] [col-id="year"]').dblclick();
+		await page.locator('[row-id="1"] [col-id="year"]').dblclick();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('Backspace');

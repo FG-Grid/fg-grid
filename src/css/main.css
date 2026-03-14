@@ -11,6 +11,17 @@
   --base-color-6: #f5f7f7;
   --base-color-7: #b7b7b7;
   --base-color-8: #dde1e3;
+  --base-color-9: #d3dbe1;
+  --base-color-10: #fcfdfe;
+  --base-color-11: #ecf0f1;
+  --base-color-template: 174 183 194;
+  --base-color-12: rgba(var(--base-color-template) / 0.12);
+  --base-color-13: rgba(var(--base-color-template) / 0.25);
+  --base-color-14: rgba(var(--base-color-template) / 0.35);
+  --base-color-15: #b5b9c4;
+  --base-color-16: #f1f6ff;
+  --base-color-17: #8e8e8e;
+  --base-color-18: #181d1f;
 
   --grid-border-color: var(--base-color-1);
   --grid-border-width: 1px;
@@ -30,13 +41,13 @@
   --grid-cell-line-height: 27px;
   --grid-row-bg: white;
   --grid-row-border-bottom-width: 1px;
-  --grid-row-border-bottom-color: #d3dbe1;
-  --grid-row-odd-bg: #fcfdfe;
-  --grid-row-hover-bg: #ecf0f1;
+  --grid-row-border-bottom-color: var(--base-color-9);
+  --grid-row-odd-bg: var(--base-color-10);
+  --grid-row-hover-bg: var(--base-color-11);
   --grid-row-selected-color: var(--base-color-5);
-  --grid-row-group-expander-color: rgba(174, 183, 194, 0.12);
-  --grid-row-group-hover-expander-color: rgba(174, 183, 194, 0.25);
-  --grid-row-group-expander-hover-color: rgba(174, 183, 194, 0.35);
+  --grid-row-group-expander-color: var(--base-color-12);
+  --grid-row-group-hover-expander-color: var(--base-color-13);
+  --grid-row-group-expander-hover-color: var(--base-color-14);
   --grid-row-group-bar-logo-color: var(--base-color-3);
   --grid-group-level: 0;
   --grid-row-group-level-size: 17px;
@@ -45,8 +56,8 @@
   --grid-cell-color: var(--base-color-3);
   --grid-cell-font-size: 12px;
   --grid-cell-active-bg: var(--base-color-5);
-  --grid-cell-active-box-shadow-color: #B5B9C4;
-  --grid-cell-selected-bg: #f1f6ff;
+  --grid-cell-active-box-shadow-color: var(--base-color-15);
+  --grid-cell-selected-bg: var(--base-color-16);
   --grid-cell-order-bg: var(--base-color-6);
   --grid-cell-order-border-right-color: var(--base-color-1);
 
@@ -57,7 +68,7 @@
   --column-menu-item-group-color: var(--base-color-7);
   --column-menu-item-group-bg: var(--base-color-4);
 
-  --field-input-disabled-bg: color-mix(in srgb, #fff, #181d1f 6%);
+  --field-input-disabled-bg: color-mix(in srgb, white, var(--base-color-18) 6%);
   --field-list-bg: white;
   --field-list-border-color: var(--base-color-7);
   --field-list-item-hover-bg: var(--base-color-4);
@@ -77,7 +88,7 @@
   --filter-field-sign-hover-bg: var(--base-color-4);
   --filter-field-list-item-color: var(--base-color-2);
 
-  --checkbox-color: #8E8E8E;
+  --checkbox-color: var(--base-color-17);
 
   --svg-text-color: var(--base-color-3);
   --svg-filter-sign-color: var(--base-color-3);
@@ -100,13 +111,24 @@
   --base-color-4: #f5f7f7;
   --base-color-5: #b7b7b7;
   --base-color-6: #e8e8e8;
+  --base-color-7: #d1d1d1;
+  --base-color-8: #dde1e3;
+  --base-color-9: #d3dbe1;
+  --base-color-10: #fcfdfe;
+  --base-color-11: #f8f8f8;
+  --base-color-12: #e0e5e9;
+  --base-color-13: #b5b9c4;
+  --base-color-14: #f1f6ff;
+  --base-color-15: #8e8e8e;
+  --base-color-16: #181d1f;
+  --base-color-17: #bdc3c7;
 
-  --grid-border-color: #d1d1d1;
+  --grid-border-color: var(--base-color-7);
   --grid-border-width: 1px;
 
-  --grid-header-bottom-color: #dde1e3;
+  --grid-header-bottom-color: var(--base-color-8);
   --grid-header-bottom-width: 1px;
-  --grid-header-bg: #F5F7F7;
+  --grid-header-bg: var(--base-color-4);
   --grid-header-cell-color: var(--base-color-1);
   --grid-header-cell-font-weight: 600;
   --grid-header-cell-font-size: 12px;
@@ -119,20 +141,20 @@
   --grid-cell-line-height: 27px;
   --grid-row-bg: white;
   --grid-row-border-bottom-width: 1px;
-  --grid-row-border-bottom-color: #d3dbe1;
-  --grid-row-odd-bg: #fcfdfe;
-  --grid-row-hover-bg: #f8f8f8;
+  --grid-row-border-bottom-color: var(--base-color-9);
+  --grid-row-odd-bg: var(--base-color-10);
+  --grid-row-hover-bg: var(--base-color-11);
   --grid-group-level: 0;
   --grid-row-group-level-size: 17px;
   --grid-row-height: 28px;
 
   --grid-cell-color: var(--base-color-3);
   --grid-cell-font-size: 12px;
-  --grid-cell-active-bg: #E0E5E9;
-  --grid-cell-active-box-shadow-color: #B5B9C4;
-  --grid-cell-selected-bg: #f1f6ff;
+  --grid-cell-active-bg: var(--base-color-12);
+  --grid-cell-active-box-shadow-color: var(--base-color-13);
+  --grid-cell-selected-bg: var(--base-color-14);
   --grid-cell-order-bg: var(--base-color-4);
-  --grid-cell-order-border-right-color: rgb(189, 195, 199);
+  --grid-cell-order-border-right-color: var(--base-color-17);
 
   --column-menu-border-color: var(--base-color-5);
   --column-menu-bg: white;
@@ -141,7 +163,7 @@
   --column-menu-item-group-color: var(--base-color-5);
   --column-menu-item-group-bg: var(--base-color-6);
 
-  --field-input-disabled-bg: color-mix(in srgb, #fff, #181d1f 6%);
+  --field-input-disabled-bg: color-mix(in srgb, white, var(--base-color-16) 6%);
   --field-list-bg: white;
   --field-list-border-color: var(--base-color-5);
   --field-list-item-hover-bg: var(--base-color-6);
@@ -150,7 +172,7 @@
   --field-combo-button-border-color: var(--base-color-5);
   --field-combo-button-hover-bg: var(--base-color-4);
   --field-combo-list-item-color: var(--base-color-1);
-  --field-combo-list-item-active-bg: #E0E5E9;
+  --field-combo-list-item-active-bg: var(--base-color-12);
   --field-combo-list-item-selected-bg: rgba(0, 0, 0, 0.5);
 
   --filter-field-font-size: 12px;
@@ -161,7 +183,7 @@
   --filter-field-sign-hover-bg: var(--base-color-6);
   --filter-field-list-item-color: var(--base-color-1);
 
-  --checkbox-color: #8E8E8E;
+  --checkbox-color: var(--base-color-15);
 
   --svg-text-color: var(--base-color-3);
   --svg-filter-sign-color: var(--base-color-3);
@@ -185,6 +207,10 @@
   --base-color-5: #2196f3;
   --base-color-6: #626972;
   --base-color-7: #2e3744;
+  --base-color-8: #203145;
+  --base-color-9: #888888;
+  --base-color-10: #203e5c;
+  --base-color-11: #2F3744;
 
   --grid-border-color: var(--base-color-1);
   --grid-border-width: 1px;
@@ -200,44 +226,44 @@
   --grid-header-cell-after-top: calc(50% - 50%*0.5);
   --grid-header-cell-column-group-child-border-top-color: var(--base-color-1);
 
-  --grid-body-bg: rgb(31, 40, 54);
+  --grid-body-bg: var(--base-color-3);
   --grid-cell-line-height: 27px;
   --grid-row-bg: var(--base-color-3);
   --grid-row-border-bottom-width: 1px;
   --grid-row-border-bottom-color: var(--base-color-1);
   --grid-row-odd-bg: var(--base-color-3);
-  --grid-row-hover-bg: #203145;
+  --grid-row-hover-bg: var(--base-color-8);
   --grid-row-selected-color: var(--base-color-4);
 
   --grid-row-group-expander-color: rgba(174, 183, 194, 0.12);
   --grid-row-group-hover-expander-color: rgba(174, 183, 194, 0.25);
   --grid-row-group-expander-hover-color: rgba(174, 183, 194, 0.35);
-  --grid-row-group-bar-logo-color: #888888;
+  --grid-row-group-bar-logo-color: var(--base-color-9);
   --grid-group-level: 0;
   --grid-row-group-level-size: 17px;
   --grid-row-height: 28px;
 
   --grid-cell-color: var(--base-color-2);
   --grid-cell-font-size: 12px;
-  --grid-cell-active-bg: #203E5C;
+  --grid-cell-active-bg: var(--base-color-10);
   --grid-cell-active-box-shadow-color: var(--base-color-5);
-  --grid-cell-selected-bg: color-mix(in srgb, transparent, #2196f3 20%);
-  --grid-cell-order-bg: #2F3744;
+  --grid-cell-selected-bg: color-mix(in srgb, transparent, var(--base-color-5) 20%);
+  --grid-cell-order-bg: var(--base-color-11);
   --grid-cell-order-border-right-color: rgba(255, 255, 255, 0.15);
 
-  --column-menu-border-color: color-mix(in srgb, transparent, #FFF 20%);
-  --column-menu-bg: color-mix(in srgb, #1F2836, #FFF 3%);
+  --column-menu-border-color: color-mix(in srgb, transparent, white 20%);
+  --column-menu-bg: color-mix(in srgb, var(--base-color-3), white 3%);
   --column-menu-item-color: var(--base-color-2);
-  --column-menu-item-hover-bg: color-mix(in srgb, transparent, #2196f3 8%);
-  --column-menu-item-group-color: color-mix(in srgb, transparent, #FFF 20%);
-  --column-menu-item-group-bg: color-mix(in srgb, transparent, #FFF 10%);
+  --column-menu-item-hover-bg: color-mix(in srgb, transparent, var(--base-color-5) 8%);
+  --column-menu-item-group-color: color-mix(in srgb, transparent, white 20%);
+  --column-menu-item-group-bg: color-mix(in srgb, transparent, white 10%);
 
   --field-input-disabled-bg: var(--base-color-6);
-  --field-list-bg: color-mix(in srgb, #1F2836, #FFF 3%);
-  --field-list-border-color: color-mix(in srgb, transparent, #FFF 20%);
-  --field-list-item-hover-bg: color-mix(in srgb, transparent, #2196f3 8%);
+  --field-list-bg: color-mix(in srgb, var(--base-color-3), white 3%);
+  --field-list-border-color: color-mix(in srgb, transparent, white 20%);
+  --field-list-item-hover-bg: color-mix(in srgb, transparent, var(--base-color-5) 8%);
 
-  --field-combo-button-bg: rgb(46, 55, 68);
+  --field-combo-button-bg: var(--base-color-7);
   --field-combo-button-border-color: var(--base-color-1);
   --field-combo-button-hover-bg: var(--base-color-1);
   --field-combo-list-item-color: var(--base-color-2);
@@ -245,11 +271,11 @@
   --field-combo-list-item-selected-bg: var(--base-color-4);
 
   --filter-field-font-size: 12px;
-  --filter-field-cell-color: #888888;
+  --filter-field-cell-color: var(--base-color-9);
   --filter-field-sign-border-color: var(--base-color-1);
   --filter-field-input-border-color: var(--base-color-1);
   --filter-field-bg: var(--base-color-3);
-  --filter-field-sign-hover-bg: color-mix(in srgb, transparent, #FFF 10%);
+  --filter-field-sign-hover-bg: color-mix(in srgb, transparent, white 10%);
   --filter-field-list-item-color: var(--base-color-2);
 
   --checkbox-color: var(--base-color-6);
@@ -263,7 +289,7 @@
 
   --button-border-color: var(--base-color-1);
   --button-bg: var(--base-color-7);
-  --button-bg-sign-hover-bg: color-mix(in srgb, transparent, #FFF 10%);
+  --button-bg-sign-hover-bg: color-mix(in srgb, transparent, white 10%);
   --button-color: var(--base-color-2);
 
   .fg-filter-field-input {
@@ -284,7 +310,7 @@
         border-radius: 2px;
         &:focus {
           border: 2px solid var(--base-color-5);
-          background-color: #2F3744;
+          background-color: var(--base-color-11);
         }
       }
     }
@@ -313,7 +339,7 @@
   .fg-filter-field-input {
     border-left: 1px solid var(--filter-field-input-border-color);
     &:focus {
-      border: 1px solid #2196f3;
+      border: 1px solid var(--base-color-5);
     }
   }
 }

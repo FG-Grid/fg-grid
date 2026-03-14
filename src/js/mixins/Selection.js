@@ -27,7 +27,7 @@
       const itemId = row.getAttribute('row-id');
       const column = me.columns[columnIndex];
       const store = me.store;
-      const item = store.idItemMap.get(itemId);
+      const item = store.idItemMap[itemId];
       const selected = !item.$selected;
       const group = item.$rowGroupValue;
 
@@ -44,7 +44,7 @@
       const itemId = row.getAttribute('row-id');
       const column = me.columns[columnIndex];
       const store = me.store;
-      const item = store.idItemMap.get(itemId);
+      const item = store.idItemMap[itemId];
       const selected = !item.$selected;
       const group = item.$rowGroupValue;
       const rowCheckBoxes = row.querySelectorAll(`div.${CELL_SELECTION} input.${INPUT_CHECKBOX}`);
@@ -63,7 +63,7 @@
       const row = inputEl.closest(`.${ROW_GROUP}`);
       const itemId = row.getAttribute('row-id');
       const store = me.store;
-      const item = store.idItemMap.get(itemId);
+      const item = store.idItemMap[itemId];
       const selected = !item.$selected;
       const group = item.$rowGroupValue;
 
@@ -134,7 +134,7 @@
 
       me.bodyEl.querySelectorAll(`.${ROW}`).forEach(row => {
         const itemId = row.getAttribute('row-id');
-        const item = store.idItemMap.get(itemId);
+        const item = store.idItemMap[itemId];
         if(!item) console.error(`FG-Grid: store.idItemMap does not contain ${itemId}`);
 
         const selected = item.$selected;
@@ -663,7 +663,7 @@
         if (!row) return;
 
         const itemId = row.getAttribute('row-id');
-        const item = me.store.idItemMap.get(itemId);
+        const item = me.store.idItemMap[itemId];
         const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
         const column = me.columns[columnIndex];
         const rowIndex = row.getAttribute('row-index');
@@ -796,7 +796,7 @@
 
         const rowIndex = rowEl.getAttribute('row-index');
         const itemId = rowEl.getAttribute('row-id');
-        const item = store.idItemMap.get(itemId);
+        const item = store.idItemMap[itemId];
         const columnIndex = Number(me.activeCellEl.getAttribute('col-index'));
         const column = me.columns[columnIndex];
 

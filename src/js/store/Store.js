@@ -24,7 +24,7 @@
 
     prevAction = '';
 
-    constructor({ data, rowGroups, rowGroupExpanded, aggregations, defaultRowGroupSort, onChange }) {
+    constructor({ data, rowGroups, rowGroupExpanded, aggregations, defaultRowGroupSort, onChange, dataIndexes }) {
       const me = this;
 
       me.prevAction = '';
@@ -38,6 +38,10 @@
       me.selectedRowGroupsChildren = {};
       me.groupDetails = {};
       me.onChange = onChange;
+
+      if(dataIndexes){
+        me.dataIndexes = dataIndexes;
+      }
 
       if (me.data.length && me.rowGroups.length) {
         me.lightSetIds();
@@ -92,7 +96,7 @@
       const me = this;
 
       if (!me.idItemMap) {
-        me.idItemMap = new Map();
+        me.idItemMap = {};
       }
       me.updateIndexes();
     }
@@ -103,8 +107,8 @@
 
       if(!me.$isOriginalDataIndexesSet){
         me.data.forEach((item, index) => {
-          item.originalDataRowIndex = index;
-          me.idItemMap.set(item.id, item);
+          item.originalRowIndex = index;
+          me.idItemMap[item.id] = item;
         });
         me.$isOriginalDataIndexesSet = true;
       }
@@ -113,35 +117,130 @@
 
       data.forEach((item, index) => {
         me.idRowIndexesMap.set(item.id, index);
-        me.idItemMap.set(item.id, item);
+        me.idItemMap[item.id] = item;
 
         item.rowIndex = index;
         item.originalRowIndex = index;
       });
     }
+    updateDataIndexes(items){
+      const me = this;
+      if(me.dataIndexes){
+        const toUpdate = {};
+        for(let p in me.dataIndexes){
+          toUpdate[p] = [];
+        }
+        items.forEach((item) => {
+          for(let p in me.dataIndexes){
+            toUpdate[p].push(item[p]);
+          }
+        });
+
+        for(let p in me.dataIndexes){
+          toUpdate[p] = [...new Set(toUpdate[p])];
+        }
+
+        me.setDataIndexes(toUpdate);
+      }
+    }
+    setDataIndexes(toUpdate) {
+      const me = this;
+      if(me.dataIndexes) {
+        const data = me.data;
+        const dataLength = data.length;
+
+        if(toUpdate){
+          for (let p in toUpdate) {
+            toUpdate[p].forEach(value => {
+              me.dataIndexes[p][value] = [];
+            });
+          }
+
+          for(let j = 0;j<dataLength;j++) {
+            const item = data[j];
+            for (let p in toUpdate) {
+              toUpdate[p].forEach(value => {
+                if(item[p] === value){
+                  me.dataIndexes[p][value].push(item.id);
+                }
+              });
+            }
+          }
+
+          return;
+        }
+
+        for (let p in me.dataIndexes) {
+          me.dataIndexes[p] = {};
+        }
+
+        for(let i = 0;i<dataLength;i++) {
+          const item = data[i];
+
+          for(let p in me.dataIndexes){
+            if(!me.dataIndexes[p][item[p]]){
+              me.dataIndexes[p][item[p]] = [];
+            }
+            me.dataIndexes[p][item[p]].push(item.id);
+          }
+        }
+      }
+    }
     setIds() {
       const me = this;
+      const data = me.data;
 
       me.idRowIndexesMap = new Map();
-      me.idItemMap = new Map();
+      me.idItemMap = {};
 
       me.idSeed = 0;
 
-      me.data.forEach((item, index) => {
-        if (item.id === undefined) {
-          item.id = me.generateId();
-          item.originalRowIndex = index;
-        }
-        else{
-          item.id = String(item.id);
+      let i = 0;
+      const iL = me.data.length;
+      if(me.dataIndexes){
+        for(let p in me.dataIndexes){
+          me.dataIndexes[p] = {};
         }
 
-        me.idRowIndexesMap.set(item.id, index);
-        me.idItemMap.set(item.id, item);
-      });
+        for(;i<iL;i++){
+          const item = data[i];
+          if (item.id === undefined) {
+            item.id = String(this.idSeed++);
+            item.originalRowIndex = i;
+          }
+          else{
+            item.id = String(item.id);
+          }
+
+          for(let p in me.dataIndexes){
+            if(!me.dataIndexes[p][item[p]]){
+              me.dataIndexes[p][item[p]] = [];
+            }
+            me.dataIndexes[p][item[p]].push(item.id);
+          }
+
+          me.idRowIndexesMap.set(item.id, i);
+          //me.idItemMap.set(item.id, item);
+          me.idItemMap[item.id] = item;
+        }
+      } else {
+        for(;i<iL;i++){
+          const item = data[i];
+          if (item.id === undefined) {
+            item.id = String(this.idSeed++);
+            item.originalRowIndex = i;
+          }
+          else{
+            item.id = String(item.id);
+          }
+
+          me.idRowIndexesMap.set(item.id, i);
+          me.idItemMap[item.id] = item;
+        }
+      }
     }
     generateId() {
-      return 'id-' + this.idSeed++;
+      return String(this.idSeed++);
     }
     getDataTotal() {
       return this.data.length;
@@ -198,6 +297,29 @@
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
         if (row.$isGroupRow !== true) return i;
+      }
+    }
+    spliceToData(rowIndex, removeNumber, toData, data){
+      const me = this;
+      if(data.length > 100_000){
+        const CHUNK = 10_000;
+        let pos = rowIndex + 1;
+
+        if (removeNumber > 0) {
+          toData.splice(pos, removeNumber);
+        }
+
+        for (let i = 0; i < data.length; i += CHUNK) {
+          const chunkSize = Math.min(CHUNK, data.length - i);
+          toData.splice(
+            pos,
+            0,
+            ...data.slice(i, i + chunkSize)
+          );
+          pos += chunkSize;
+        }
+      } else {
+        toData.splice(rowIndex + 1, removeNumber, ...data);
       }
     }
   }

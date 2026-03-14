@@ -6,7 +6,7 @@
    */
   const StoreMixinEdit = {
     setById(id, key, value){
-      const item = this.idItemMap.get(id);
+      const item = this.idItemMap[id];
 
       if (!item) return false;
 
@@ -30,10 +30,10 @@
     },
     removeItemById(id){
       const me = this;
-      const item = me.idItemMap.get(id);
-      const rowIndex = item.originalDataRowIndex;
+      const item = me.idItemMap[id];
+      const rowIndex = item.originalRowIndex;
 
-      me.idItemMap.delete(id);
+      delete me.idItemMap[id];
       me.idRowIndexesMap.delete(id);
       me.selectedItemsMap.delete(id);
 

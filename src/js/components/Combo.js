@@ -335,7 +335,9 @@
       const selectedItem = me.elComboList.querySelector(`.${FIELD_COMBO_LIST_ITEM_SELECTED}`);
 
       if(selectedItem){
-        selectedItem.scrollIntoView();
+        selectedItem.scrollIntoView({
+          block: 'nearest'
+        });
         me.setActiveItem(selectedItem);
       }
     }

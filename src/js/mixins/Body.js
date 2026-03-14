@@ -838,7 +838,7 @@
           const row = cell.closest(`.${ROW}`);
           if (!row) return;
           const itemId = row.getAttribute('row-id');
-          const item = me.store.idItemMap.get(itemId);
+          const item = me.store.idItemMap[itemId];
 
           if (!item) return;
 

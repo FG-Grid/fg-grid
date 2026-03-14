@@ -20,7 +20,7 @@ test.describe('Column Group', () => {
 
 		await page.waitForTimeout(1000);
 
-		await page.locator('[row-id="id-1"] [col-id="brand"]').click();
+		await page.locator('[row-id="1"] [col-id="brand"]').click();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('ArrowRight');

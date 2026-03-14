@@ -229,6 +229,8 @@
 
       if(!Fancy.isTouchDevice && column.menu !== false) {
         cell.addEventListener('mouseenter', () => {
+					if(me.columnResizing) return;
+
           elMenu.style.opacity = '0';
           elMenu.style.display = '';
           setTimeout(() => {

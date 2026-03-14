@@ -30,13 +30,22 @@
     sort(column, dir = 'ASC', multi) {
       const me = this;
       let data;
+      let dataIndex;
 
       if (me.prevAction === 'sort' && me.sortedData) {
-        data = me.sortedData.slice();
+        if(column.dataIndex && !multi && !me.rowGroups.length && !me.filters.length){
+          dataIndex = column.dataIndex;
+        } else {
+          data = me.sortedData.slice();
+        }
       } else if (me.filteredData) {
         data = me.filteredData.slice();
       } else {
-        data = me.data.slice();
+        if(column.dataIndex && !multi && !me.rowGroups.length){
+          dataIndex = column.dataIndex;
+        } else {
+          data = me.data.slice();
+        }
       }
 
       if (!me.prevIdRowIndexesMap) {
@@ -60,7 +69,11 @@
           if (me.rowGroups.length) {
             me.sortedData = me.filters.length ? me.sortGroupDataForFiltering(column, dir) : me.sortGroupData(column, dir);
           } else {
-            me.sortedData = me.sortData(data, column, dir);
+            if(dataIndex){
+              me.sortedData = me.sortDataByDataIndex(column, dir);
+            } else {
+              me.sortedData = me.sortData(data, column, dir);
+            }
           }
           break;
       }
@@ -95,7 +108,8 @@
           sortedGroupData = me.sortData(groupData, column, dir);
         }
 
-        sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
+        //sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
+        me.spliceToData(rowIndex, sortedGroupData.length, sortedData, sortedGroupData);
       }
 
       return sortedData;
@@ -120,7 +134,8 @@
           sortedGroupData = me.sortData(groupData, column, dir);
         }
 
-        sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
+        //sortedData.splice(rowIndex + 1, sortedGroupData.length, ...sortedGroupData);
+        me.spliceToData(rowIndex, sortedGroupData.length, sortedData, sortedGroupData);
       }
 
       return sortedData;
@@ -134,13 +149,46 @@
 
       return data;
     },
+    sortDataByDataIndex(column, dir) {
+      const me = this;
+      const values = Object.keys(me.dataIndexes[column.index]);
+      switch (dir){
+        case 'ASC':
+          values.sort((a, b) => {
+            if (!a.localeCompare) console.error(`FG-Grid: ${a} is not a string`);
+
+            return a.localeCompare(b);
+          });
+          break;
+        case 'DESC':
+          values.sort((a, b) => {
+            if (!a.localeCompare) console.error(`FG-Grid: ${a} is not a string`);
+
+            return b.localeCompare(a);
+          });
+          break;
+      }
+
+      let sortedData = [];
+      values.forEach(value => {
+        let ids = me.dataIndexes[column.index][value];
+        ids.forEach(id => {
+          sortedData.push(me.idItemMap[id]);
+        });
+      });
+
+      return sortedData;
+    },
     sortData(data, column, dir) {
       let sortedData = [];
+      let N;
+      let rowOrder;
 
       switch (dir) {
         case 'ASC':
           switch (column.type) {
             case 'number':
+              /*
               sortedData = data.sort((a, b) => {
                 if (column.getter) {
                   a = column.getter({
@@ -161,6 +209,40 @@
 
                 return a - b;
               });
+              */
+              const t10 = performance.now()
+              N = data.length;
+              const sortValues = new Int32Array(N);
+              t2 = performance.now();
+              for (let i = 0; i < N; i++) {
+                let value;
+
+                if (column.getter) {
+                  value = column.getter({ item: data[i] });
+                } else {
+                  value = data[i][column.index];
+                }
+
+                if (value === null || value === undefined) {
+                  value = Number.MIN_SAFE_INTEGER;
+                } else {
+                  value = Number(value);
+                  if (value > 2_147_483_647) value = 2_147_483_647;
+                  if (value < -2_147_483_648) value = -2_147_483_648;
+                }
+
+                sortValues[i] = value;
+              }
+
+              rowOrder = new Uint32Array(N);
+              for (let i = 0; i < N; i++) rowOrder[i] = i;
+
+              rowOrder.sort((i, j) => sortValues[i] - sortValues[j]);
+
+              sortedData = new Array(N);
+              for (let i = 0; i < N; i++) {
+                sortedData[i] = data[rowOrder[i]];
+              }
               break;
             case 'string':
               sortedData = data.sort((a, b) => {
@@ -184,6 +266,7 @@
               });
               break;
             case 'boolean':
+              /*
               sortedData = data.sort((a, b) => {
                 if (column.getter) {
                   a = column.getter({
@@ -200,12 +283,43 @@
 
                 return (a === b) ? 0 : a ? 1 : -1;
               });
+               */
+
+              N = data.length;
+
+              const values = new Uint8Array(N);
+
+              for (let i = 0; i < N; i++) {
+                const v = column.getter
+                  ? column.getter({ item: data[i] })
+                  : data[i][column.index];
+
+                values[i] = v === true ? 1 : 0;
+              }
+
+              rowOrder = new Uint32Array(N);
+              let writeFalse = 0;
+              let writeTrue = N - 1;
+
+              for (let i = 0; i < N; i++) {
+                if (values[i] === 0) {
+                  rowOrder[writeFalse++] = i;
+                } else {
+                  rowOrder[writeTrue--] = i;
+                }
+              }
+
+              sortedData = new Array(N);
+              for (let i = 0; i < N; i++) {
+                sortedData[i] = data[rowOrder[i]];
+              }
               break;
           }
           break;
         case 'DESC':
           switch (column.type) {
             case 'number':
+              /*
               sortedData = data.sort((a, b) => {
                 if(column.getter){
                   a = column.getter({
@@ -226,6 +340,39 @@
 
                 return b - a;
               });
+               */
+
+              N = data.length;
+              const sortValues = new Int32Array(N);
+              for (let i = 0; i < N; i++) {
+                let value;
+
+                if (column.getter) {
+                  value = column.getter({ item: data[i] });
+                } else {
+                  value = data[i][column.index];
+                }
+
+                if (value === null || value === undefined) {
+                  value = Number.MIN_SAFE_INTEGER;
+                } else {
+                  value = Number(value);
+                  if (value > 2_147_483_647) value = 2_147_483_647;
+                  if (value < -2_147_483_648) value = -2_147_483_648;
+                }
+
+                sortValues[i] = value;
+              }
+
+              rowOrder = new Uint32Array(N);
+              for (let i = 0; i < N; i++) rowOrder[i] = i;
+
+              rowOrder.sort((i, j) => sortValues[j] - sortValues[i]);
+
+              sortedData = new Array(N);
+              for (let i = 0; i < N; i++) {
+                sortedData[i] = data[rowOrder[i]];
+              }
               break;
             case 'string':
               sortedData = data.sort((a, b) => {
@@ -247,6 +394,7 @@
               });
               break;
             case 'boolean':
+              /*
               sortedData = data.sort((a, b) => {
                 if (column.getter) {
                   a = column.getter({
@@ -263,6 +411,36 @@
 
                 return (a === b) ? 0 : a ? -1 : 1;
               });
+               */
+
+              N = data.length;
+
+              const values = new Uint8Array(N);
+
+              for (let i = 0; i < N; i++) {
+                const v = column.getter
+                  ? column.getter({ item: data[i] })
+                  : data[i][column.index];
+
+                values[i] = v === true ? 1 : 0;
+              }
+
+              rowOrder = new Uint32Array(N);
+              let writeTrue = 0;
+              let writeFalse = N - 1;
+
+              for (let i = 0; i < N; i++) {
+                if (values[i] === 1) {
+                  rowOrder[writeTrue++] = i;
+                } else {
+                  rowOrder[writeFalse--] = i;
+                }
+              }
+
+              sortedData = new Array(N);
+              for (let i = 0; i < N; i++) {
+                sortedData[i] = data[rowOrder[i]];
+              }
               break;
           }
           break;
@@ -342,6 +520,11 @@
             me.idRowIndexesMap.set(item.id, index);
             item.rowIndex = index;
           });
+          //const data = me.data.slice();
+          // Here is problem
+          //delete me.displayedData;
+          //me.displayedData = me.data;
+          //me.displayedData = data;
         }
       }
 

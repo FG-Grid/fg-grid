@@ -20,7 +20,7 @@
         for (let i = 0; i < iL - 1; i++) {
           const _group = splitted.join('/');
           const groupDetail = me.groupDetails[_group];
-          const groupItem = me.idItemMap.get(groupDetail.id);
+          const groupItem = me.idItemMap[groupDetail.id];
           splitted.pop();
           const parentGroup = splitted.join('/');
 
@@ -68,7 +68,7 @@
       for (let i = 0; i < iL - 1; i++) {
         const _group = splitted.join('/');
         const groupDetail = me.filters.length? me.groupDetailsForFiltering[_group] : me.groupDetails[_group];
-        const groupItem = me.idItemMap.get(groupDetail.id);
+        const groupItem = me.idItemMap[groupDetail.id];
         splitted.pop();
         const parentGroup = splitted.join('/');
 
@@ -106,7 +106,7 @@
       const groupDetails = me.filters.length ? me.groupDetailsForFiltering : me.groupDetails;
       const groupsChildren = me.filters.length ? me.groupsChildrenForFiltering : me.groupsChildren;
       const groupDetail = groupDetails[group];
-      const groupItem = me.idItemMap.get(groupDetail.id);
+      const groupItem = me.idItemMap[groupDetail.id];
 
       let groupSelectedStatus;
 

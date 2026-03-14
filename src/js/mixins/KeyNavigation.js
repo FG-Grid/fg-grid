@@ -44,7 +44,7 @@
             const column = me.columns[columnIndex];
             const row = cell.closest(`.${ROW}`);
             const itemId = row.getAttribute('row-id');
-            const item = me.store.idItemMap.get(itemId);
+            const item = me.store.idItemMap[itemId];
             const value = item[column.index];
 
             if(column.type === 'boolean' && column.editable){

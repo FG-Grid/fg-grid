@@ -119,7 +119,7 @@
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           me.renderedRowsIdMap.forEach((rowEl, id) => {
-            const item = me.store.idItemMap.get(id);
+            const item = me.store.idItemMap[id];
 
             !me.actualRowsIdSet.has(item.id) && itemsToRemove.push(item);
 

@@ -305,6 +305,7 @@
       const me = this;
       let rowGroups = [];
       let aggregations = [];
+      const dataIndexes = {};
 
       const $lang = Fancy.deepClone(lang);
 
@@ -363,6 +364,9 @@
                 break;
             }
             delete column.filter?.defaultFilter;
+          }
+          if(column.dataIndex){
+            dataIndexes[column.index] = {};
           }
         });
 
@@ -452,8 +456,17 @@
         });
       }
 
+      let data = [];
+      switch (Fancy.typeOf(config.data)){
+        case 'array':
+          data = structuredClone(config.data);
+          break;
+        case 'object':
+          break;
+      }
+
       const storeConfig = {
-        data: structuredClone(config.data),
+        data: data,
         defaultRowGroupSort: config.defaultRowGroupSort || me.defaultRowGroupSort,
         onChange(params) {
           if(params.value !== params.oldValue){
@@ -461,6 +474,10 @@
           }
         }
       };
+
+      if(Object.keys(dataIndexes).length){
+        storeConfig.dataIndexes = dataIndexes;
+      }
 
       if(rowGroups.length){
         Object.assign(storeConfig, {
@@ -685,9 +702,9 @@
         }
       });
 
-      const rowIndexes = dataItemsToRemove.sort((a, b) => a.originalDataRowIndex - b.originalDataRowIndex);
+      const rowIndexes = dataItemsToRemove.sort((a, b) => a.originalRowIndex - b.originalRowIndex);
       rowIndexes.forEach((item, index) => {
-        store.data.splice(item.originalDataRowIndex - index, 1);
+        store.data.splice(item.originalRowIndex - index, 1);
       });
       delete store.$isOriginalDataIndexesSet;
 
@@ -720,6 +737,8 @@
       me.updateHeaderCheckboxesSelection();
 
       me.updateOrderColumn();
+
+      store.updateDataIndexes(rows);
     }
     add(items, position){
       const me = this;
@@ -757,6 +776,8 @@
       me.updateHeaderCheckboxesSelection();
 
       me.updateOrderColumn();
+
+      store.updateDataIndexes(Fancy.typeOf(items) === 'object'? [items]: items);
     }
     setById(id, index, value){
       const me = this;
@@ -807,7 +828,7 @@
       row && me.rowCellsUpdateWithColumnRender(row, me.flashChanges);
     }
     getItemById(id) {
-      return this.store.idItemMap.get(id);
+      return this.store.idItemMap[id];
     }
     getColumnData(column){
       const me = this;

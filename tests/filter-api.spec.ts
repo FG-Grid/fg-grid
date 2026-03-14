@@ -268,7 +268,7 @@ test.describe('Filter API', () => {
 
 		await page.waitForTimeout(500);
 
-		await page.locator('[row-id="id-2"] [col-id="brand"]').click();
+		await page.locator('[row-id="2"] [col-id="brand"]').click();
 		await page.waitForTimeout(700);
 
 		await page.keyboard.press('ArrowRight');

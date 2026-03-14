@@ -636,13 +636,13 @@
     }
     onInputKeyDown(event){
       const me = this;
-      const value = event.target.value;
+      const value = String(event.target.value).toLocaleLowerCase();
       const hiddenMap = new Map();
 
       me.items.forEach(item => {
-        if(!item.text.includes(value)){
+        if(!String(item.text).toLocaleLowerCase().includes(value)) {
           item.hidden = true;
-          hiddenMap.set(item.text, true);
+          hiddenMap.set(String(item.text), true);
         } else {
           item.hidden = false;
         }

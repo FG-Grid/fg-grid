@@ -76,7 +76,7 @@
         const groupDetails = me.groupDetails[group];
         const rowIndex = me.idRowIndexesMap.get(groupDetails.id);
 
-        groupedData.splice(rowIndex + 1, groupData.length, ...groupData);
+        me.spliceToData(rowIndex, groupData.length, groupedData, groupData);
       }
 
       me.displayedData = groupedData;
@@ -514,9 +514,7 @@
       }
 
       const groupData = me.getGroupExpandedChildren(group);
-
-      me.displayedData.splice(rowIndex + 1, 0, ...groupData);
-
+      me.spliceToData(rowIndex, 0, me.displayedData, groupData);
       me.updateIndexes();
     },
     expandForFiltering(group) {
@@ -532,8 +530,7 @@
       }
 
       const groupData = me.getGroupExpandedChildrenForFiltering(group);
-
-      me.displayedData.splice(rowIndex + 1, 0, ...groupData);
+      me.spliceToData(rowIndex, 0, me.displayedData, groupData);
       me.updateIndexes();
     },
     expandAll() {
