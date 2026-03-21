@@ -1,5 +1,11 @@
+const IS_SERVER = typeof window !== 'object' || !window?.document?.fonts?.forEach;
+let Fancy$100;
+let Grid$200;
+
+if(!IS_SERVER) {        
+        
 const Fancy$1 = {
-  version: '1.0.0',
+  version: '1.0.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -10786,10 +10792,11 @@ Fancy.copyText = (text) => {
   Fancy.ComboField = Combo;
 })();
 
-import '../styles/fg-grid.css';
+  import('../styles/fg-grid.css');
         
-const Fancy$100 = window.Fancy;
-const Grid$200 = window.Fancy.Grid;
+  Fancy$100 = window.Fancy;
+  Grid$200 = window.Fancy.Grid;
+}
 
 export {
   Fancy$100 as Fancy,

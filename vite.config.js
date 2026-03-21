@@ -107,12 +107,18 @@ module.exports = {
         entryFileNames: 'fg-grid.esm.js',
         dir: 'dist',
         strict: false,
-        banner: ``,
+        banner: `const IS_SERVER = typeof window !== 'object' || !window?.document?.fonts?.forEach;
+let Fancy$100;
+let Grid$200;
+
+if(!IS_SERVER) {        
+        `,
         footer: `
-import '../styles/fg-grid.css';
+  import('../styles/fg-grid.css');
         
-const Fancy$100 = window.Fancy;
-const Grid$200 = window.Fancy.Grid;
+  Fancy$100 = window.Fancy;
+  Grid$200 = window.Fancy.Grid;
+}
 
 export {
   Fancy$100 as Fancy,
@@ -124,12 +130,18 @@ export {
         entryFileNames: 'fg-grid.esm.min.js',
         dir: 'dist',
         strict: false,
-        banner: ``,
+        banner: `const IS_SERVER = typeof window !== 'object' || !window?.document?.fonts?.forEach;
+let Fancy$100;
+let Grid$200;
+
+if(!IS_SERVER) {         
+        `,
         footer: `
-import '../styles/fg-grid.css';
+  import('../styles/fg-grid.css');
         
-const Fancy$100 = window.Fancy;
-const Grid$200 = window.Fancy.Grid;
+  Fancy$100 = window.Fancy;
+  Grid$200 = window.Fancy.Grid;
+}
 
 export {
   Fancy$100 as Fancy,

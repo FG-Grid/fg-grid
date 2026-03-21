@@ -1,6 +1,6 @@
 {
   "name": "fg-grid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JavaScript Grid Library",
   "type": "module",
   "main": "./dist/fg-grid.cjs.js",
