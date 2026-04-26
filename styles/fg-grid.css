@@ -3,6 +3,9 @@
 }
 
 .fg-theme-default {
+  --font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen-Sans, Ubuntu, Cantarell, Helvetica Neue, sans-serif;
+  font-family: var(--font-family);
+
   --base-color-1: #bdc3c7;
   --base-color-2: rgba(0, 0, 0, 0.54);
   --base-color-3: #888888;
@@ -105,6 +108,9 @@
 }
 
 .fg-theme-air {
+  --font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen-Sans, Ubuntu, Cantarell, Helvetica Neue, sans-serif;
+  font-family: var(--font-family);
+
   --base-color-1: rgba(0, 0, 0, 0.54);
   --base-color-2: #d9dddf;
   --base-color-3: #888888;
@@ -200,6 +206,9 @@
 }
 
 .fg-theme-dark {
+  --font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen-Sans, Ubuntu, Cantarell, Helvetica Neue, sans-serif;
+  font-family: var(--font-family);
+
   --base-color-1: #ffffff26;
   --base-color-2: #ffffff99;
   --base-color-3: #1f2836;
@@ -354,7 +363,7 @@
   flex-direction: column;
   box-sizing: border-box;
   border: var(--grid-border-width) solid var(--grid-border-color);
-  font-family: -apple-system,system-ui,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol',sans-serif;
+  font-family: var(--font-family);
 }
 
 .fg-grid * {
@@ -399,7 +408,7 @@
 
 .fg-field-input {
   width: 100%;
-  padding: 6px 4px 4px 4px;
+  padding: 4px;
   box-sizing: border-box;
   margin: 0;
   outline: 0;
@@ -440,6 +449,7 @@
 }
 
 .fg-field-combo-list {
+  font-family: var(--font-family);
   position: absolute;
   box-sizing: border-box;
   border: 1px solid var(--field-list-border-color);
@@ -450,6 +460,7 @@
 }
 
 .fg-field-combo-list-item {
+  font-family: var(--font-family);
   padding: 5px;
   cursor: pointer;
   display: flex;
@@ -578,6 +589,7 @@
 }
 
 .fg-filter-field-list {
+  font-family: var(--font-family);
   position: absolute;
   border: 1px solid var(--field-list-border-color);
   background: var(--field-list-bg);
@@ -595,6 +607,7 @@
   padding: 5px;
   cursor: pointer;
   display: flex;
+  align-items: center;
   color: var(--filter-field-list-item-color);
   font-weight: bold;
   line-height: 18px;
@@ -848,7 +861,7 @@
   width: 100%;
   color: var(--grid-cell-color);
   font-size: var(--grid-cell-font-size);
-  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif;
+  font-family: var(--font-family);
   position: absolute;
   white-space: nowrap;
   height: 100%;
@@ -920,7 +933,7 @@
   box-sizing: border-box;
   color: var(--grid-cell-color);
   font-size: var(--grid-cell-font-size);
-  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif;
+  font-family: var(--font-family);
   /*display: flex;*/
   display: inline-block;
   /*
@@ -1193,6 +1206,7 @@
 }
 
 .fg-columns-menu {
+  z-index: 1;
   opacity: 0;
   transition: opacity 0.2s;
 

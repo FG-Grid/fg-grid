@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.0.1',
+  version: '1.0.2',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -5663,8 +5663,9 @@ Fancy.copyText = (text) => {
     showHeaderCellMenuList(event, column) {
       const me = this;
       const elMenuRect = column.elMenu.getBoundingClientRect();
-      const top = elMenuRect.top - 1 + elMenuRect.height;
-      const left = elMenuRect.left;
+      const top = elMenuRect.top + window.scrollY - 1 + elMenuRect.height;
+      const left = elMenuRect.left + window.scrollX;
+
       const el = div([COLUMNS_MENU, 'fg-theme-' + me.theme], {
         top: `${top}px`,
         left: `${left}px`
