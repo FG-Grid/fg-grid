@@ -5,7 +5,7 @@ let Grid$200;
 if(!IS_SERVER) {        
         
 const Fancy$1 = {
-  version: '1.0.7',
+  version: '1.0.8',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -1153,10 +1153,8 @@ Fancy.copyText = (text) => {
                 return a - b;
               });
               */
-              performance.now();
               N = data.length;
               const sortValues = new Int32Array(N);
-              t2 = performance.now();
               for (let i = 0; i < N; i++) {
                 let value;
 

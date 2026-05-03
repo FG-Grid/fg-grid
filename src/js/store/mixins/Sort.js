@@ -210,10 +210,8 @@
                 return a - b;
               });
               */
-              const t10 = performance.now()
               N = data.length;
               const sortValues = new Int32Array(N);
-              t2 = performance.now();
               for (let i = 0; i < N; i++) {
                 let value;
 
