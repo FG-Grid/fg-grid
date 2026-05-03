@@ -1,5 +1,5 @@
 (() => {
-  const { CELL, ACTIVE_CELL, ROW, EDITING } = Fancy.cls;
+  const { CELL, ACTIVE_CELL, ROW, EDITING, INPUT_CHECKBOX } = Fancy.cls;
 
   /**
    * @mixin GridMixinEdit
@@ -7,6 +7,10 @@
   const GridMixinEdit = {
     onBodyCellDBLClick(event){
       const cell = event.target.closest(`.${CELL}`);
+
+      if(event.target.classList.contains(INPUT_CHECKBOX)){
+        return;
+      }
 
       this.openEditorForCell(cell);
     },

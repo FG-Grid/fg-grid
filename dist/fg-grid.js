@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.0.2',
+  version: '1.0.7',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -253,6 +253,8 @@ Fancy.cls = {
   HEADER_CELL_SPAN_HEIGHT: 'fg-header-span-height',
   HEADER_CELL_STICKY: 'fg-header-cell-sticky',
   HEADER_CELL_ROW_GROUP: 'fg-header-row-group-cell',
+  HEADER_CELL_ALIGN_CENTER: 'fg-header-cell-align-center',
+  HEADER_CELL_ALIGN_RIGHT: 'fg-header-cell-align-right',
 
   // Body
   BODY: 'fg-body',
@@ -281,6 +283,8 @@ Fancy.cls = {
   CELL_WRAPPER: 'fg-cell-wrapper',
   CELL_SELECTION: 'fg-cell-selection',
   CELL_SELECTED: 'fg-cell-selected',
+  CELL_ALIGN_CENTER: 'fg-cell-align-center',
+  CELL_ALIGN_RIGHT: 'fg-cell-align-right',
   ACTIVE_CELL: 'fg-cell-active',
   ACTIVE_CELL_ROW: 'fg-cell-active-row',
 
@@ -4040,6 +4044,7 @@ Fancy.copyText = (text) => {
             }
             delete column.filter?.defaultFilter;
           }
+
           if(column.dataIndex){
             dataIndexes[column.index] = {};
           }
@@ -4097,6 +4102,16 @@ Fancy.copyText = (text) => {
           }
 
           me.prepareColumn(column, config.defaults);
+
+          if(column.type === 'number'){
+            if(!column.align){
+              column.align = 'right';
+            }
+
+            if(!column.headerAlign){
+              column.headerAlign = 'right';
+            }
+          }
 
           if (column.checkboxSelection) {
             config.checkboxSelection = true;
@@ -5056,6 +5071,8 @@ Fancy.copyText = (text) => {
     HEADER_CELL_COLUMN_GROUP_CHILD,
     HEADER_CELL_SPAN_HEIGHT,
     HEADER_CELL_STICKY,
+    HEADER_CELL_ALIGN_CENTER,
+    HEADER_CELL_ALIGN_RIGHT,
     BODY,
     COLUMN_RESIZING,
     COLUMN_DRAGGING,
@@ -5198,6 +5215,17 @@ Fancy.copyText = (text) => {
         }
       }
 
+      if(column.headerAlign){
+        switch (column.headerAlign){
+          case 'right':
+            cell.classList.add(HEADER_CELL_ALIGN_RIGHT);
+            break;
+          case 'center':
+            cell.classList.add(HEADER_CELL_ALIGN_CENTER);
+            break;
+        }
+      }
+
       if(column.resizable === false){
         cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
       }
@@ -5261,14 +5289,16 @@ Fancy.copyText = (text) => {
 
       label.append(cellText, filterContainer, sortContainer);
 
-      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice ? {} : {
+      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice || column.menuVisibility === 'always' ? {
+        opacity: '1'
+      } : {
         display: 'none'
       });
       elMenu.innerHTML = Fancy.svg.menu;
 
       column.elMenu = elMenu;
 
-      if(!Fancy.isTouchDevice && column.menu !== false) {
+      if((!Fancy.isTouchDevice && column.menu !== false) && (column.menu !== false && column.menuVisibility !== 'always')) {
         cell.addEventListener('mouseenter', () => {
 					if(me.columnResizing) return;
 
@@ -5918,6 +5948,8 @@ Fancy.copyText = (text) => {
     CELL_SELECTED,
     ACTIVE_CELL,
     ACTIVE_CELL_ROW,
+    CELL_ALIGN_CENTER,
+    CELL_ALIGN_RIGHT,
     ROW,
     ROW_ODD,
     ROW_EVEN,
@@ -6005,6 +6037,17 @@ Fancy.copyText = (text) => {
       if(allowActiveCellSet && me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
         cell.classList.add(ACTIVE_CELL);
         me.activeCellEl = cell;
+      }
+
+      if(column.align){
+        switch (column.align){
+          case 'right':
+            cell.classList.add(CELL_ALIGN_RIGHT);
+            break;
+          case 'center':
+            cell.classList.add(CELL_ALIGN_CENTER);
+            break;
+        }
       }
 
       if(column.cellStyle) {
@@ -9247,7 +9290,7 @@ Fancy.copyText = (text) => {
 })();
 
 (() => {
-  const { CELL, ACTIVE_CELL, ROW, EDITING } = Fancy.cls;
+  const { CELL, ACTIVE_CELL, ROW, EDITING, INPUT_CHECKBOX } = Fancy.cls;
 
   /**
    * @mixin GridMixinEdit
@@ -9255,6 +9298,10 @@ Fancy.copyText = (text) => {
   const GridMixinEdit = {
     onBodyCellDBLClick(event){
       const cell = event.target.closest(`.${CELL}`);
+
+      if(event.target.classList.contains(INPUT_CHECKBOX)){
+        return;
+      }
 
       this.openEditorForCell(cell);
     },

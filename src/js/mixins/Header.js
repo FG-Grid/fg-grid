@@ -15,6 +15,8 @@
     HEADER_CELL_COLUMN_GROUP_CHILD,
     HEADER_CELL_SPAN_HEIGHT,
     HEADER_CELL_STICKY,
+    HEADER_CELL_ALIGN_CENTER,
+    HEADER_CELL_ALIGN_RIGHT,
     BODY,
     COLUMN_RESIZING,
     COLUMN_DRAGGING,
@@ -157,6 +159,17 @@
         }
       }
 
+      if(column.headerAlign){
+        switch (column.headerAlign){
+          case 'right':
+            cell.classList.add(HEADER_CELL_ALIGN_RIGHT);
+            break;
+          case 'center':
+            cell.classList.add(HEADER_CELL_ALIGN_CENTER);
+            break;
+        }
+      }
+
       if(column.resizable === false){
         cell.classList.add(HEADER_CELL_NOT_RESIZABLE);
       }
@@ -220,14 +233,16 @@
 
       label.append(cellText, filterContainer, sortContainer);
 
-      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice ? {} : {
+      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice || column.menuVisibility === 'always' ? {
+        opacity: '1'
+      } : {
         display: 'none'
       });
       elMenu.innerHTML = Fancy.svg.menu;
 
       column.elMenu = elMenu;
 
-      if(!Fancy.isTouchDevice && column.menu !== false) {
+      if((!Fancy.isTouchDevice && column.menu !== false) && (column.menu !== false && column.menuVisibility !== 'always')) {
         cell.addEventListener('mouseenter', () => {
 					if(me.columnResizing) return;
 

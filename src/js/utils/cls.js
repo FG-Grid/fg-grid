@@ -24,6 +24,8 @@ Fancy.cls = {
   HEADER_CELL_SPAN_HEIGHT: 'fg-header-span-height',
   HEADER_CELL_STICKY: 'fg-header-cell-sticky',
   HEADER_CELL_ROW_GROUP: 'fg-header-row-group-cell',
+  HEADER_CELL_ALIGN_CENTER: 'fg-header-cell-align-center',
+  HEADER_CELL_ALIGN_RIGHT: 'fg-header-cell-align-right',
 
   // Body
   BODY: 'fg-body',
@@ -52,6 +54,8 @@ Fancy.cls = {
   CELL_WRAPPER: 'fg-cell-wrapper',
   CELL_SELECTION: 'fg-cell-selection',
   CELL_SELECTED: 'fg-cell-selected',
+  CELL_ALIGN_CENTER: 'fg-cell-align-center',
+  CELL_ALIGN_RIGHT: 'fg-cell-align-right',
   ACTIVE_CELL: 'fg-cell-active',
   ACTIVE_CELL_ROW: 'fg-cell-active-row',
 

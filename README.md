@@ -1,6 +1,6 @@
 # FG-Grid
 
-Build v1.0.2
+Build v1.0.7
 
 FG-Grid - Open source data grid library for building enterprise applications
 
@@ -14,12 +14,12 @@ FG-Grid - Open source data grid library for building enterprise applications
 
 #### *npm*
 ```
-npm install fg-grid@latest
+npm install fg-grid
 ```
 
 ### React
 ```
-npm install fg-grid fg-grid-react-wrapper@latest
+npm install fg-grid fg-grid-react-wrapper
 ```
 
 #### *CDN*

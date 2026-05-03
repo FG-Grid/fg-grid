@@ -8,6 +8,8 @@
     CELL_SELECTED,
     ACTIVE_CELL,
     ACTIVE_CELL_ROW,
+    CELL_ALIGN_CENTER,
+    CELL_ALIGN_RIGHT,
     ROW,
     ROW_ODD,
     ROW_EVEN,
@@ -95,6 +97,17 @@
       if(allowActiveCellSet && me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId && columnIndex === me.activeCellColumnIndex){
         cell.classList.add(ACTIVE_CELL);
         me.activeCellEl = cell;
+      }
+
+      if(column.align){
+        switch (column.align){
+          case 'right':
+            cell.classList.add(CELL_ALIGN_RIGHT);
+            break;
+          case 'center':
+            cell.classList.add(CELL_ALIGN_CENTER);
+            break;
+        }
       }
 
       if(column.cellStyle) {

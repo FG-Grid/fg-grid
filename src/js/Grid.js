@@ -365,6 +365,7 @@
             }
             delete column.filter?.defaultFilter;
           }
+
           if(column.dataIndex){
             dataIndexes[column.index] = {};
           }
@@ -422,6 +423,16 @@
           }
 
           me.prepareColumn(column, config.defaults);
+
+          if(column.type === 'number'){
+            if(!column.align){
+              column.align = 'right';
+            }
+
+            if(!column.headerAlign){
+              column.headerAlign = 'right';
+            }
+          }
 
           if (column.checkboxSelection) {
             config.checkboxSelection = true;

@@ -72,6 +72,9 @@ export interface Column<TData = any> {
     }[];
   };
   menu?: boolean;
+  menuVisibility?: 'hover' | 'always';
+  align?: 'left' | 'center' | 'right';
+  headerAlign?: 'left' | 'center' | 'right';
   type?: 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'order';
   title?: string;
   sticky?: boolean;
