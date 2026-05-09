@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.0.8',
+  version: '1.0.9',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -3483,11 +3483,15 @@ Fancy.copyText = (text) => {
     }
     initResizeObserver(){
       const me = this;
+      const grid = me.grid;
 
       me.resizeObserver = new ResizeObserver((entries) => {
         if (!Array.isArray(entries) || !entries.length) return;
 
-        me.grid.checkSize() && me.updateSize();
+        if(grid.resizeDownColumnIndex === undefined && grid.checkSize()){
+          grid.calcFlexColumns();
+          me.updateSize();
+        }
       });
 
       me.resizeObserver.observe(me.grid.containerEl);
@@ -4003,6 +4007,9 @@ Fancy.copyText = (text) => {
           config.rowGroupColumn = config.rowGroupColumn || {};
         }
 
+        let flexAmount = 0;
+        let width = 0;
+
         config.columns.forEach(column => {
           if(column.rowGroup){
             column.hidden = true;
@@ -4030,7 +4037,21 @@ Fancy.copyText = (text) => {
           if(column.dataIndex){
             dataIndexes[column.index] = {};
           }
+
+          if(column.flex){
+            flexAmount += column.flex;
+          }
         });
+
+        if(flexAmount){
+          me.flexAmount = flexAmount;
+          if(config.width){
+            width = config.width;
+          } else {
+            const rect = me.containerEl.getBoundingClientRect();
+            width = rect.width;
+          }
+        }
 
         if(newRowGroupsOrder){
           const groupsToMerge = structuredClone(rowGroups).filter(group => !newRowGroupsOrder.includes(group));
@@ -4126,6 +4147,10 @@ Fancy.copyText = (text) => {
             left += column.width;
           }
         });
+
+        if(flexAmount){
+          me.calcFlexColumns(config, width);
+        }
       }
 
       let data = [];
@@ -4220,11 +4245,14 @@ Fancy.copyText = (text) => {
 
       if(!me.initialWidth || me.width !== rect.width){
         me.width = rect.width;
+        me.initialWidth = me.width;
         changed = true;
       }
 
       if(me.initialHeight || me.height !== rect.height){
         me.height = rect.height;
+        me.initialHeight = me.height;
+
         changed = true;
       }
 
@@ -5547,6 +5575,11 @@ Fancy.copyText = (text) => {
         return;
       }
 
+      if(column.flex){
+        me.flexAmount -= column.flex;
+        delete column.flex;
+      }
+
       me.columnResizing = true;
 
       me.resizeDownX = event.pageX;
@@ -5610,6 +5643,25 @@ Fancy.copyText = (text) => {
         newWidth = minColumnWidth;
       }
 
+      let resizeDownColumnIndex = me.resizeDownColumnIndex;
+      if(me.flexAmount){
+        let flex = false;
+
+        for(let i = resizeDownColumnIndex; i < me.columns.length; i++){
+          const column = me.columns[i];
+          if(column.flex && column.hidden !== true){
+            flex = true;
+            break;
+          }
+        }
+
+        if(flex){
+          me.calcFlexColumns();
+        } else {
+          resizeDownColumnIndex = undefined;
+        }
+      }
+
       if (me.resizeColumnGroup) {
         const children = me.resizeColumnGroup.children.filter(column => column.hidden !== true);
         const resizeColumnGroupChildrenWidths = me.resizeColumnGroupChildrenWidths;
@@ -5641,7 +5693,7 @@ Fancy.copyText = (text) => {
 
       requestAnimationFrame(() => {
         me.reCalcColumnsPositions();
-        me.updateCellPositions(me.resizeDownColumnIndex);
+        me.updateCellPositions(resizeDownColumnIndex);
         me.updateWidth();
       });
     },
@@ -9269,6 +9321,84 @@ Fancy.copyText = (text) => {
   };
 
   Object.assign(Grid.prototype, GridMixinColumnDrag);
+})();
+
+(() => {
+  /**
+	 * @mixin GridMixinColumnFlex
+	 */
+  const GridMixinColumnFlex = {
+    calcFlexColumns(config, width){
+      const me = this;
+      const scrollBarWidth = 17;
+      const flexAmount = me.flexAmount;
+      let columns = me.columns;
+      let columnsLevel = me.columnsLevel;
+      let columns2 = me.columns2;
+
+      if(config){
+        columns = config.columns;
+        columnsLevel = config.columnsLevel;
+        columns2 = config.columns2;
+      }
+
+      let left = 0;
+      let columnsWidthWithoutFlex = 0;
+
+      if(width === undefined){
+        const rect = me.containerEl.getBoundingClientRect();
+        width = rect.width;
+      }
+
+      columns.forEach((column) => {
+        if(!column.flex){
+          columnsWidthWithoutFlex += column.width;
+        }
+      });
+
+      let flexWidth = width - columnsWidthWithoutFlex - scrollBarWidth;
+
+      let oneFlexWidth = flexWidth / flexAmount;
+      let prevGroupColumn;
+      columns.forEach((column, columnIndex) => {
+        column.left = left;
+
+        if(column.flex){
+          let newColumnWidth = oneFlexWidth * column.flex;
+          let minColumnWidth = column.minWidth || me.minColumnWidth;
+          let maxColumnWidth = column.maxWidth;
+
+          if(newColumnWidth < minColumnWidth){
+            newColumnWidth = minColumnWidth;
+          } else if(maxColumnWidth && newColumnWidth > maxColumnWidth){
+            newColumnWidth = maxColumnWidth;
+          }
+
+          column.width = newColumnWidth;
+        }
+
+        if(columnsLevel > 1){
+          const groupColumnAtIndex = columns2[columnIndex];
+
+          if(groupColumnAtIndex.spanning){
+            prevGroupColumn.width += column.width;
+            groupColumnAtIndex.left = left;
+            groupColumnAtIndex.width = column.width;
+          } else if(groupColumnAtIndex.ignore !== true){
+            prevGroupColumn = groupColumnAtIndex;
+            groupColumnAtIndex.left = left;
+            groupColumnAtIndex.width = column.width;
+          }
+        }
+
+        if(!column.hidden){
+          left += column.width;
+        }
+      });
+    }
+  };
+
+  Object.assign(Grid.prototype, GridMixinColumnFlex);
 })();
 
 (() => {

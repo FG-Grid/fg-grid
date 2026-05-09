@@ -471,11 +471,15 @@
     }
     initResizeObserver(){
       const me = this;
+      const grid = me.grid;
 
       me.resizeObserver = new ResizeObserver((entries) => {
         if (!Array.isArray(entries) || !entries.length) return;
 
-        me.grid.checkSize() && me.updateSize();
+        if(grid.resizeDownColumnIndex === undefined && grid.checkSize()){
+          grid.calcFlexColumns();
+          me.updateSize();
+        }
       });
 
       me.resizeObserver.observe(me.grid.containerEl);

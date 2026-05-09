@@ -509,6 +509,11 @@
         return;
       }
 
+      if(column.flex){
+        me.flexAmount -= column.flex;
+        delete column.flex;
+      }
+
       me.columnResizing = true;
 
       me.resizeDownX = event.pageX;
@@ -572,6 +577,25 @@
         newWidth = minColumnWidth;
       }
 
+      let resizeDownColumnIndex = me.resizeDownColumnIndex;
+      if(me.flexAmount){
+        let flex = false;
+
+        for(let i = resizeDownColumnIndex; i < me.columns.length; i++){
+          const column = me.columns[i];
+          if(column.flex && column.hidden !== true){
+            flex = true;
+            break;
+          }
+        }
+
+        if(flex){
+          me.calcFlexColumns();
+        } else {
+          resizeDownColumnIndex = undefined;
+        }
+      }
+
       if (me.resizeColumnGroup) {
         const children = me.resizeColumnGroup.children.filter(column => column.hidden !== true);
         const resizeColumnGroupChildrenWidths = me.resizeColumnGroupChildrenWidths;
@@ -603,7 +627,7 @@
 
       requestAnimationFrame(() => {
         me.reCalcColumnsPositions();
-        me.updateCellPositions(me.resizeDownColumnIndex);
+        me.updateCellPositions(resizeDownColumnIndex);
         me.updateWidth();
       });
     },

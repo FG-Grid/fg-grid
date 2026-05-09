@@ -29,6 +29,7 @@ import './mixins/RowGroupBar.js';
 import './mixins/Selection.js';
 import './mixins/KeyNavigation.js';
 import './mixins/ColumnDrag.js';
+import './mixins/ColumnFlex.js';
 import './mixins/Edit.js';
 
 import './components/Field.js';

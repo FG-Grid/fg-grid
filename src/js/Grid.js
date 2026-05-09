@@ -342,6 +342,9 @@
           config.rowGroupColumn = config.rowGroupColumn || {};
         }
 
+        let flexAmount = 0;
+        let width = 0;
+
         config.columns.forEach(column => {
           if(column.rowGroup){
             column.hidden = true;
@@ -369,7 +372,21 @@
           if(column.dataIndex){
             dataIndexes[column.index] = {};
           }
+
+          if(column.flex){
+            flexAmount += column.flex;
+          }
         });
+
+        if(flexAmount){
+          me.flexAmount = flexAmount;
+          if(config.width){
+            width = config.width;
+          } else {
+            const rect = me.containerEl.getBoundingClientRect();
+            width = rect.width;
+          }
+        }
 
         if(newRowGroupsOrder){
           const groupsToMerge = structuredClone(rowGroups).filter(group => !newRowGroupsOrder.includes(group));
@@ -465,6 +482,10 @@
             left += column.width;
           }
         });
+
+        if(flexAmount){
+          me.calcFlexColumns(config, width);
+        }
       }
 
       let data = [];
@@ -561,11 +582,14 @@
 
       if(!me.initialWidth || me.width !== rect.width){
         me.width = rect.width;
+        me.initialWidth = me.width;
         changed = true;
       }
 
       if(me.initialHeight || me.height !== rect.height){
         me.height = rect.height;
+        me.initialHeight = me.height;
+
         changed = true;
       }
 
