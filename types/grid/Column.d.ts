@@ -89,6 +89,7 @@ export interface Column<TData = any> {
   maxWidth?: number;
   minWidth?: number;
   width?: number;
+  flex?: number;
 
   render?(params: RenderParams<TData>): string|undefined;
   cellStyle?: CellStyle | CellStyleFn<TData>;

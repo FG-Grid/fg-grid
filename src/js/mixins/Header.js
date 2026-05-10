@@ -233,7 +233,7 @@
 
       label.append(cellText, filterContainer, sortContainer);
 
-      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice || column.menuVisibility === 'always' ? {
+      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice || column.menuVisibility !== 'hover' ? {
         opacity: '1'
       } : {
         display: 'none'
@@ -242,7 +242,7 @@
 
       column.elMenu = elMenu;
 
-      if((!Fancy.isTouchDevice && column.menu !== false) && (column.menu !== false && column.menuVisibility !== 'always')) {
+      if((!Fancy.isTouchDevice && column.menu !== false) && (column.menu !== false && column.menuVisibility === 'hover')) {
         cell.addEventListener('mouseenter', () => {
 					if(me.columnResizing) return;
 

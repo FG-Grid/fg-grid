@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.0.9',
+  version: '1.1.0',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -5315,7 +5315,7 @@ Fancy.copyText = (text) => {
 
       label.append(cellText, filterContainer, sortContainer);
 
-      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice || column.menuVisibility === 'always' ? {
+      const elMenu = div(HEADER_CELL_MENU, Fancy.isTouchDevice || column.menuVisibility !== 'hover' ? {
         opacity: '1'
       } : {
         display: 'none'
@@ -5324,7 +5324,7 @@ Fancy.copyText = (text) => {
 
       column.elMenu = elMenu;
 
-      if((!Fancy.isTouchDevice && column.menu !== false) && (column.menu !== false && column.menuVisibility !== 'always')) {
+      if((!Fancy.isTouchDevice && column.menu !== false) && (column.menu !== false && column.menuVisibility === 'hover')) {
         cell.addEventListener('mouseenter', () => {
 					if(me.columnResizing) return;
 

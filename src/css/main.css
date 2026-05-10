@@ -100,6 +100,7 @@
   --svg-header-filter-color: var(--base-color-2);
   --svg-expander-color: var(--base-color-3);
   --svg-combo-button-color: var(--base-color-2);
+  --svg-remove-hover-bg: rgba(0, 0, 0, 0.05);
 
   --button-border-color: var(--base-color-7);
   --button-bg: var(--base-color-6);
@@ -198,6 +199,7 @@
   --svg-header-filter-color: var(--base-color-1);
   --svg-expander-color: var(--base-color-3);
   --svg-combo-button-color: var(--base-color-1);
+  --svg-remove-hover-bg: rgba(0, 0, 0, 0.05);
 
   --button-border-color: var(--base-color-5);
   --button-bg: var(--base-color-4);
@@ -288,13 +290,14 @@
   --filter-field-list-item-color: var(--base-color-2);
 
   --checkbox-color: var(--base-color-6);
-  --svg-text-color: var(--base-color-6);
+  --svg-text-color: rgba(255, 255, 255, 0.6);
   --svg-filter-sign-color: var(--base-color-2);
-  --svg-menu-color: white;
-  --svg-sort-color: white;
+  --svg-menu-color: rgba(255, 255, 255, 0.6);
+  --svg-sort-color: rgba(255, 255, 255, 0.6);
   --svg-header-filter-color: white;
   --svg-expander-color: var(--base-color-2);
   --svg-combo-button-color: var(--base-color-2);
+  --svg-remove-hover-bg: rgba(174, 183, 194, 0.12);
 
   --button-border-color: var(--base-color-1);
   --button-bg: var(--base-color-7);
@@ -321,6 +324,15 @@
           border: 2px solid var(--base-color-5);
           background-color: var(--base-color-11);
         }
+      }
+    }
+  }
+
+  .fg-header-cell-menu {
+    svg {
+      &:hover {
+        background-color: color(srgb 1 1 1 / 0.1);
+        box-shadow: color(srgb 1 1 1 / 0.1) 0px 0px 0px 2px;
       }
     }
   }
@@ -558,6 +570,7 @@
 }
 
 .fg-filter-field-sign {
+  transition: background-color .2s;
   width: 27px;
   max-width: 27px;
   min-width: 27px;
@@ -1083,12 +1096,21 @@
   align-items: center;
 
   svg {
+    transition:
+      background-color .2s,
+      box-shadow .2s;
     width: 18px;
     height: 18px;
     line-height: 18px;
     /*color: rgba(0, 0, 0, 0.54);*/
     color: var(--svg-menu-color);
     /*margin-left: 4px;*/
+    border-radius: 1px;
+
+    &:hover {
+      background-color: color(srgb 0.0941176 0.113725 0.121569 / 0.1);
+      box-shadow: color(srgb 0.0941176 0.113725 0.121569 / 0.1) 0px 0px 0px 2px;
+    }
   }
 }
 
@@ -1345,7 +1367,7 @@
 .fg-svg-remove {
   transition: background-color 0.2s linear;
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--svg-remove-hover-bg);
   }
   cursor: pointer;
 }
