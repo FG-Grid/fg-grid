@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.1.0',
+  version: '1.1.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -103,6 +103,19 @@ const Fancy$1 = {
     return Fancy$1.newElement('input', cls, style);
   },
   /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   * @return HTMLElement
+   */
+  checkbox(cls = [], style = {}){
+    const el = Fancy$1.newElement('input', cls, style);
+
+    el.type = 'checkbox';
+
+    return el;
+  },
+
+  /**
    * @param {String} tag
    * @param {String|Array} cls
    * @param {Object} style
@@ -160,7 +173,7 @@ const Fancy$1 = {
       this.dom.classList.remove(...classNames);
     }
     containCls(cls) {
-      this.dom.classList.contains(cls);
+      return this.dom.classList.contains(cls);
     }
   }
 
@@ -574,11 +587,22 @@ Fancy.render = {
 
 Fancy.format = {
   CURRENCY_REGIONS: {
-    USD: 'en-US',
-    EUR: 'de',
-    GBP: 'en-gb',
-    JPY: 'jp',
-    CNY: 'zh-cn'
+    AUD: 'en-AU',
+    CAD: 'en-CA',
+    CHF: 'de-CH',
+    CNY: 'zh-CN',
+    EUR: 'de-DE',
+    GBP: 'en-GB',
+    INR: 'en-IN',
+    JPY: 'ja-JP',
+    KRW: 'ko-KR',
+    KZT: 'kk-KZ',
+    NOK: 'nb-NO',
+    PLN: 'pl-PL',
+    RUB: 'ru-RU',
+    SEK: 'sv-SE',
+    TRY: 'tr-TR',
+    USD: 'en-US'
   },
   currency(params) {
     const value = params.value;
@@ -914,6 +938,23 @@ Fancy.copyText = (text) => {
         if (row.$isGroupRow !== true) return i;
       }
     }
+    getPrevPageVisibleRowIndex(rowIndex, pageRows){
+      const me = this;
+      const data = me.displayedData || me.data;
+      let rowI;
+
+      for(let i = rowIndex - 1;i>-1;i--){
+        const row = data[i];
+        if (row.$isGroupRow !== true) {
+          rowI = i;
+          pageRows--;
+        }
+
+        if(pageRows === 0){
+          return rowI;
+        }
+      }
+    }
     getNextVisibleRowIndex(rowIndex){
       const me = this;
       const totalDisplayed = me.getDisplayedDataTotal();
@@ -922,6 +963,24 @@ Fancy.copyText = (text) => {
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
         if (row.$isGroupRow !== true) return i;
+      }
+    }
+    getNextPageVisibleRowIndex(rowIndex, pageRows){
+      const me = this;
+      const totalDisplayed = me.getDisplayedDataTotal();
+      const data = me.displayedData || me.data;
+      let rowI;
+
+      for(let i = rowIndex + 1;i<totalDisplayed;i++){
+        const row = data[i];
+        if (row.$isGroupRow !== true) {
+          rowI = i;
+          pageRows--;
+        }
+
+        if(pageRows === 0){
+          return rowI;
+        }
       }
     }
     spliceToData(rowIndex, removeNumber, toData, data){
@@ -3702,6 +3761,7 @@ Fancy.copyText = (text) => {
     groupBarDragEmpty: 'Drag columns here to generate row groups',
     search: 'Search...',
     reset: 'Reset',
+    selectAll: 'Select All',
     sign: {
       clear: 'Clear',
       list: 'List',
@@ -3946,6 +4006,18 @@ Fancy.copyText = (text) => {
       me.bodyInnerContainerEl = bodyInnerContainerEl;
       me.bodyInnerEl = bodyInnerEl;
       me.bodyEl = bodyEl;
+    }
+    getBodyHeight(){
+      const me = this;
+      const rect = me.bodyEl.getBoundingClientRect();
+
+      return rect.height;
+    }
+    getVisiblePageRows(){
+      const me = this;
+      const bodyHeight = me.getBodyHeight();
+
+      return Math.ceil(bodyHeight / me.rowHeight);
     }
     updateVisibleHeight(){
       const me = this;
@@ -7166,6 +7238,7 @@ Fancy.copyText = (text) => {
           renderTo: cell,
           theme: me.theme,
           lang: me.lang,
+          minListWidth: column.minListWidth,
           disabled: column.type === 'boolean',
           onChange: me.onFilterFieldChange.bind(this),
           onChangeValues: me.onFilterFieldValuesChange.bind(this),
@@ -8388,12 +8461,13 @@ Fancy.copyText = (text) => {
         cell && me.setActiveCell(cell);
       },0);
     },
-    setActiveCellUp(){
+    setActiveCellUp(page = false){
       const me = this;
+      const store = me.store;
       const columnIndex = me.activeCellColumnIndex;
       const row = me.activeCellRowEl;
       const rowIndex = Number(row.getAttribute('row-index'));
-      const newRowIndex = me.store.getPrevVisibleRowIndex(rowIndex);
+      const newRowIndex = page ? store.getPrevPageVisibleRowIndex(rowIndex, me.getVisiblePageRows() - 1) : store.getPrevVisibleRowIndex(rowIndex);
 
       if(newRowIndex === rowIndex || newRowIndex === undefined){
         if(newRowIndex === undefined && me.scroller.scrollTop !== 0){
@@ -8411,13 +8485,14 @@ Fancy.copyText = (text) => {
         me.scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex);
       }
     },
-    setActiveCellDown(){
+    setActiveCellDown(page = false){
       const me = this;
+      const store = me.store;
       const columnIndex = me.activeCellColumnIndex;
       const row = me.activeCellRowEl;
       const rowIndex = Number(row.getAttribute('row-index'));
-      const totalDisplayed = me.store.getDisplayedDataTotal();
-      const newRowIndex = me.store.getNextVisibleRowIndex(rowIndex);
+      const totalDisplayed = store.getDisplayedDataTotal();
+      const newRowIndex = page ? store.getNextPageVisibleRowIndex(rowIndex, me.getVisiblePageRows() - 1) : store.getNextVisibleRowIndex(rowIndex);
 
       if(newRowIndex === rowIndex || newRowIndex === undefined){
         if(newRowIndex === undefined){
@@ -8842,6 +8917,8 @@ Fancy.copyText = (text) => {
   const {
     DOWN,
     UP,
+    PAGE_DOWN,
+    PAGE_UP,
     LEFT,
     RIGHT,
     ESC,
@@ -8911,6 +8988,18 @@ Fancy.copyText = (text) => {
             me.onKeyUP(event.shiftKey);
           }
           break;
+        case PAGE_DOWN:
+          if(!me.isEditing) {
+            event.preventDefault();
+            me.onKeyPageDOWN();
+          }
+          break;
+        case PAGE_UP:
+          if(!me.isEditing) {
+            event.preventDefault();
+            me.onKeyPageUP();
+          }
+          break;
         case LEFT:
           !me.isEditing && me.onKeyLEFT(event.shiftKey);
           break;
@@ -8957,6 +9046,20 @@ Fancy.copyText = (text) => {
 
       if(me.active && me.hasActiveCell()){
         shift? me.setShiftCellDown():me.setActiveCellDown();
+      }
+    },
+    onKeyPageUP(){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        me.setActiveCellUp(true);
+      }
+    },
+    onKeyPageDOWN(){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        me.setActiveCellDown(true);
       }
     },
     onKeyLEFT(shift){
@@ -9920,7 +10023,7 @@ Fancy.copyText = (text) => {
     'F': 'False'
   };
 
-  const { div, input } = Fancy;
+  const { div, input, checkbox } = Fancy;
 
   class FilterField {
     sign = '=';
@@ -10093,6 +10196,7 @@ Fancy.copyText = (text) => {
 
       const searchField = input(FILTER_FIELD_INPUT, {});
       searchField.setAttribute('placeholder', me.lang.search);
+      me.searchField = searchField;
 
       const debounceInputFn = Fancy.debounce(me.onInputKeyDown.bind(this), 300);
       searchField.addEventListener('input', debounceInputFn.bind(me));
@@ -10101,11 +10205,41 @@ Fancy.copyText = (text) => {
         justifyContent: 'flex-end'
       });
 
+      const selectButtonEl = div(BUTTON,{
+        marginRight: '3px',
+        display: 'flex',
+        gap: '3px',
+        padding: '0px 3px'
+      });
+      const selectCheckBoxEl = checkbox(INPUT_CHECKBOX);
+      selectCheckBoxEl.checked = true;
+      const selectAllText = div();
+      selectAllText.innerHTML = me.lang.selectAll;
+      selectButtonEl.appendChild(selectCheckBoxEl);
+      selectButtonEl.appendChild(selectAllText);
+
+      selectAllText.addEventListener('click', () => {
+        const newValue = !selectCheckBoxEl.checked;
+        selectCheckBoxEl.checked = newValue;
+        me.selectCheckBox.indeterminate = false;
+
+        me.items.forEach(item => {
+          item.checked = newValue;
+        });
+
+        me.elComboButtonList.querySelectorAll('input').forEach(item => {
+          item.checked = newValue;
+        });
+      });
+
+      me.selectCheckBox = selectCheckBoxEl;
+
       const resetButtonEl = div(BUTTON);
 
       resetButtonEl.innerHTML = me.lang.reset;
       resetButtonEl.addEventListener('click', me.buttonResetClick.bind(this));
 
+      bbar.appendChild(selectButtonEl);
       bbar.appendChild(resetButtonEl);
 
       containerEl.append(searchField, comboEl, bbar);
@@ -10291,6 +10425,20 @@ Fancy.copyText = (text) => {
       });
 
       let values = Array.from(checkedMap.keys());
+
+      if(uncheckedMap.size && checkedMap.size !== 0){
+        me.selectCheckBox.indeterminate = true;
+        me.selectCheckBox.checked = false;
+      } else {
+        if(uncheckedMap.size === 0){
+          me.selectCheckBox.checked = true;
+        }
+        if(checkedMap.size === 0){
+          me.selectCheckBox.checked = false;
+        }
+
+        me.selectCheckBox.indeterminate = false;
+      }
 
       if(uncheckedMap.size === 0){
         me.input.value = '';
@@ -10506,6 +10654,15 @@ Fancy.copyText = (text) => {
       });
 
       me.input.value = '';
+
+      if(me.searchField){
+        me.searchField.value = '';
+        me.onInputKeyDown({
+          target: {
+            value: ''
+          }
+        });
+      }
 
       me.elComboButtonList.querySelectorAll('input').forEach(item => {
         item.checked = true;

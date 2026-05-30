@@ -289,6 +289,23 @@
         if (row.$isGroupRow !== true) return i;
       }
     }
+    getPrevPageVisibleRowIndex(rowIndex, pageRows){
+      const me = this;
+      const data = me.displayedData || me.data;
+      let rowI;
+
+      for(let i = rowIndex - 1;i>-1;i--){
+        const row = data[i];
+        if (row.$isGroupRow !== true) {
+          rowI = i;
+          pageRows--;
+        }
+
+        if(pageRows === 0){
+          return rowI;
+        }
+      }
+    }
     getNextVisibleRowIndex(rowIndex){
       const me = this;
       const totalDisplayed = me.getDisplayedDataTotal();
@@ -297,6 +314,24 @@
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
         if (row.$isGroupRow !== true) return i;
+      }
+    }
+    getNextPageVisibleRowIndex(rowIndex, pageRows){
+      const me = this;
+      const totalDisplayed = me.getDisplayedDataTotal();
+      const data = me.displayedData || me.data;
+      let rowI;
+
+      for(let i = rowIndex + 1;i<totalDisplayed;i++){
+        const row = data[i];
+        if (row.$isGroupRow !== true) {
+          rowI = i;
+          pageRows--;
+        }
+
+        if(pageRows === 0){
+          return rowI;
+        }
       }
     }
     spliceToData(rowIndex, removeNumber, toData, data){

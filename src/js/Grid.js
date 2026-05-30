@@ -21,6 +21,7 @@
     groupBarDragEmpty: 'Drag columns here to generate row groups',
     search: 'Search...',
     reset: 'Reset',
+    selectAll: 'Select All',
     sign: {
       clear: 'Clear',
       list: 'List',
@@ -265,6 +266,18 @@
       me.bodyInnerContainerEl = bodyInnerContainerEl;
       me.bodyInnerEl = bodyInnerEl;
       me.bodyEl = bodyEl;
+    }
+    getBodyHeight(){
+      const me = this;
+      const rect = me.bodyEl.getBoundingClientRect();
+
+      return rect.height;
+    }
+    getVisiblePageRows(){
+      const me = this;
+      const bodyHeight = me.getBodyHeight();
+
+      return Math.ceil(bodyHeight / me.rowHeight);
     }
     updateVisibleHeight(){
       const me = this;

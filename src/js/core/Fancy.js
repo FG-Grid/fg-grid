@@ -1,5 +1,5 @@
 const Fancy = {
-  version: '1.1.0',
+  version: '1.1.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -87,6 +87,19 @@ const Fancy = {
     return Fancy.newElement('input', cls, style);
   },
   /**
+   * @param {String|Array} [cls]
+   * @param {Object} [style]
+   * @return HTMLElement
+   */
+  checkbox(cls = [], style = {}){
+    const el = Fancy.newElement('input', cls, style);
+
+    el.type = 'checkbox';
+
+    return el;
+  },
+
+  /**
    * @param {String} tag
    * @param {String|Array} cls
    * @param {Object} style
@@ -144,7 +157,7 @@ const Fancy = {
       this.dom.classList.remove(...classNames);
     }
     containCls(cls) {
-      this.dom.classList.contains(cls);
+      return this.dom.classList.contains(cls);
     }
   }
 

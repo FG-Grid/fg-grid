@@ -83,6 +83,7 @@
           renderTo: cell,
           theme: me.theme,
           lang: me.lang,
+          minListWidth: column.minListWidth,
           disabled: column.type === 'boolean',
           onChange: me.onFilterFieldChange.bind(this),
           onChangeValues: me.onFilterFieldValuesChange.bind(this),

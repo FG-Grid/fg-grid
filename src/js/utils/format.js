@@ -1,10 +1,21 @@
 Fancy.format = {
   CURRENCY_REGIONS: {
-    USD: 'en-US',
-    EUR: 'de',
-    GBP: 'en-gb',
-    JPY: 'jp',
-    CNY: 'zh-cn'
+    AUD: 'en-AU',
+    CAD: 'en-CA',
+    CHF: 'de-CH',
+    CNY: 'zh-CN',
+    EUR: 'de-DE',
+    GBP: 'en-GB',
+    INR: 'en-IN',
+    JPY: 'ja-JP',
+    KRW: 'ko-KR',
+    KZT: 'kk-KZ',
+    NOK: 'nb-NO',
+    PLN: 'pl-PL',
+    RUB: 'ru-RU',
+    SEK: 'sv-SE',
+    TRY: 'tr-TR',
+    USD: 'en-US'
   },
   currency(params) {
     const value = params.value;

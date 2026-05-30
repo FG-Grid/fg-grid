@@ -406,12 +406,13 @@
         cell && me.setActiveCell(cell);
       },0);
     },
-    setActiveCellUp(){
+    setActiveCellUp(page = false){
       const me = this;
+      const store = me.store;
       const columnIndex = me.activeCellColumnIndex;
       const row = me.activeCellRowEl;
       const rowIndex = Number(row.getAttribute('row-index'));
-      const newRowIndex = me.store.getPrevVisibleRowIndex(rowIndex);
+      const newRowIndex = page ? store.getPrevPageVisibleRowIndex(rowIndex, me.getVisiblePageRows() - 1) : store.getPrevVisibleRowIndex(rowIndex);
 
       if(newRowIndex === rowIndex || newRowIndex === undefined){
         if(newRowIndex === undefined && me.scroller.scrollTop !== 0){
@@ -429,13 +430,14 @@
         me.scrollToNotVisibleNewActiveCell(newRowIndex, columnIndex);
       }
     },
-    setActiveCellDown(){
+    setActiveCellDown(page = false){
       const me = this;
+      const store = me.store;
       const columnIndex = me.activeCellColumnIndex;
       const row = me.activeCellRowEl;
       const rowIndex = Number(row.getAttribute('row-index'));
-      const totalDisplayed = me.store.getDisplayedDataTotal();
-      const newRowIndex = me.store.getNextVisibleRowIndex(rowIndex);
+      const totalDisplayed = store.getDisplayedDataTotal();
+      const newRowIndex = page ? store.getNextPageVisibleRowIndex(rowIndex, me.getVisiblePageRows() - 1) : store.getNextVisibleRowIndex(rowIndex);
 
       if(newRowIndex === rowIndex || newRowIndex === undefined){
         if(newRowIndex === undefined){

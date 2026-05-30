@@ -2,6 +2,8 @@
   const {
     DOWN,
     UP,
+    PAGE_DOWN,
+    PAGE_UP,
     LEFT,
     RIGHT,
     ESC,
@@ -71,6 +73,18 @@
             me.onKeyUP(event.shiftKey);
           }
           break;
+        case PAGE_DOWN:
+          if(!me.isEditing) {
+            event.preventDefault();
+            me.onKeyPageDOWN();
+          }
+          break;
+        case PAGE_UP:
+          if(!me.isEditing) {
+            event.preventDefault();
+            me.onKeyPageUP();
+          }
+          break;
         case LEFT:
           !me.isEditing && me.onKeyLEFT(event.shiftKey);
           break;
@@ -117,6 +131,20 @@
 
       if(me.active && me.hasActiveCell()){
         shift? me.setShiftCellDown():me.setActiveCellDown();
+      }
+    },
+    onKeyPageUP(){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        me.setActiveCellUp(true);
+      }
+    },
+    onKeyPageDOWN(){
+      const me = this;
+
+      if(me.active && me.hasActiveCell()){
+        me.setActiveCellDown(true);
       }
     },
     onKeyLEFT(shift){

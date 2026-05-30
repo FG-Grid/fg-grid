@@ -106,6 +106,13 @@
   --button-bg: var(--base-color-6);
   --button-bg-sign-hover-bg: var(--base-color-4);
   --button-color: var(--base-color-2);
+
+  input[type="checkbox"] {
+    all: revert;
+    accent-color: var(--checkbox-color);
+    transform: scale(1.2);
+    cursor: pointer;
+  }
 }
 
 .fg-theme-air {
@@ -205,6 +212,13 @@
   --button-bg: var(--base-color-4);
   --button-bg-sign-hover-bg: var(--base-color-6);
   --button-color: var(--base-color-1);
+
+  input[type="checkbox"] {
+    all: revert;
+    accent-color: var(--checkbox-color);
+    transform: scale(1.2);
+    cursor: pointer;
+  }
 }
 
 .fg-theme-dark {
@@ -338,6 +352,7 @@
   }
 
   input[type="checkbox"] {
+    all: revert;
     appearance: none;
     width: 14px;
     min-width: 14px;
@@ -347,6 +362,8 @@
     background-color: var(--base-color-6);
     cursor: pointer;
     position: relative;
+    accent-color: var(--checkbox-color);
+    transform: scale(1.2);
   }
 
   input[type="checkbox"]:checked, input[type="checkbox"]:indeterminate {
@@ -543,14 +560,15 @@
   }
   .fg-filter-field-input {
     height: 28px;
-    margin: 10px;
-    width: calc(100% - 20px);
+    margin: 6px;
+    width: calc(100% - 12px);
     border-left-width: 1px;
     border-radius: 2px;
   }
 
   .fg-bbar {
     border-top: 1px solid var(--grid-header-bottom-color);
+    box-sizing: border-box;
     height: 33px;
     display: flex;
     align-items: center;
@@ -999,12 +1017,6 @@
   justify-content: center;
   align-items: center;
   font-weight: 600;
-}
-
-.fg-input-checkbox {
-  accent-color: var(--checkbox-color);
-  transform: scale(1.2);
-  cursor: pointer;
 }
 
 .fg-body-vertical-scroll {

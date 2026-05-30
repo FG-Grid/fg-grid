@@ -75,7 +75,7 @@
     'F': 'False'
   };
 
-  const { div, input } = Fancy;
+  const { div, input, checkbox } = Fancy;
 
   class FilterField {
     sign = '=';
@@ -248,6 +248,7 @@
 
       const searchField = input(FILTER_FIELD_INPUT, {});
       searchField.setAttribute('placeholder', me.lang.search);
+      me.searchField = searchField;
 
       const debounceInputFn = Fancy.debounce(me.onInputKeyDown.bind(this), 300);
       searchField.addEventListener('input', debounceInputFn.bind(me));
@@ -256,11 +257,41 @@
         justifyContent: 'flex-end'
       });
 
+      const selectButtonEl = div(BUTTON,{
+        marginRight: '3px',
+        display: 'flex',
+        gap: '3px',
+        padding: '0px 3px'
+      });
+      const selectCheckBoxEl = checkbox(INPUT_CHECKBOX);
+      selectCheckBoxEl.checked = true;
+      const selectAllText = div();
+      selectAllText.innerHTML = me.lang.selectAll;
+      selectButtonEl.appendChild(selectCheckBoxEl);
+      selectButtonEl.appendChild(selectAllText);
+
+      selectAllText.addEventListener('click', () => {
+        const newValue = !selectCheckBoxEl.checked;
+        selectCheckBoxEl.checked = newValue;
+        me.selectCheckBox.indeterminate = false;
+
+        me.items.forEach(item => {
+          item.checked = newValue;
+        });
+
+        me.elComboButtonList.querySelectorAll('input').forEach(item => {
+          item.checked = newValue;
+        });
+      });
+
+      me.selectCheckBox = selectCheckBoxEl;
+
       const resetButtonEl = div(BUTTON);
 
       resetButtonEl.innerHTML = me.lang.reset;
       resetButtonEl.addEventListener('click', me.buttonResetClick.bind(this));
 
+      bbar.appendChild(selectButtonEl);
       bbar.appendChild(resetButtonEl);
 
       containerEl.append(searchField, comboEl, bbar);
@@ -446,6 +477,20 @@
       });
 
       let values = Array.from(checkedMap.keys());
+
+      if(uncheckedMap.size && checkedMap.size !== 0){
+        me.selectCheckBox.indeterminate = true;
+        me.selectCheckBox.checked = false;
+      } else {
+        if(uncheckedMap.size === 0){
+          me.selectCheckBox.checked = true;
+        }
+        if(checkedMap.size === 0){
+          me.selectCheckBox.checked = false;
+        }
+
+        me.selectCheckBox.indeterminate = false;
+      }
 
       if(uncheckedMap.size === 0){
         me.input.value = '';
@@ -661,6 +706,15 @@
       });
 
       me.input.value = '';
+
+      if(me.searchField){
+        me.searchField.value = '';
+        me.onInputKeyDown({
+          target: {
+            value: ''
+          }
+        });
+      }
 
       me.elComboButtonList.querySelectorAll('input').forEach(item => {
         item.checked = true;

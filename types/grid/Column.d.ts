@@ -15,7 +15,23 @@ export interface ChangeParams<TData = any> {
   value: string | number | unknown;
 }
 
-type Currencies = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CNY';
+type Currencies =
+  | 'AUD'
+  | 'CAD'
+  | 'CHF'
+  | 'CNY'
+  | 'EUR'
+  | 'GBP'
+  | 'INR'
+  | 'JPY'
+  | 'KRW'
+  | 'KZT'
+  | 'NOK'
+  | 'PLN'
+  | 'RUB'
+  | 'SEK'
+  | 'TRY'
+  | 'USD';
 
 export interface FormatParams<TData = any> extends RenderParams<TData> {
   currency?: Currencies;
@@ -90,6 +106,8 @@ export interface Column<TData = any> {
   minWidth?: number;
   width?: number;
   flex?: number;
+
+  minListWidth?: number;
 
   render?(params: RenderParams<TData>): string|undefined;
   cellStyle?: CellStyle | CellStyleFn<TData>;
