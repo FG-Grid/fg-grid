@@ -1386,20 +1386,21 @@
 
 /* Button */
 .fg-button {
-  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
   border: 1px solid var(--button-border-color);
   border-radius: 3px;
   background: var(--button-bg);
+  color: var(--button-color);
   height: 22px;
   padding: 0 5px;
   line-height: 12px;
   min-width: 27px;
+  cursor: pointer;
+  user-select: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--button-color);
-  font-size: 12px;
-  font-weight: 600;
   &:hover {
     background: var(--button-bg-sign-hover-bg);
   }

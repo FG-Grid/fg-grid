@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.1.1',
+  version: '1.1.2',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -10195,26 +10195,40 @@ Fancy.copyText = (text) => {
         gap: '3px',
         padding: '0px 3px'
       });
+
+      const checkedMap = new Map();
+      const uncheckedMap = new Map();
+
+      me.items.forEach(item => {
+        if(item.checked === false){
+          uncheckedMap.set(item.text, true);
+        } else {
+          checkedMap.set(item.text, true);
+        }
+      });
+
       const selectCheckBoxEl = checkbox(INPUT_CHECKBOX);
-      selectCheckBoxEl.checked = true;
+
+      if(uncheckedMap.size && checkedMap.size !== 0){
+        selectCheckBoxEl.indeterminate = true;
+        selectCheckBoxEl.checked = false;
+      } else {
+        if(uncheckedMap.size === 0){
+          selectCheckBoxEl.checked = true;
+        }
+        if(checkedMap.size === 0){
+          selectCheckBoxEl.checked = false;
+        }
+
+        selectCheckBoxEl.indeterminate = false;
+      }
+
       const selectAllText = div();
       selectAllText.innerHTML = me.lang.selectAll;
       selectButtonEl.appendChild(selectCheckBoxEl);
       selectButtonEl.appendChild(selectAllText);
 
-      selectAllText.addEventListener('click', () => {
-        const newValue = !selectCheckBoxEl.checked;
-        selectCheckBoxEl.checked = newValue;
-        me.selectCheckBox.indeterminate = false;
-
-        me.items.forEach(item => {
-          item.checked = newValue;
-        });
-
-        me.elComboButtonList.querySelectorAll('input').forEach(item => {
-          item.checked = newValue;
-        });
-      });
+      selectButtonEl.addEventListener('click', me.onButtonSelectAllClick.bind(this));
 
       me.selectCheckBox = selectCheckBoxEl;
 
@@ -10630,6 +10644,37 @@ Fancy.copyText = (text) => {
         item.parentElement.style.display = hiddenMap.has(value) ? 'none' : '';
       });
     }
+    onButtonSelectAllClick(e){
+      const me = this;
+      const selectCheckBox = me.selectCheckBox;
+      const isCheckBox = e.target.classList.contains(INPUT_CHECKBOX);
+      const newValue = isCheckBox ? selectCheckBox.checked : !selectCheckBox.checked;
+      selectCheckBox.checked = newValue;
+      me.selectCheckBox.indeterminate = false;
+
+      me.items.forEach(item => {
+        item.checked = newValue;
+      });
+
+      me.elComboButtonList.querySelectorAll('input').forEach(item => {
+        item.checked = newValue;
+      });
+
+      me.input.value = '';
+
+      if(me.searchField){
+        me.searchField.value = '';
+        me.onInputKeyDown({
+          target: {
+            value: ''
+          }
+        });
+      }
+
+      if(newValue){
+        me.onChangeValues([], '=', me.column);
+      }
+    }
     buttonResetClick(){
       const me = this;
 
@@ -10651,6 +10696,8 @@ Fancy.copyText = (text) => {
       me.elComboButtonList.querySelectorAll('input').forEach(item => {
         item.checked = true;
       });
+
+      me.selectCheckBox.indeterminate = false;
 
       me.onChangeValues([], '=', me.column);
     }
