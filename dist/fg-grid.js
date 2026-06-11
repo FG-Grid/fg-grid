@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.1.2',
+  version: '1.1.3',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -10212,33 +10212,7 @@ Fancy.copyText = (text) => {
         padding: '0px 3px'
       });
 
-      const checkedMap = new Map();
-      const uncheckedMap = new Map();
-
-      me.items.forEach(item => {
-        if(item.checked === false){
-          uncheckedMap.set(item.text, true);
-        } else {
-          checkedMap.set(item.text, true);
-        }
-      });
-
       const selectCheckBoxEl = checkbox(INPUT_CHECKBOX);
-
-      if(uncheckedMap.size && checkedMap.size !== 0){
-        selectCheckBoxEl.indeterminate = true;
-        selectCheckBoxEl.checked = false;
-      } else {
-        if(uncheckedMap.size === 0){
-          selectCheckBoxEl.checked = true;
-        }
-        if(checkedMap.size === 0){
-          selectCheckBoxEl.checked = false;
-        }
-
-        selectCheckBoxEl.indeterminate = false;
-      }
-
       const selectAllText = div();
       selectAllText.innerHTML = me.lang.selectAll;
       selectButtonEl.appendChild(selectCheckBoxEl);
@@ -10247,6 +10221,7 @@ Fancy.copyText = (text) => {
       selectButtonEl.addEventListener('click', me.onButtonSelectAllClick.bind(this));
 
       me.selectCheckBox = selectCheckBoxEl;
+      me.updateSelectAllCheckBox();
 
       const resetButtonEl = div(BUTTON);
 
@@ -10411,6 +10386,10 @@ Fancy.copyText = (text) => {
     }
     onComboListClick(e){
       const me = this;
+      const {
+        checkedMap,
+        uncheckedMap
+      } = me.getCheckedUncheckedMap();
 
       if(e.target.classList.contains(FIELD_COMBO_LIST_ITEM_TEXT)){
         e.target.previousSibling.checked = !e.target.previousSibling.checked;
@@ -10427,32 +10406,9 @@ Fancy.copyText = (text) => {
       const item = me.itemsMap.get(textEl.innerHTML);
       item.checked = input.checked;
 
-      const checkedMap = new Map();
-      const uncheckedMap = new Map();
+      let values = me.getCheckedValues();
 
-      me.items.forEach(item => {
-        if(item.checked === false){
-          uncheckedMap.set(item.text, true);
-        } else {
-          checkedMap.set(item.text, true);
-        }
-      });
-
-      let values = Array.from(checkedMap.keys());
-
-      if(uncheckedMap.size && checkedMap.size !== 0){
-        me.selectCheckBox.indeterminate = true;
-        me.selectCheckBox.checked = false;
-      } else {
-        if(uncheckedMap.size === 0){
-          me.selectCheckBox.checked = true;
-        }
-        if(checkedMap.size === 0){
-          me.selectCheckBox.checked = false;
-        }
-
-        me.selectCheckBox.indeterminate = false;
-      }
+      me.updateSelectAllCheckBox();
 
       if(uncheckedMap.size === 0){
         me.input.value = '';
@@ -10659,6 +10615,8 @@ Fancy.copyText = (text) => {
         const value = item.innerHTML;
         item.parentElement.style.display = hiddenMap.has(value) ? 'none' : '';
       });
+
+      me.updateSelectAllCheckBox();
     }
     onButtonSelectAllClick(e){
       const me = this;
@@ -10667,28 +10625,38 @@ Fancy.copyText = (text) => {
       const newValue = isCheckBox ? selectCheckBox.checked : !selectCheckBox.checked;
       selectCheckBox.checked = newValue;
       me.selectCheckBox.indeterminate = false;
+      const changedItemsMap = {};
 
       me.items.forEach(item => {
-        item.checked = newValue;
+        if(!item.hidden){
+          item.checked = newValue;
+          changedItemsMap[item.value] = true;
+        }
       });
 
       me.elComboButtonList.querySelectorAll('input').forEach(item => {
-        item.checked = newValue;
+        const parent = item.parentElement;
+        const value = parent.getAttribute('value');
+        if(changedItemsMap[value] === true){
+          item.checked = newValue;
+        }
       });
 
-      me.input.value = '';
+      const {
+        checkedMap,
+        uncheckedMap
+      } = me.getCheckedUncheckedMap();
 
-      if(me.searchField){
-        me.searchField.value = '';
-        me.onInputKeyDown({
-          target: {
-            value: ''
-          }
-        });
-      }
+      const values = me.getCheckedValues();
 
-      if(newValue){
+      if(uncheckedMap.size === 0){
+        me.input.value = '';
         me.onChangeValues([], '=', me.column);
+      } else {
+        const keysAsString = [ ...checkedMap.keys() ].join(',');
+
+        me.input.value = `(${checkedMap.size}) ${keysAsString}`;
+        me.onChangeValues(values, '=', me.column);
       }
     }
     buttonResetClick(){
@@ -10719,14 +10687,106 @@ Fancy.copyText = (text) => {
     }
     generateItems(){
       const me = this;
-      const data = me.grid.getUniqueColumnData(me.column).map(value => {
-        return {
-          value,
-          text: value
-        };
-      });
+      const grid = me.grid;
+      const column = me.column;
+      let data;
+
+      if(column?.filters?.sign === '=' && Array.isArray(column?.filters?.value)){
+        const values = {};
+        column?.filters?.value.forEach(value => {
+          values[String(value).toLocaleLowerCase()] = true;
+        });
+
+        data = grid.getUniqueColumnData(column).map(value => {
+          const o = {
+            checked: !!values[String(value).toLocaleLowerCase()],
+            value,
+            text: value
+          };
+
+          return o;
+        });
+      } else {
+        data = grid.getUniqueColumnData(column).map(value => {
+          return {
+            value,
+            text: value
+          };
+        });
+      }
 
       me.items = data;
+    }
+    updateSelectAllCheckBox(){
+      const me = this;
+      const {
+        checkedMap,
+        uncheckedMap
+      } = me.getVisibleCheckedUncheckedMap();
+      const selectCheckBox = me.selectCheckBox;
+
+      if(uncheckedMap.size && checkedMap.size !== 0){
+        selectCheckBox.indeterminate = true;
+        selectCheckBox.checked = false;
+      } else {
+        if(uncheckedMap.size === 0){
+          selectCheckBox.checked = true;
+        }
+        if(checkedMap.size === 0){
+          selectCheckBox.checked = false;
+        }
+
+        selectCheckBox.indeterminate = false;
+      }
+    }
+    getVisibleCheckedUncheckedMap(){
+      const me = this;
+      const checkedMap = new Map();
+      const uncheckedMap = new Map();
+
+      me.items.forEach(item => {
+        if(item.hidden){
+          return;
+        }
+
+        if(item.checked === false){
+          uncheckedMap.set(item.text, true);
+        } else {
+          checkedMap.set(item.text, true);
+        }
+      });
+
+      return {
+        checkedMap,
+        uncheckedMap
+      }
+    }
+    getCheckedUncheckedMap(){
+      const me = this;
+      const checkedMap = new Map();
+      const uncheckedMap = new Map();
+
+      me.items.forEach(item => {
+        if(item.checked === false){
+          uncheckedMap.set(item.text, true);
+        } else {
+          checkedMap.set(item.text, true);
+        }
+      });
+
+      return {
+        checkedMap,
+        uncheckedMap
+      }
+    }
+    getCheckedValues(){
+      const {
+        checkedMap
+      } = this.getCheckedUncheckedMap();
+
+      const values = Array.from(checkedMap.keys());
+
+      return values;
     }
   }
 
