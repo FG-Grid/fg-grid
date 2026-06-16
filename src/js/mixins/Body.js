@@ -202,8 +202,9 @@
         }
       }
 
-      column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
+      column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClickToEdit.bind(this));
       cell.addEventListener('click', me.onBodyCellClick.bind(this));
+      cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
 
       return cell;
     },

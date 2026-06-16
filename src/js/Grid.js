@@ -645,8 +645,79 @@
       this.touchScroller.destroy();
       this.gridEl.remove();
     }
-    onBodyCellClick(){
+    onBodyCellClick(e){
+      const cell = e.currentTarget;
+      const {
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      } = this.getCellParams(cell);
+
       this.hideActiveEditor();
+
+      this.onCellClick?.({
+        event: e,
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      });
+    }
+    onBodyCellDBLClick(e){
+      const cell = e.currentTarget;
+      const {
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      } = this.getCellParams(cell);
+
+      this.hideActiveEditor();
+
+      this.onCellDblClick?.({
+        event: e,
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      });
+    }
+    getCellParams(cell){
+      const row = cell.parentElement;
+      const rowId = Number(row.getAttribute('row-id'));
+      const rowIndex = Number(row.getAttribute('row-id'));
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const columnId = cell.getAttribute('col-id');
+
+      const item = this.getItemById(rowId);
+      const column = this.getColumnById(columnId);
+      let value = item[column.index];
+
+      if(column.getter){
+        const params = {
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value,
+          cell
+        };
+
+        value = column.getter(params);
+      }
+
+      return {
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      }
     }
     remove(rows){
       const me = this;

@@ -429,6 +429,18 @@
   align-items: stretch;
 }
 
+.fg-field-align-center {
+  input {
+    text-align: center;
+  }
+}
+
+.fg-field-align-right {
+  input {
+    text-align: right;
+  }
+}
+
 .fg-field-disabled {
   .fg-field-input, .fg-filter-field-input {
     background: var(--field-input-disabled-bg);

@@ -1,5 +1,6 @@
 (() => {
-  const { FIELD, FIELD_INPUT } = Fancy.cls;
+  const { FIELD, FIELD_INPUT, FIELD_ALIGN_CENTER, FIELD_ALIGN_RIGHT } = Fancy.cls;
+
   const { ENTER, ESC } = Fancy.key;
   const { div, input } = Fancy;
 
@@ -23,6 +24,15 @@
 
       el.appendChild(elInput);
       me.el = el;
+
+      switch (me.align){
+        case 'center':
+          el.classList.add(FIELD_ALIGN_CENTER);
+          break;
+        case 'right':
+          el.classList.add(FIELD_ALIGN_RIGHT);
+          break;
+      }
 
       me.container.appendChild(el);
     }

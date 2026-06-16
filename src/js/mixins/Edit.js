@@ -5,7 +5,7 @@
    * @mixin GridMixinEdit
    */
   const GridMixinEdit = {
-    onBodyCellDBLClick(event){
+    onBodyCellDBLClickToEdit(event){
       const cell = event.target.closest(`.${CELL}`);
 
       if(event.target.classList.contains(INPUT_CHECKBOX)){
@@ -158,6 +158,7 @@
               value,
               grid: me,
               column,
+              align: column.align,
               style: {
                 position: 'absolute',
                 width: `${column.width}px`,

@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.1.3',
+  version: '1.1.5',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -349,6 +349,8 @@ Fancy.cls = {
 
   // Field
   FIELD: 'fg-field',
+  FIELD_ALIGN_CENTER: 'fg-field-align-center',
+  FIELD_ALIGN_RIGHT: 'fg-field-align-right',
   FIELD_DISABLED: 'fg-field-disabled',
   FIELD_INPUT: 'fg-field-input',
 
@@ -4367,8 +4369,79 @@ Fancy.copyText = (text) => {
       this.touchScroller.destroy();
       this.gridEl.remove();
     }
-    onBodyCellClick(){
+    onBodyCellClick(e){
+      const cell = e.currentTarget;
+      const {
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      } = this.getCellParams(cell);
+
       this.hideActiveEditor();
+
+      this.onCellClick?.({
+        event: e,
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      });
+    }
+    onBodyCellDBLClick(e){
+      const cell = e.currentTarget;
+      const {
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      } = this.getCellParams(cell);
+
+      this.hideActiveEditor();
+
+      this.onCellDblClick?.({
+        event: e,
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      });
+    }
+    getCellParams(cell){
+      const row = cell.parentElement;
+      const rowId = Number(row.getAttribute('row-id'));
+      const rowIndex = Number(row.getAttribute('row-id'));
+      const columnIndex = Number(cell.getAttribute('col-index'));
+      const columnId = cell.getAttribute('col-id');
+
+      const item = this.getItemById(rowId);
+      const column = this.getColumnById(columnId);
+      let value = item[column.index];
+
+      if(column.getter){
+        const params = {
+          item,
+          column,
+          rowIndex,
+          columnIndex,
+          value,
+          cell
+        };
+
+        value = column.getter(params);
+      }
+
+      return {
+        item,
+        column,
+        rowIndex,
+        columnIndex,
+        value
+      }
     }
     remove(rows){
       const me = this;
@@ -6248,8 +6321,9 @@ Fancy.copyText = (text) => {
         }
       }
 
-      column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
+      column.editable && cell.addEventListener('dblclick', me.onBodyCellDBLClickToEdit.bind(this));
       cell.addEventListener('click', me.onBodyCellClick.bind(this));
+      cell.addEventListener('dblclick', me.onBodyCellDBLClick.bind(this));
 
       return cell;
     },
@@ -9511,7 +9585,7 @@ Fancy.copyText = (text) => {
    * @mixin GridMixinEdit
    */
   const GridMixinEdit = {
-    onBodyCellDBLClick(event){
+    onBodyCellDBLClickToEdit(event){
       const cell = event.target.closest(`.${CELL}`);
 
       if(event.target.classList.contains(INPUT_CHECKBOX)){
@@ -9664,6 +9738,7 @@ Fancy.copyText = (text) => {
               value,
               grid: me,
               column,
+              align: column.align,
               style: {
                 position: 'absolute',
                 width: `${column.width}px`,
@@ -9857,7 +9932,8 @@ Fancy.copyText = (text) => {
 })();
 
 (() => {
-  const { FIELD, FIELD_INPUT } = Fancy.cls;
+  const { FIELD, FIELD_INPUT, FIELD_ALIGN_CENTER, FIELD_ALIGN_RIGHT } = Fancy.cls;
+
   const { ENTER, ESC } = Fancy.key;
   const { div, input } = Fancy;
 
@@ -9881,6 +9957,15 @@ Fancy.copyText = (text) => {
 
       el.appendChild(elInput);
       me.el = el;
+
+      switch (me.align){
+        case 'center':
+          el.classList.add(FIELD_ALIGN_CENTER);
+          break;
+        case 'right':
+          el.classList.add(FIELD_ALIGN_RIGHT);
+          break;
+      }
 
       me.container.appendChild(el);
     }
@@ -10834,10 +10919,12 @@ Fancy.copyText = (text) => {
   const {
     HIDDEN,
     FIELD,
-    FIELD_COMBO,
-    FIELD_COMBO_BUTTON,
     FIELD_DISABLED,
     FIELD_INPUT,
+    FIELD_ALIGN_CENTER,
+    FIELD_ALIGN_RIGHT,
+    FIELD_COMBO,
+    FIELD_COMBO_BUTTON,
     FIELD_COMBO_LIST,
     FIELD_COMBO_LIST_ITEM,
     FIELD_COMBO_LIST_ITEM_ACTIVE,
@@ -10896,6 +10983,15 @@ Fancy.copyText = (text) => {
 
       if(me.disabled || me.typing === false){
         me.input.disabled = true;
+      }
+
+      switch (me.align){
+        case 'center':
+          el.classList.add(FIELD_ALIGN_CENTER);
+          break;
+        case 'right':
+          el.classList.add(FIELD_ALIGN_RIGHT);
+          break;
       }
 
       el.append(elInput, elButton);

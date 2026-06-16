@@ -2,10 +2,12 @@
   const {
     HIDDEN,
     FIELD,
-    FIELD_COMBO,
-    FIELD_COMBO_BUTTON,
     FIELD_DISABLED,
     FIELD_INPUT,
+    FIELD_ALIGN_CENTER,
+    FIELD_ALIGN_RIGHT,
+    FIELD_COMBO,
+    FIELD_COMBO_BUTTON,
     FIELD_COMBO_LIST,
     FIELD_COMBO_LIST_ITEM,
     FIELD_COMBO_LIST_ITEM_ACTIVE,
@@ -64,6 +66,15 @@
 
       if(me.disabled || me.typing === false){
         me.input.disabled = true;
+      }
+
+      switch (me.align){
+        case 'center':
+          el.classList.add(FIELD_ALIGN_CENTER);
+          break;
+        case 'right':
+          el.classList.add(FIELD_ALIGN_RIGHT);
+          break;
       }
 
       el.append(elInput, elButton);

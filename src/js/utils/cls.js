@@ -123,6 +123,8 @@ Fancy.cls = {
 
   // Field
   FIELD: 'fg-field',
+  FIELD_ALIGN_CENTER: 'fg-field-align-center',
+  FIELD_ALIGN_RIGHT: 'fg-field-align-right',
   FIELD_DISABLED: 'fg-field-disabled',
   FIELD_INPUT: 'fg-field-input',
 

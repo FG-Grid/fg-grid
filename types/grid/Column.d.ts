@@ -15,6 +15,18 @@ export interface ChangeParams<TData = any> {
   value: string | number | unknown;
 }
 
+export interface CellClickParams<TData = any> {
+  item: TData;
+  column: Column<TData>;
+  rowIndex: number;
+  columnIndex: number;
+  value: string | number | unknown;
+  event: MouseEvent;
+}
+
+export interface CellDblClickParams<TData = any>
+  extends CellClickParams<TData> {}
+
 type Currencies =
   | 'AUD'
   | 'CAD'
