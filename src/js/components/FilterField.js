@@ -438,10 +438,6 @@
     }
     onComboListClick(e){
       const me = this;
-      const {
-        checkedMap,
-        uncheckedMap
-      } = me.getCheckedUncheckedMap();
 
       if(e.target.classList.contains(FIELD_COMBO_LIST_ITEM_TEXT)){
         e.target.previousSibling.checked = !e.target.previousSibling.checked;
@@ -458,9 +454,12 @@
       const item = me.itemsMap.get(textEl.innerHTML);
       item.checked = input.checked;
 
-      let values = me.getCheckedValues();
-
       me.updateSelectAllCheckBox();
+      let values = me.getCheckedValues();
+      const {
+        checkedMap,
+        uncheckedMap
+      } = me.getCheckedUncheckedMap();
 
       if(uncheckedMap.size === 0){
         me.input.value = '';

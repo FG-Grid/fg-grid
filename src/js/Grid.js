@@ -655,8 +655,6 @@
         value
       } = this.getCellParams(cell);
 
-      this.hideActiveEditor();
-
       this.onCellClick?.({
         event: e,
         item,
@@ -676,8 +674,6 @@
         value
       } = this.getCellParams(cell);
 
-      this.hideActiveEditor();
-
       this.onCellDblClick?.({
         event: e,
         item,
@@ -696,7 +692,7 @@
 
       const item = this.getItemById(rowId);
       const column = this.getColumnById(columnId);
-      let value = item[column.index];
+      let value = item && item[column?.index];
 
       if(column.getter){
         const params = {

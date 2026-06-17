@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.1.5',
+  version: '1.1.6',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -4395,8 +4395,6 @@ Fancy.copyText = (text) => {
         value
       } = this.getCellParams(cell);
 
-      this.hideActiveEditor();
-
       this.onCellClick?.({
         event: e,
         item,
@@ -4416,8 +4414,6 @@ Fancy.copyText = (text) => {
         value
       } = this.getCellParams(cell);
 
-      this.hideActiveEditor();
-
       this.onCellDblClick?.({
         event: e,
         item,
@@ -4436,7 +4432,7 @@ Fancy.copyText = (text) => {
 
       const item = this.getItemById(rowId);
       const column = this.getColumnById(columnId);
-      let value = item[column.index];
+      let value = item && item[column?.index];
 
       if(column.getter){
         const params = {
@@ -10471,10 +10467,6 @@ Fancy.copyText = (text) => {
     }
     onComboListClick(e){
       const me = this;
-      const {
-        checkedMap,
-        uncheckedMap
-      } = me.getCheckedUncheckedMap();
 
       if(e.target.classList.contains(FIELD_COMBO_LIST_ITEM_TEXT)){
         e.target.previousSibling.checked = !e.target.previousSibling.checked;
@@ -10491,9 +10483,12 @@ Fancy.copyText = (text) => {
       const item = me.itemsMap.get(textEl.innerHTML);
       item.checked = input.checked;
 
-      let values = me.getCheckedValues();
-
       me.updateSelectAllCheckBox();
+      let values = me.getCheckedValues();
+      const {
+        checkedMap,
+        uncheckedMap
+      } = me.getCheckedUncheckedMap();
 
       if(uncheckedMap.size === 0){
         me.input.value = '';
