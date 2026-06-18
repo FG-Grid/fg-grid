@@ -79,7 +79,11 @@ declare class Grid<TData = any> implements GridConfig<TData> {
   // Data
   setData(data: TData[]): void;
   setById(id: string, index: string|object, value?: Value): void;
+  getItem(rowIndex: number): TData;
   getItemById(id: string): TData;
+  getData(): TData[];
+  getSelection(): TData[];
+
   remove(rows: string|TData): void;
   add(items: TData|TData[], position?: number|TData): void;
 

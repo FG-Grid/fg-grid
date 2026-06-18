@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.1.6',
+  version: '1.1.7',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -3754,6 +3754,7 @@ Fancy.copyText = (text) => {
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
+    CELL,
     EDITORS_CONTAINER,
     TOUCH
   } = Fancy.cls;
@@ -4387,6 +4388,11 @@ Fancy.copyText = (text) => {
     }
     onBodyCellClick(e){
       const cell = e.currentTarget;
+
+      if(!cell.parentElement){
+        return;
+      }
+
       const {
         item,
         column,
@@ -4406,6 +4412,11 @@ Fancy.copyText = (text) => {
     }
     onBodyCellDBLClick(e){
       const cell = e.currentTarget;
+
+      if(!cell.parentElement){
+        return;
+      }
+
       const {
         item,
         column,
@@ -4670,8 +4681,13 @@ Fancy.copyText = (text) => {
         for(let p in index){
           store.setById(id, p, index[p]);
 
-          let cell = row?.querySelector(`div[col-id="${p}"]`);
-          rerenderCell(cell);
+          let cells = row?.querySelectorAll(`div.${CELL}`);
+          cells.forEach(cell => {
+            const colId = cell.getAttribute('col-id');
+            if(colId.includes(p)){
+              rerenderCell(cell);
+            }
+          });
         }
       } else {
         store.setById(id, index, value);
@@ -4684,6 +4700,17 @@ Fancy.copyText = (text) => {
     }
     getItemById(id) {
       return this.store.idItemMap[id];
+    }
+    getItem(rowIndex){
+      const item = this.store.getItemByRowIndex(rowIndex);
+      return item;
+    }
+    getData(){
+      const me = this;
+      const store = me.store;
+      const data = store.displayedData || store.data;
+
+      return data;
     }
     getColumnData(column){
       const me = this;
@@ -8449,6 +8476,12 @@ Fancy.copyText = (text) => {
       const itemId = row.getAttribute('row-id');
       const column = me.columns[columnIndex];
 
+      const prevActiveCells = me.bodyEl.querySelectorAll(`.${ACTIVE_CELL}`);
+
+      prevActiveCells.forEach(cell => {
+        cell.classList.remove(ACTIVE_CELL);
+      });
+
       me.selectionCellsRange && me.clearSelectionRange();
 
       me.activeCellEl?.classList.remove(ACTIVE_CELL);
@@ -9664,12 +9697,17 @@ Fancy.copyText = (text) => {
         } else {
           me.store.setById(itemId, column.index, value);
         }
-        cell?.remove();
 
-        cell = me.createCell(rowIndex, columnIndex);
-        cell.classList.add(ACTIVE_CELL);
-        me.activeCellEl = cell;
-        row.appendChild(cell);
+        if(column.index){
+          me.rowCellsUpdateWithColumnIndex(row, column.index);
+        } else {
+          cell?.remove();
+
+          cell = me.createCell(rowIndex, columnIndex);
+          cell.classList.add(ACTIVE_CELL);
+          me.activeCellEl = cell;
+          row.appendChild(cell);
+        }
 
         if(column.setter){
           me.rowCellsUpdateWithColumnIndex(row);
@@ -9828,7 +9866,7 @@ Fancy.copyText = (text) => {
         delete me.editingCell;
       }
     },
-    rowCellsUpdateWithColumnIndex(row){
+    rowCellsUpdateWithColumnIndex(row, columnIndexToUpdate){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
       const cells = row.querySelectorAll(`.${CELL}`);
@@ -9836,6 +9874,10 @@ Fancy.copyText = (text) => {
       cells.forEach(cell => {
         const columnIndex = Number(cell.getAttribute('col-index'));
         const column = me.columns[columnIndex];
+
+        if(columnIndexToUpdate && column.index !== columnIndexToUpdate){
+          return;
+        }
 
         if(column.index === undefined) return;
 

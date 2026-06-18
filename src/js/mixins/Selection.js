@@ -324,6 +324,12 @@
       const itemId = row.getAttribute('row-id');
       const column = me.columns[columnIndex];
 
+      const prevActiveCells = me.bodyEl.querySelectorAll(`.${ACTIVE_CELL}`);
+
+      prevActiveCells.forEach(cell => {
+        cell.classList.remove(ACTIVE_CELL);
+      });
+
       me.selectionCellsRange && me.clearSelectionRange();
 
       me.activeCellEl?.classList.remove(ACTIVE_CELL);

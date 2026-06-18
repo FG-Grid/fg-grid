@@ -72,12 +72,17 @@
         } else {
           me.store.setById(itemId, column.index, value);
         }
-        cell?.remove();
 
-        cell = me.createCell(rowIndex, columnIndex);
-        cell.classList.add(ACTIVE_CELL);
-        me.activeCellEl = cell;
-        row.appendChild(cell);
+        if(column.index){
+          me.rowCellsUpdateWithColumnIndex(row, column.index);
+        } else {
+          cell?.remove();
+
+          cell = me.createCell(rowIndex, columnIndex);
+          cell.classList.add(ACTIVE_CELL);
+          me.activeCellEl = cell;
+          row.appendChild(cell);
+        }
 
         if(column.setter){
           me.rowCellsUpdateWithColumnIndex(row);
@@ -236,7 +241,7 @@
         delete me.editingCell;
       }
     },
-    rowCellsUpdateWithColumnIndex(row){
+    rowCellsUpdateWithColumnIndex(row, columnIndexToUpdate){
       const me = this;
       const rowIndex = row.getAttribute('row-index');
       const cells = row.querySelectorAll(`.${CELL}`);
@@ -244,6 +249,10 @@
       cells.forEach(cell => {
         const columnIndex = Number(cell.getAttribute('col-index'));
         const column = me.columns[columnIndex];
+
+        if(columnIndexToUpdate && column.index !== columnIndexToUpdate){
+          return;
+        }
 
         if(column.index === undefined) return;
 

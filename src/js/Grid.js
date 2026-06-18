@@ -12,6 +12,7 @@
     BODY,
     BODY_INNER,
     BODY_INNER_CONTAINER,
+    CELL,
     EDITORS_CONTAINER,
     TOUCH
   } = Fancy.cls;
@@ -647,6 +648,11 @@
     }
     onBodyCellClick(e){
       const cell = e.currentTarget;
+
+      if(!cell.parentElement){
+        return;
+      }
+
       const {
         item,
         column,
@@ -666,6 +672,11 @@
     }
     onBodyCellDBLClick(e){
       const cell = e.currentTarget;
+
+      if(!cell.parentElement){
+        return;
+      }
+
       const {
         item,
         column,
@@ -930,8 +941,13 @@
         for(let p in index){
           store.setById(id, p, index[p]);
 
-          let cell = row?.querySelector(`div[col-id="${p}"]`);
-          rerenderCell(cell);
+          let cells = row?.querySelectorAll(`div.${CELL}`);
+          cells.forEach(cell => {
+            const colId = cell.getAttribute('col-id');
+            if(colId.includes(p)){
+              rerenderCell(cell);
+            }
+          });
         }
       } else {
         store.setById(id, index, value);
@@ -944,6 +960,17 @@
     }
     getItemById(id) {
       return this.store.idItemMap[id];
+    }
+    getItem(rowIndex){
+      const item = this.store.getItemByRowIndex(rowIndex);
+      return item;
+    }
+    getData(){
+      const me = this;
+      const store = me.store;
+      const data = store.displayedData || store.data;
+
+      return data;
     }
     getColumnData(column){
       const me = this;
