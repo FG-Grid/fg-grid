@@ -182,8 +182,20 @@
     filter(column, value, sign = '=') {
       const me = this;
       const store = me.store;
-
       me.hideActiveEditor();
+
+      if (Fancy.typeOf(column) === 'string'){
+        column = me.getColumn(column);
+      }
+
+      switch (value){
+        case '+':
+        case '-':
+        case 'empty':
+        case '!empty':
+          sign = value;
+          break;
+      }
 
       switch (value){
         case '=':

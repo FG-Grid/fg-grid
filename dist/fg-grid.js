@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.1.7',
+  version: '1.1.8',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -4696,6 +4696,14 @@ Fancy.copyText = (text) => {
         rerenderCell(cell);
       }
 
+      if(me.rowCls || me.rowStyle || me.rowClsRules){
+        const params = {
+          item: me.getItemById(id),
+          rowIndex
+        };
+        me.applyExtraRowStyles(row, params);
+      }
+
       row && me.rowCellsUpdateWithColumnRender(row, me.flashChanges);
     }
     getItemById(id) {
@@ -4716,13 +4724,21 @@ Fancy.copyText = (text) => {
       const me = this;
       const columnData = [];
 
-      if(!column.index){
+      if(!column.index && !column.getter){
         return false;
       }
 
-      me.store.data.forEach(item => {
-        columnData.push(item[column.index]);
-      });
+      if(column.getter){
+        me.store.data.forEach(item => {
+          columnData.push(column.getter({
+            item
+          }));
+        });
+      } else {
+        me.store.data.forEach(item => {
+          columnData.push(item[column.index]);
+        });
+      }
 
       return columnData;
     }
@@ -6598,6 +6614,14 @@ Fancy.copyText = (text) => {
         if(typeof me.rowStyle === 'function'){
           const rowStyles = me.rowStyle(params) || {};
 
+          rowEl.style.cssText.split(';').forEach(rule => {
+            const prop = rule.split(':')[0]?.trim();
+
+            if (prop && prop !== 'transform') {
+              rowEl.style.removeProperty(prop);
+            }
+          });
+
           for(const p in rowStyles){
             rowEl.style[p] = rowStyles[p];
           }
@@ -6606,6 +6630,21 @@ Fancy.copyText = (text) => {
 
       if(me.rowCls){
         if(typeof me.rowCls === 'function'){
+          const baseCls = [
+            ROW,
+            ROW_ODD,
+            ROW_EVEN,
+            ROW_SELECTED,
+            ROW_GROUP,
+            ROW_HOVER
+          ];
+
+          [...rowEl.classList].forEach(c => {
+            if (!baseCls.includes(c)) {
+              rowEl.classList.remove(c);
+            }
+          });
+
           let cls = me.rowCls(params) || [];
 
           if(typeof cls === 'string') (cls = [cls]);
@@ -6615,6 +6654,9 @@ Fancy.copyText = (text) => {
       }
 
       if(me.rowClsRules){
+        const cls = Object.keys(me.rowClsRules);
+        rowEl.classList.remove(...cls);
+
         if(typeof me.rowClsRules === 'object'){
           for(const cls in me.rowClsRules){
             const fn = me.rowClsRules[cls];
@@ -7434,8 +7476,20 @@ Fancy.copyText = (text) => {
     filter(column, value, sign = '=') {
       const me = this;
       const store = me.store;
-
       me.hideActiveEditor();
+
+      if (Fancy.typeOf(column) === 'string'){
+        column = me.getColumn(column);
+      }
+
+      switch (value){
+        case '+':
+        case '-':
+        case 'empty':
+        case '!empty':
+          sign = value;
+          break;
+      }
 
       switch (value){
         case '=':
@@ -10348,7 +10402,10 @@ Fancy.copyText = (text) => {
 
       const resetButtonEl = div(BUTTON);
 
-      resetButtonEl.innerHTML = me.lang.reset;
+      const resetButtonText = div();
+      resetButtonText.innerHTML = me.lang.reset;
+      resetButtonEl.appendChild(resetButtonText);
+
       resetButtonEl.addEventListener('click', me.buttonResetClick.bind(this));
 
       bbar.appendChild(selectButtonEl);
@@ -10687,7 +10744,8 @@ Fancy.copyText = (text) => {
         case 'Positive':
         case 'Negative':
           me.input.style.display = 'none';
-          me.elText.innerHTML = sign;
+          const signText = me.lang.sign[Fancy.toCamelCase(sign.toLowerCase())];
+          me.elText.innerHTML = signText;
           me.elText.style.display = 'block';
           removeDisabling();
           me.elButton.style.display = 'none';

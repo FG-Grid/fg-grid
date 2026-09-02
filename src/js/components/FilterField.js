@@ -277,7 +277,10 @@
 
       const resetButtonEl = div(BUTTON);
 
-      resetButtonEl.innerHTML = me.lang.reset;
+      const resetButtonText = div();
+      resetButtonText.innerHTML = me.lang.reset;
+      resetButtonEl.appendChild(resetButtonText);
+
       resetButtonEl.addEventListener('click', me.buttonResetClick.bind(this));
 
       bbar.appendChild(selectButtonEl);
@@ -616,7 +619,8 @@
         case 'Positive':
         case 'Negative':
           me.input.style.display = 'none';
-          me.elText.innerHTML = sign;
+          const signText = me.lang.sign[Fancy.toCamelCase(sign.toLowerCase())];
+          me.elText.innerHTML = signText;
           me.elText.style.display = 'block';
           removeDisabling();
           me.elButton.style.display = 'none';

@@ -679,6 +679,8 @@
   line-height: 27px;
   padding-left: 5px;
   color: #616161;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .fg-header {
@@ -1415,5 +1417,11 @@
   justify-content: center;
   &:hover {
     background: var(--button-bg-sign-hover-bg);
+  }
+
+  div {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
