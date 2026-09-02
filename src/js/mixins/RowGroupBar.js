@@ -63,6 +63,10 @@
       const rowGroupBarItemEl = me.generateRowGroupBarItemEl(column);
       isItemActive && rowGroupBarItemEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
 
+      if(me.columnOrder && me.rowGroupType !== 'column'){
+        me.columnOrder.hidden = true;
+      }
+
       me.activeRowGroupBarItemEl = rowGroupBarItemEl;
       me.rowGroupBarItems = me.rowGroupBarItems || [];
       me.rowGroupBarItemColumns = me.rowGroupBarItemColumns || [];
@@ -212,6 +216,10 @@
       const rowGroupOrderIndex = Number(groupItemEl.getAttribute('row-group-order-index'));
       const groupItemToRemove = me.rowGroupBarItems.splice(rowGroupOrderIndex, 1)[0];
       const column = me.rowGroupBarItemColumns.splice(rowGroupOrderIndex, 1)[0];
+
+      if(me.columnOrder && me.rowGroupType !== 'column' && me.rowGroupBarItemColumns.length === 0){
+        delete me.columnOrder.hidden;
+      }
 
       me.isEditing && me.hideActiveEditor();
 

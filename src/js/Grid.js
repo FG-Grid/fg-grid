@@ -956,14 +956,6 @@
         rerenderCell(cell);
       }
 
-      if(me.rowCls || me.rowStyle || me.rowClsRules){
-        const params = {
-          item: me.getItemById(id),
-          rowIndex
-        };
-        me.applyExtraRowStyles(row, params);
-      }
-
       row && me.rowCellsUpdateWithColumnRender(row, me.flashChanges);
     }
     getItemById(id) {
@@ -984,21 +976,13 @@
       const me = this;
       const columnData = [];
 
-      if(!column.index && !column.getter){
+      if(!column.index){
         return false;
       }
 
-      if(column.getter){
-        me.store.data.forEach(item => {
-          columnData.push(column.getter({
-            item
-          }));
-        });
-      } else {
-        me.store.data.forEach(item => {
-          columnData.push(item[column.index]);
-        });
-      }
+      me.store.data.forEach(item => {
+        columnData.push(item[column.index]);
+      });
 
       return columnData;
     }

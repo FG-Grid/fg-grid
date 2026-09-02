@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.1.8',
+  version: '1.1.9',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -1622,11 +1622,18 @@ Fancy.copyText = (text) => {
         return;
       }
 
+      const filters = me.filters;
+      const columnIsAlreadyFiltered = filters.some(filter => {
+        if(filter.column.id === column.id){
+          return true;
+        }
+      });
+
       if (me.prevAction === 'sort' && me.sortedData) {
         data = me.sortedData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && me.filteredData) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id &&  !columnIsAlreadyFiltered && me.filteredData) {
         data = me.filteredData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id === column.id) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && !columnIsAlreadyFiltered) {
         totalReFilterRequired = true;
       } else {
         data = me.data.slice();
@@ -4680,14 +4687,6 @@ Fancy.copyText = (text) => {
         rerenderCell(cell);
       }
 
-      if(me.rowCls || me.rowStyle || me.rowClsRules){
-        const params = {
-          item: me.getItemById(id),
-          rowIndex
-        };
-        me.applyExtraRowStyles(row, params);
-      }
-
       row && me.rowCellsUpdateWithColumnRender(row, me.flashChanges);
     }
     getItemById(id) {
@@ -4708,21 +4707,13 @@ Fancy.copyText = (text) => {
       const me = this;
       const columnData = [];
 
-      if(!column.index && !column.getter){
+      if(!column.index){
         return false;
       }
 
-      if(column.getter){
-        me.store.data.forEach(item => {
-          columnData.push(column.getter({
-            item
-          }));
-        });
-      } else {
-        me.store.data.forEach(item => {
-          columnData.push(item[column.index]);
-        });
-      }
+      me.store.data.forEach(item => {
+        columnData.push(item[column.index]);
+      });
 
       return columnData;
     }
@@ -6560,6 +6551,10 @@ Fancy.copyText = (text) => {
         item
       };
 
+      if(me.rowHeight !== 28){
+        rowEl.style.height = `${me.rowHeight}px`;
+      }
+
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){
@@ -6598,14 +6593,6 @@ Fancy.copyText = (text) => {
         if(typeof me.rowStyle === 'function'){
           const rowStyles = me.rowStyle(params) || {};
 
-          rowEl.style.cssText.split(';').forEach(rule => {
-            const prop = rule.split(':')[0]?.trim();
-
-            if (prop && prop !== 'transform') {
-              rowEl.style.removeProperty(prop);
-            }
-          });
-
           for(const p in rowStyles){
             rowEl.style[p] = rowStyles[p];
           }
@@ -6614,21 +6601,6 @@ Fancy.copyText = (text) => {
 
       if(me.rowCls){
         if(typeof me.rowCls === 'function'){
-          const baseCls = [
-            ROW,
-            ROW_ODD,
-            ROW_EVEN,
-            ROW_SELECTED,
-            ROW_GROUP,
-            ROW_HOVER
-          ];
-
-          [...rowEl.classList].forEach(c => {
-            if (!baseCls.includes(c)) {
-              rowEl.classList.remove(c);
-            }
-          });
-
           let cls = me.rowCls(params) || [];
 
           if(typeof cls === 'string') (cls = [cls]);
@@ -6638,9 +6610,6 @@ Fancy.copyText = (text) => {
       }
 
       if(me.rowClsRules){
-        const cls = Object.keys(me.rowClsRules);
-        rowEl.classList.remove(...cls);
-
         if(typeof me.rowClsRules === 'object'){
           for(const cls in me.rowClsRules){
             const fn = me.rowClsRules[cls];
@@ -6660,6 +6629,10 @@ Fancy.copyText = (text) => {
       }
 
       const rowEl = div(ROW_GROUP, style);
+
+      if(me.rowHeight !== 28){
+        rowEl.style.height = `${me.rowHeight}px`;
+      }
 
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
       item.$selected && rowEl.classList.add(ROW_SELECTED);
@@ -7427,6 +7400,10 @@ Fancy.copyText = (text) => {
       const me = this;
       const store = me.store;
 
+      if (Fancy.typeOf(column) === 'string'){
+        column = me.getColumn(column);
+      }
+
       me.columns.forEach($column => {
         if(!column){
           delete $column.filters;
@@ -7439,6 +7416,7 @@ Fancy.copyText = (text) => {
             delete column.filters[sign];
           } else {
             delete column.filters;
+            column.filterField?.clearValue();
           }
         }
       });
@@ -7962,6 +7940,10 @@ Fancy.copyText = (text) => {
       const rowGroupBarItemEl = me.generateRowGroupBarItemEl(column);
       isItemActive && rowGroupBarItemEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
 
+      if(me.columnOrder && me.rowGroupType !== 'column'){
+        me.columnOrder.hidden = true;
+      }
+
       me.activeRowGroupBarItemEl = rowGroupBarItemEl;
       me.rowGroupBarItems = me.rowGroupBarItems || [];
       me.rowGroupBarItemColumns = me.rowGroupBarItemColumns || [];
@@ -8111,6 +8093,10 @@ Fancy.copyText = (text) => {
       const rowGroupOrderIndex = Number(groupItemEl.getAttribute('row-group-order-index'));
       const groupItemToRemove = me.rowGroupBarItems.splice(rowGroupOrderIndex, 1)[0];
       const column = me.rowGroupBarItemColumns.splice(rowGroupOrderIndex, 1)[0];
+
+      if(me.columnOrder && me.rowGroupType !== 'column' && me.rowGroupBarItemColumns.length === 0){
+        delete me.columnOrder.hidden;
+      }
 
       me.isEditing && me.hideActiveEditor();
 

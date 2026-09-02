@@ -149,6 +149,10 @@
       const me = this;
       const store = me.store;
 
+      if (Fancy.typeOf(column) === 'string'){
+        column = me.getColumn(column);
+      }
+
       me.columns.forEach($column => {
         if(!column){
           delete $column.filters;
@@ -161,6 +165,7 @@
             delete column.filters[sign];
           } else {
             delete column.filters;
+            column.filterField?.clearValue();
           }
         }
       });

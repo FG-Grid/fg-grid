@@ -87,11 +87,18 @@
         return;
       }
 
+      const filters = me.filters;
+      const columnIsAlreadyFiltered = filters.some(filter => {
+        if(filter.column.id === column.id){
+          return true;
+        }
+      });
+
       if (me.prevAction === 'sort' && me.sortedData) {
         data = me.sortedData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && me.filteredData) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id &&  !columnIsAlreadyFiltered && me.filteredData) {
         data = me.filteredData.slice();
-      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id === column.id) {
+      } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && !columnIsAlreadyFiltered) {
         totalReFilterRequired = true;
       } else {
         data = me.data.slice();

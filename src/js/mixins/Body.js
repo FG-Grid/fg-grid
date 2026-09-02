@@ -402,6 +402,10 @@
         item
       };
 
+      if(me.rowHeight !== 28){
+        rowEl.style.height = `${me.rowHeight}px`;
+      }
+
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){
@@ -440,14 +444,6 @@
         if(typeof me.rowStyle === 'function'){
           const rowStyles = me.rowStyle(params) || {};
 
-          rowEl.style.cssText.split(';').forEach(rule => {
-            const prop = rule.split(':')[0]?.trim();
-
-            if (prop && prop !== 'transform') {
-              rowEl.style.removeProperty(prop);
-            }
-          });
-
           for(const p in rowStyles){
             rowEl.style[p] = rowStyles[p];
           }
@@ -456,21 +452,6 @@
 
       if(me.rowCls){
         if(typeof me.rowCls === 'function'){
-          const baseCls = [
-            ROW,
-            ROW_ODD,
-            ROW_EVEN,
-            ROW_SELECTED,
-            ROW_GROUP,
-            ROW_HOVER
-          ];
-
-          [...rowEl.classList].forEach(c => {
-            if (!baseCls.includes(c)) {
-              rowEl.classList.remove(c);
-            }
-          });
-
           let cls = me.rowCls(params) || [];
 
           if(typeof cls === 'string') (cls = [cls]);
@@ -480,9 +461,6 @@
       }
 
       if(me.rowClsRules){
-        const cls = Object.keys(me.rowClsRules);
-        rowEl.classList.remove(...cls);
-
         if(typeof me.rowClsRules === 'object'){
           for(const cls in me.rowClsRules){
             const fn = me.rowClsRules[cls];
@@ -502,6 +480,10 @@
       }
 
       const rowEl = div(ROW_GROUP, style);
+
+      if(me.rowHeight !== 28){
+        rowEl.style.height = `${me.rowHeight}px`;
+      }
 
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
       item.$selected && rowEl.classList.add(ROW_SELECTED);
