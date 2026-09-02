@@ -154,7 +154,7 @@
           $groupLevel: groupLevel,
           $isGroupRow: true,
           $hasChildrenGroups: hasChildrenGroups,
-          id: me.generateId(),
+          id: me.generateId() + '-group',
           childrenAmount: me.groupsChildren[groupName].length,
           expanded,
           $agValues: {}
@@ -765,7 +765,7 @@
           $groupLevel: groupLevel,
           $isGroupRow: true,
           $hasChildrenGroups: group !== name,
-          id: me.generateId(),
+          id: me.generateId() + '-group',
           childrenAmount: 0,
           amount: 0,
           expanded: true,

@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.1.9',
+  version: '1.2.0',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -2030,7 +2030,7 @@ Fancy.copyText = (text) => {
           $groupLevel: groupLevel,
           $isGroupRow: true,
           $hasChildrenGroups: hasChildrenGroups,
-          id: me.generateId(),
+          id: me.generateId() + '-group',
           childrenAmount: me.groupsChildren[groupName].length,
           expanded,
           $agValues: {}
@@ -2636,7 +2636,7 @@ Fancy.copyText = (text) => {
           $groupLevel: groupLevel,
           $isGroupRow: true,
           $hasChildrenGroups: group !== name,
-          id: me.generateId(),
+          id: me.generateId() + '-group',
           childrenAmount: 0,
           amount: 0,
           expanded: true,

@@ -1,6 +1,6 @@
 # FG-Grid
 
-Build v1.1.9
+Build v1.2.0
 
 FG-Grid - Open source data grid library for building enterprise applications
 
