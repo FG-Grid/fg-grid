@@ -286,7 +286,7 @@
 
       for(let i = rowIndex - 1;i>-1;i--){
         const row = data[i];
-        if (row.$isGroupRow !== true) return i;
+        if (row?.$isGroupRow !== true) return i;
       }
     }
     getPrevPageVisibleRowIndex(rowIndex, pageRows){
@@ -296,7 +296,7 @@
 
       for(let i = rowIndex - 1;i>-1;i--){
         const row = data[i];
-        if (row.$isGroupRow !== true) {
+        if (row?.$isGroupRow !== true) {
           rowI = i;
           pageRows--;
         }
@@ -324,7 +324,7 @@
 
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
-        if (row.$isGroupRow !== true) {
+        if (row?.$isGroupRow !== true) {
           rowI = i;
           pageRows--;
         }

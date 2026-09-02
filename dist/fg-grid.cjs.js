@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.2.1',
+  version: '1.2.2',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -921,7 +921,7 @@ Fancy.copyText = (text) => {
 
       for(let i = rowIndex - 1;i>-1;i--){
         const row = data[i];
-        if (row.$isGroupRow !== true) return i;
+        if (row?.$isGroupRow !== true) return i;
       }
     }
     getPrevPageVisibleRowIndex(rowIndex, pageRows){
@@ -931,7 +931,7 @@ Fancy.copyText = (text) => {
 
       for(let i = rowIndex - 1;i>-1;i--){
         const row = data[i];
-        if (row.$isGroupRow !== true) {
+        if (row?.$isGroupRow !== true) {
           rowI = i;
           pageRows--;
         }
@@ -959,7 +959,7 @@ Fancy.copyText = (text) => {
 
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
-        if (row.$isGroupRow !== true) {
+        if (row?.$isGroupRow !== true) {
           rowI = i;
           pageRows--;
         }
