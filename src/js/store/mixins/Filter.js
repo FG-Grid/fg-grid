@@ -94,7 +94,7 @@
         }
       });
 
-      if (me.prevAction === 'sort' && me.sortedData) {
+      if (me.prevAction === 'sort' && me.sortedData && !columnIsAlreadyFiltered) {
         data = me.sortedData.slice();
       } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id &&  !columnIsAlreadyFiltered && me.filteredData) {
         data = me.filteredData.slice();

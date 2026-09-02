@@ -313,7 +313,7 @@
 
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
-        if (row.$isGroupRow !== true) return i;
+        if (row?.$isGroupRow !== true) return i;
       }
     }
     getNextPageVisibleRowIndex(rowIndex, pageRows){

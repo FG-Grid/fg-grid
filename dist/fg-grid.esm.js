@@ -5,7 +5,7 @@ let Grid$200;
 if(!IS_SERVER) {        
         
 const Fancy$1 = {
-  version: '1.2.0',
+  version: '1.2.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -954,7 +954,7 @@ Fancy.copyText = (text) => {
 
       for(let i = rowIndex + 1;i<totalDisplayed;i++){
         const row = data[i];
-        if (row.$isGroupRow !== true) return i;
+        if (row?.$isGroupRow !== true) return i;
       }
     }
     getNextPageVisibleRowIndex(rowIndex, pageRows){
@@ -1635,7 +1635,7 @@ Fancy.copyText = (text) => {
         }
       });
 
-      if (me.prevAction === 'sort' && me.sortedData) {
+      if (me.prevAction === 'sort' && me.sortedData && !columnIsAlreadyFiltered) {
         data = me.sortedData.slice();
       } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id &&  !columnIsAlreadyFiltered && me.filteredData) {
         data = me.filteredData.slice();
