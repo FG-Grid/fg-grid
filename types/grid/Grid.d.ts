@@ -34,7 +34,7 @@ interface GridConfig<TData = any> {
   onCellClick?: (params: CellClickParams<TData>) => any;
   onCellDblClick?: (params: CellDblClickParams<TData>) => any;
   onReady?: (grid: Grid<TData>) => any;
-  on?: (eventName: string, handler: (params: EventParams) => void) => any;
+  on?: (eventName: string, params: EventParams) => any;
 
   lang?: {
     group?: string;
