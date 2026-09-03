@@ -34,6 +34,7 @@ interface GridConfig<TData = any> {
   onCellClick?: (params: CellClickParams<TData>) => any;
   onCellDblClick?: (params: CellDblClickParams<TData>) => any;
   onReady?: (grid: Grid<TData>) => any;
+  on?: (eventName: string, handler: (params: EventParams) => void) => any;
 
   lang?: {
     group?: string;
@@ -64,6 +65,8 @@ interface GridConfig<TData = any> {
 
 type Sign = '<'|'>'|'<='|'>='|'='|'!=';
 type Value = string|number|boolean|undefined|null;
+
+type EventParams = unknown;
 
 declare class Grid<TData = any> implements GridConfig<TData> {
   constructor(config: GridConfig<TData>);
@@ -101,6 +104,8 @@ declare class Grid<TData = any> implements GridConfig<TData> {
   collapseAll(): void;
 
   destroy(): void;
+
+  fire(eventName: string, params?: EventParams): void;
 
   columns: Column<TData>[];
   data: TData[];

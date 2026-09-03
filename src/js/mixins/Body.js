@@ -148,7 +148,7 @@
       }
 
       if(column.format) (value = column.format(params));
-      cellInner = column.render? cellInner = column.render(params): value;
+      cellInner = column.render? cellInner = column.render(params, me): value;
 
       if(column.$isRowGroupColumn || column.rowGroupIndent) cell.classList.add(ROW_GROUP_VALUE_CELL);
 
@@ -249,7 +249,7 @@
             columnIndex: columnIndex,
             value,
             cell
-          });
+          }, me);
         } else {
           cellInner = value;
         }

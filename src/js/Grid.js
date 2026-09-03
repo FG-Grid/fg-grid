@@ -994,6 +994,12 @@
 
       return uniqueData;
     }
+    fire(eventName, params){
+      this.on(eventName, params);
+    }
+    on(eventName, callback){
+
+    }
   }
 
   window.Grid = Grid;

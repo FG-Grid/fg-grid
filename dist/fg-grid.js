@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.2.2',
+  version: '1.2.3',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -1240,7 +1240,7 @@ Fancy.copyText = (text) => {
                 } else {
                   value = Number(value);
                   if (value > 2_147_483_647) value = 2_147_483_647;
-                  if (value < -2_147_483_648) value = -2_147_483_648;
+                  if (value < -2147483648) value = -2147483648;
                 }
 
                 sortValues[i] = value;
@@ -1370,7 +1370,7 @@ Fancy.copyText = (text) => {
                 } else {
                   value = Number(value);
                   if (value > 2_147_483_647) value = 2_147_483_647;
-                  if (value < -2_147_483_648) value = -2_147_483_648;
+                  if (value < -2147483648) value = -2147483648;
                 }
 
                 sortValues[i] = value;
@@ -4741,6 +4741,12 @@ Fancy.copyText = (text) => {
 
       return uniqueData;
     }
+    fire(eventName, params){
+      this.on(eventName, params);
+    }
+    on(eventName, callback){
+
+    }
   }
 
   window.Grid = Grid;
@@ -6313,7 +6319,7 @@ Fancy.copyText = (text) => {
       }
 
       if(column.format) (value = column.format(params));
-      cellInner = column.render? cellInner = column.render(params): value;
+      cellInner = column.render? cellInner = column.render(params, me): value;
 
       if(column.$isRowGroupColumn || column.rowGroupIndent) cell.classList.add(ROW_GROUP_VALUE_CELL);
 
@@ -6414,7 +6420,7 @@ Fancy.copyText = (text) => {
             columnIndex: columnIndex,
             value,
             cell
-          });
+          }, me);
         } else {
           cellInner = value;
         }

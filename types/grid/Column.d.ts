@@ -1,3 +1,5 @@
+import { Grid } from './Grid';
+
 export interface RenderParams<TData = any> {
   item: TData;
   column: Column<TData>;
@@ -64,7 +66,7 @@ export interface CellStyle {
 }
 
 export interface CellStyleFn<TData = any> {
-  (params: RenderParams<TData>): CellStyle | null | undefined;
+  (params: RenderParams<TData>): CellStyle | null | void;
 }
 
 export interface CellClsRules<TData = any> {
@@ -72,7 +74,7 @@ export interface CellClsRules<TData = any> {
 }
 
 export interface CellClsFn<TData = any> {
-  (params: RenderParams<TData>): string | string[] | null | undefined;
+  (params: RenderParams<TData>): string | string[] | null | void;
 }
 
 export interface RowStyle {
@@ -121,7 +123,7 @@ export interface Column<TData = any> {
 
   minListWidth?: number;
 
-  render?(params: RenderParams<TData>): string|undefined;
+  render?(params: RenderParams<TData>, grid: Grid<TData>): string|void;
   cellStyle?: CellStyle | CellStyleFn<TData>;
   cellClsRules?: CellClsRules<TData>;
   cellCls?: string | string[] | CellClsFn<TData>;
