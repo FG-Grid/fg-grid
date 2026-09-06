@@ -5,7 +5,7 @@ let Grid$200;
 if(!IS_SERVER) {        
         
 const Fancy$1 = {
-  version: '1.2.4',
+  version: '1.2.5',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -1641,6 +1641,8 @@ Fancy.copyText = (text) => {
         data = me.filteredData.slice();
       } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && !columnIsAlreadyFiltered) {
         totalReFilterRequired = true;
+      } else if(columnIsAlreadyFiltered) {
+        totalReFilterRequired = true;
       } else {
         data = me.data.slice();
       }
@@ -1660,7 +1662,7 @@ Fancy.copyText = (text) => {
       }
 
       if (totalReFilterRequired) {
-        me.reFilter();
+        me.reFilter(false);
         me.reSort();
         me.prevAction = 'filter';
         me.prevFilterColumn = column;

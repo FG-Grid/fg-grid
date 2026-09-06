@@ -100,6 +100,8 @@
         data = me.filteredData.slice();
       } else if (me.prevAction === 'filter' && me.prevFilterColumn?.id !== column.id && !columnIsAlreadyFiltered) {
         totalReFilterRequired = true;
+      } else if(columnIsAlreadyFiltered) {
+        totalReFilterRequired = true;
       } else {
         data = me.data.slice();
       }
@@ -119,7 +121,7 @@
       }
 
       if (totalReFilterRequired) {
-        me.reFilter();
+        me.reFilter(false);
         me.reSort();
         me.prevAction = 'filter';
         me.prevFilterColumn = column;
