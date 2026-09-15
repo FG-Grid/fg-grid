@@ -8,6 +8,10 @@
 
       if (me.sorting) return;
 
+      if (Fancy.typeOf(sortingColumn) === 'string'){
+        sortingColumn = me.getColumn(sortingColumn);
+      }
+
       me.isEditing && me.hideActiveEditor();
 
       me.sorting = true;

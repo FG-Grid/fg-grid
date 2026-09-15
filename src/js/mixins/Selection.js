@@ -176,7 +176,8 @@
               }
 
             }, {
-              once: true
+              once: true,
+              capture: true
             });
           });
         };

@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.2.5',
+  version: '1.2.6',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -7139,6 +7139,10 @@ Fancy.copyText = (text) => {
 
       if (me.sorting) return;
 
+      if (Fancy.typeOf(sortingColumn) === 'string'){
+        sortingColumn = me.getColumn(sortingColumn);
+      }
+
       me.isEditing && me.hideActiveEditor();
 
       me.sorting = true;
@@ -8376,7 +8380,8 @@ Fancy.copyText = (text) => {
               }
 
             }, {
-              once: true
+              once: true,
+              capture: true
             });
           });
         };
