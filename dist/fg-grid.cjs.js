@@ -7999,7 +7999,7 @@ Fancy.copyText = (text) => {
       dragSvgEl.addEventListener('mousedown', me.onRowGroupBarItemDragElMouseDown.bind(me));
 
       const groupItemText = span(ROW_GROUP_BAR_ITEM_TEXT);
-      groupItemText.innerHTML = column.title;
+      groupItemText.textContent = column.title;
       groupItemEl.appendChild(groupItemText);
 
       const removeSvgEl = span([SVG_ITEM, SVG_REMOVE]);
@@ -8177,8 +8177,8 @@ Fancy.copyText = (text) => {
       const fromColumn = me.rowGroupBarItemColumns[from];
       const toColumn = me.rowGroupBarItemColumns[to];
 
-      fromEl.querySelector(`.${ROW_GROUP_BAR_ITEM_TEXT}`).innerHTML = toColumn.title;
-      toEl.querySelector(`.${ROW_GROUP_BAR_ITEM_TEXT}`).innerHTML = fromColumn.title;
+      fromEl.querySelector(`.${ROW_GROUP_BAR_ITEM_TEXT}`).textContent = toColumn.title;
+      toEl.querySelector(`.${ROW_GROUP_BAR_ITEM_TEXT}`).textContent = fromColumn.title;
 
       fromEl.classList.remove(ROW_GROUP_BAR_ITEM_ACTIVE);
       toEl.classList.add(ROW_GROUP_BAR_ITEM_ACTIVE);
