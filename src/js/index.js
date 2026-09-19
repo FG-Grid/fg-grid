@@ -17,11 +17,13 @@ import './store/mixins/Edit.js';
 
 import './Scroller.js';
 import './TouchScroller';
+import './Loading';
 import './Grid.js';
 import './mixins/Column.js';
 import './mixins/Header.js';
 import './mixins/Body.js';
 import './mixins/Scroll.js';
+import './mixins/Loading.js';
 import './mixins/Sort.js';
 import './mixins/Filter.js';
 import './mixins/RowGroup.js';
