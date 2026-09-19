@@ -1,5 +1,5 @@
 const Fancy$1 = {
-  version: '1.2.6',
+  version: '1.2.7',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -343,6 +343,10 @@ Fancy.cls = {
   BODY_HORIZONTAL_SCROLL_CONTAINER: 'fg-body-horizontal-scroll-container',
   BODY_HORIZONTAL_SCROLL_SIZE: 'fg-body-horizontal-scroll-size',
   SCROLLBAR_INVISIBLE: 'fg-scrollbar-invisible',
+
+  // Loading
+  LOADING: 'fg-loading',
+  LOADING_INSIDE: 'fg-loading-inside',
 
   //Checkbox
   INPUT_CHECKBOX: 'fg-input-checkbox',
@@ -3758,6 +3762,7 @@ Fancy.copyText = (text) => {
     search: 'Search...',
     reset: 'Reset',
     selectAll: 'Select All',
+    loading: 'Loading...',
     sign: {
       clear: 'Clear',
       list: 'List',
@@ -3827,6 +3832,8 @@ Fancy.copyText = (text) => {
     columnLines = false;
     rowGroupBar = false;
 
+    loading = false;
+
     $defaultRowGroupColumn = {
       title: 'Group',
       width: 120,
@@ -3870,6 +3877,9 @@ Fancy.copyText = (text) => {
       const scroller = me.scroller;
       scroller.calcMaxScrollTop();
       scroller.calcVisibleRows();
+      if(me.loading){
+        me.initLoading();
+      }
       me.renderVisibleRows();
       me.renderVisibleHeaderCells();
       me.filterBar && me.renderVisibleFilterBarCells();

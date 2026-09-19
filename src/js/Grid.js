@@ -23,6 +23,7 @@
     search: 'Search...',
     reset: 'Reset',
     selectAll: 'Select All',
+    loading: 'Loading...',
     sign: {
       clear: 'Clear',
       list: 'List',
@@ -92,6 +93,8 @@
     columnLines = false;
     rowGroupBar = false;
 
+    loading = false;
+
     $defaultRowGroupColumn = {
       title: 'Group',
       width: 120,
@@ -135,6 +138,9 @@
       const scroller = me.scroller;
       scroller.calcMaxScrollTop();
       scroller.calcVisibleRows();
+      if(me.loading){
+        me.initLoading();
+      }
       me.renderVisibleRows();
       me.renderVisibleHeaderCells();
       me.filterBar && me.renderVisibleFilterBarCells();

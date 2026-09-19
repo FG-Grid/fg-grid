@@ -118,6 +118,10 @@ Fancy.cls = {
   BODY_HORIZONTAL_SCROLL_SIZE: 'fg-body-horizontal-scroll-size',
   SCROLLBAR_INVISIBLE: 'fg-scrollbar-invisible',
 
+  // Loading
+  LOADING: 'fg-loading',
+  LOADING_INSIDE: 'fg-loading-inside',
+
   //Checkbox
   INPUT_CHECKBOX: 'fg-input-checkbox',
 

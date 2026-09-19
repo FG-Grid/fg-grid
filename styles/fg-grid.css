@@ -1071,6 +1071,59 @@
   bottom: 0;
 }
 
+.fg-loading {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(77, 77, 77, 0.1);
+  z-index: 100;
+}
+
+@keyframes fg-animation-loading {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(360deg) scale(0.9);
+  }
+  100% {
+    transform: rotate(720deg) scale(1);
+  }
+}
+
+.fg-loading-inside {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background-color: rgb(250, 250, 250);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  padding: 8px 10px;
+
+  color: rgb(102, 102, 102);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  svg {
+    display: block;
+    width: 16.2px;
+    height: 16.2px;
+    animation-name: fg-animation-loading;
+    animation-duration: 2700ms;
+    animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
+    animation-iteration-count: infinite;
+    path {
+      fill: #888888;
+    }
+  }
+}
+
 .fg-filter-indicator-container {
   display: flex;
 }
