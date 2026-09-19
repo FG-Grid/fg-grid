@@ -30,6 +30,7 @@ interface GridConfig<TData = any> {
   flashChanges?: boolean;
   flashChangesColors?: [string, string];
   columnLines?: boolean;
+  loading?: boolean | string;
   onChange?: (params: ChangeParams<TData>) => any;
   onCellClick?: (params: CellClickParams<TData>) => any;
   onCellDblClick?: (params: CellDblClickParams<TData>) => any;
@@ -98,6 +99,10 @@ declare class Grid<TData = any> implements GridConfig<TData> {
   // Filtering
   filter(column: Column<TData>, value: Value, operator: Sign): void;
   clearFilter(index?: Column<TData>, sign?: Sign): void;
+
+  // Loading
+  showLoading(text?: string): void;
+  hideLoading(): void;
 
   // Row Grouping
   expandAll(): void;
