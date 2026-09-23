@@ -14,6 +14,7 @@
     BODY_INNER_CONTAINER,
     CELL,
     EDITORS_CONTAINER,
+    SHOW_ACTIVE_ROW,
     TOUCH
   } = Fancy.cls;
 
@@ -92,6 +93,8 @@
     cellsRightBorder = false;
     columnLines = false;
     rowGroupBar = false;
+
+    activeRow = false;
 
     loading = false;
 
@@ -183,6 +186,7 @@
 
       me.rowAnimation && gridCls.push(ROW_ANIMATION);
       (me.cellsRightBorder || me.columnLines) && gridCls.push(GRID_CELLS_RIGHT_BORDER);
+      me.activeRow && gridCls.push(SHOW_ACTIVE_ROW);
       Fancy.isTouchDevice && gridCls.push(TOUCH);
       me.store.rowGroups?.length && gridCls.push(ROW_GROUPING);
       const gridEl = div(gridCls);

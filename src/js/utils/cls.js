@@ -4,6 +4,7 @@ Fancy.cls = {
   TOUCH: 'fg-touch',
   EDITING: 'fg-editing',
   ROW_GROUPING: 'fg-row-grouping',
+  SHOW_ACTIVE_ROW: 'fg-show-active-row',
 
   // Header
   HEADER: 'fg-header',

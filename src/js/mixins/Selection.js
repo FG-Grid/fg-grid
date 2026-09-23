@@ -171,7 +171,7 @@
                 !event.target.closest(`div.${BODY}`)
                 && !(me.activeEditor instanceof Fancy.ComboField)
               ) {
-                me.clearActiveCell();
+                me.clearActiveCell(false);
                 me.clearSelectionRange();
               }
 
@@ -301,17 +301,19 @@
       me.generateCellsSelectionRange();
       me.selectCellsFromRange();
     },
-    clearActiveCell(){
+    clearActiveCell(clearRow = true){
       const me = this;
 
       me.activeCellEl?.classList.remove(ACTIVE_CELL);
-      me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
+      if (clearRow) {
+        me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
+        delete me.activeCellRowId;
+      }
 
       delete me.activeCellEl;
       delete me.activeCellRowEl;
       delete me.activeCellColumnIndex;
       delete me.activeCellColumn;
-      delete me.activeCellRowId;
     },
     setActiveCell(cell){
       const me = this;

@@ -406,6 +406,10 @@
         rowEl.style.height = `${me.rowHeight}px`;
       }
 
+      if(me.activeCellRowId && me.activeCellRowId === item.id){
+        rowEl.classList.add(ACTIVE_CELL_ROW);
+      }
+
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){

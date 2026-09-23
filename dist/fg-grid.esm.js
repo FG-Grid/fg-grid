@@ -5,7 +5,7 @@ let Grid$200;
 if(!IS_SERVER) {        
         
 const Fancy$1 = {
-  version: '1.2.8',
+  version: '1.2.9',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -236,6 +236,7 @@ Fancy.cls = {
   TOUCH: 'fg-touch',
   EDITING: 'fg-editing',
   ROW_GROUPING: 'fg-row-grouping',
+  SHOW_ACTIVE_ROW: 'fg-show-active-row',
 
   // Header
   HEADER: 'fg-header',
@@ -3841,6 +3842,7 @@ Fancy.copyText = (text) => {
     BODY_INNER_CONTAINER,
     CELL,
     EDITORS_CONTAINER,
+    SHOW_ACTIVE_ROW,
     TOUCH
   } = Fancy.cls;
 
@@ -3919,6 +3921,8 @@ Fancy.copyText = (text) => {
     cellsRightBorder = false;
     columnLines = false;
     rowGroupBar = false;
+
+    activeRow = false;
 
     loading = false;
 
@@ -4010,6 +4014,7 @@ Fancy.copyText = (text) => {
 
       me.rowAnimation && gridCls.push(ROW_ANIMATION);
       (me.cellsRightBorder || me.columnLines) && gridCls.push(GRID_CELLS_RIGHT_BORDER);
+      me.activeRow && gridCls.push(SHOW_ACTIVE_ROW);
       Fancy.isTouchDevice && gridCls.push(TOUCH);
       me.store.rowGroups?.length && gridCls.push(ROW_GROUPING);
       const gridEl = div(gridCls);
@@ -6661,6 +6666,10 @@ Fancy.copyText = (text) => {
         rowEl.style.height = `${me.rowHeight}px`;
       }
 
+      if(me.activeCellRowId && me.activeCellRowId === item.id){
+        rowEl.classList.add(ACTIVE_CELL_ROW);
+      }
+
       rowEl.classList.add(index % 2 === 1 ? ROW_ODD : ROW_EVEN);
 
       if(me.activeCell && me.$preventActiveCellRender !== true && item.id === me.activeCellRowId){
@@ -8490,7 +8499,7 @@ Fancy.copyText = (text) => {
                 !event.target.closest(`div.${BODY}`)
                 && !(me.activeEditor instanceof Fancy.ComboField)
               ) {
-                me.clearActiveCell();
+                me.clearActiveCell(false);
                 me.clearSelectionRange();
               }
 
@@ -8620,17 +8629,19 @@ Fancy.copyText = (text) => {
       me.generateCellsSelectionRange();
       me.selectCellsFromRange();
     },
-    clearActiveCell(){
+    clearActiveCell(clearRow = true){
       const me = this;
 
       me.activeCellEl?.classList.remove(ACTIVE_CELL);
-      me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
+      if (clearRow) {
+        me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
+        delete me.activeCellRowId;
+      }
 
       delete me.activeCellEl;
       delete me.activeCellRowEl;
       delete me.activeCellColumnIndex;
       delete me.activeCellColumn;
-      delete me.activeCellRowId;
     },
     setActiveCell(cell){
       const me = this;
