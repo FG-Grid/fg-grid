@@ -5,7 +5,7 @@ let Grid$200;
 if(!IS_SERVER) {        
         
 const Fancy$1 = {
-  version: '1.2.9',
+  version: '1.3.1',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -8666,6 +8666,12 @@ Fancy.copyText = (text) => {
       me.activeCellEl?.classList.remove(ACTIVE_CELL);
       me.activeCellEl = cell;
       me.activeCellEl.classList.add(ACTIVE_CELL);
+
+      if (me.activeRow) {
+        const activeRow = me.bodyEl.querySelector(`.${ACTIVE_CELL_ROW}`);
+
+        activeRow?.classList.remove(ACTIVE_CELL_ROW);
+      }
 
       me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
       me.activeCellRowEl = row;

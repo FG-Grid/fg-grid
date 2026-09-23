@@ -24,6 +24,7 @@ interface GridConfig<TData = any> {
   rowCls?: (params: RenderParams<TData>) => string | string[] | undefined;
   rowClsRules?: RowClsRules;
   activeCell?: boolean;
+  activeRow?: boolean;
   selectingCells?: boolean;
   startEditByTyping?: boolean;
   editorEnterAction?: 'stay' | 'down' | 'right';

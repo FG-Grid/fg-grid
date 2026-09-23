@@ -339,6 +339,12 @@
       me.activeCellEl = cell;
       me.activeCellEl.classList.add(ACTIVE_CELL);
 
+      if (me.activeRow) {
+        const activeRow = me.bodyEl.querySelector(`.${ACTIVE_CELL_ROW}`);
+
+        activeRow?.classList.remove(ACTIVE_CELL_ROW);
+      }
+
       me.activeCellRowEl?.classList.remove(ACTIVE_CELL_ROW);
       me.activeCellRowEl = row;
       me.activeCellRowEl.classList.add(ACTIVE_CELL_ROW);
