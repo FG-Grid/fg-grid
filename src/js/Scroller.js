@@ -479,6 +479,7 @@
         if(grid.resizeDownColumnIndex === undefined && grid.checkSize()){
           grid.calcFlexColumns();
           me.updateSize();
+          me.setVerticalSize();
         }
       });
 

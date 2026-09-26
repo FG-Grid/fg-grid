@@ -11,6 +11,8 @@
     ROW_GROUP_CELL_SELECTION,
     INPUT_CHECKBOX,
     BODY,
+    BODY_VERTICAL_SCROLL,
+    BODY_HORIZONTAL_SCROLL,
     FIELD_COMBO_LIST
   } = Fancy.cls;
 
@@ -164,17 +166,23 @@
 
       if(me.activeCell){
         const setActivateCell = () => {
-          me.setActiveCell(cell);
+          if (event.ctrlKey) {
+            me.clearActiveCell();
+          } else {
+            me.setActiveCell(cell);
+          }
           requestAnimationFrame(() => {
             document.addEventListener('mousedown', (event) => {
               if (
-                !event.target.closest(`div.${BODY}`)
-                && !(me.activeEditor instanceof Fancy.ComboField)
+                (
+                  !event.target.closest(`div.${BODY}`)
+                  && !(me.activeEditor instanceof Fancy.ComboField)
+                ) || event.target.closest(`div.${BODY_VERTICAL_SCROLL}`)
+                || event.target.closest(`div.${BODY_HORIZONTAL_SCROLL}`)
               ) {
                 me.clearActiveCell(false);
                 me.clearSelectionRange();
               }
-
             }, {
               once: true,
               capture: true

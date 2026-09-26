@@ -17,6 +17,7 @@ interface GridConfig<TData = any> {
   minColumnWidth?: number;
   rowGroupType?: 'row' | 'column';
   defaultRowGroupSort?: 'asc-string' | 'desc-string' | 'asc-amount' | 'desc-amount';
+  rowGroupColumn?: Column<TData>;
   rowGroupBar?: boolean;
   rowGroupExpanded?: boolean | string[] | ((groupName: string) => boolean);
   rowGroupBarSeparator?: boolean;

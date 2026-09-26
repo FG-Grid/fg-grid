@@ -849,7 +849,7 @@
 
 .fg-show-active-row {
   .fg-cell-active-row {
-    background-color: var(--grid-cell-active-bg);
+    background-color: var(--grid-cell-active-bg) !important;
   }
 }
 

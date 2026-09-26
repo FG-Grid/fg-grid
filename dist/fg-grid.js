@@ -15,7 +15,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
 
 const Fancy$1 = {
-  version: '1.3.1',
+  version: '1.3.2',
   isTouchDevice: 'ontouchstart' in window,
   gridIdSeed: 0,
   gridsMap: new Map(),
@@ -3582,6 +3582,7 @@ Fancy.copyText = (text) => {
         if(grid.resizeDownColumnIndex === undefined && grid.checkSize()){
           grid.calcFlexColumns();
           me.updateSize();
+          me.setVerticalSize();
         }
       });
 
@@ -8349,6 +8350,8 @@ Fancy.copyText = (text) => {
     ROW_GROUP_CELL_SELECTION,
     INPUT_CHECKBOX,
     BODY,
+    BODY_VERTICAL_SCROLL,
+    BODY_HORIZONTAL_SCROLL,
     FIELD_COMBO_LIST
   } = Fancy.cls;
 
@@ -8502,17 +8505,23 @@ Fancy.copyText = (text) => {
 
       if(me.activeCell){
         const setActivateCell = () => {
-          me.setActiveCell(cell);
+          if (event.ctrlKey) {
+            me.clearActiveCell();
+          } else {
+            me.setActiveCell(cell);
+          }
           requestAnimationFrame(() => {
             document.addEventListener('mousedown', (event) => {
               if (
-                !event.target.closest(`div.${BODY}`)
-                && !(me.activeEditor instanceof Fancy.ComboField)
+                (
+                  !event.target.closest(`div.${BODY}`)
+                  && !(me.activeEditor instanceof Fancy.ComboField)
+                ) || event.target.closest(`div.${BODY_VERTICAL_SCROLL}`)
+                || event.target.closest(`div.${BODY_HORIZONTAL_SCROLL}`)
               ) {
                 me.clearActiveCell(false);
                 me.clearSelectionRange();
               }
-
             }, {
               once: true,
               capture: true
